@@ -1,4 +1,6 @@
-__author__ = 'junz'
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import *
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand

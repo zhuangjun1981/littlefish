@@ -1,9 +1,13 @@
 # the 2-d terrain generator
 
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import *
 import littlefish.utilities as util
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.ndimage as ni
+
 
 plt.ioff()
 
@@ -53,7 +57,7 @@ class TerrainBase(object):
         float_map = self.generate_float_map(sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)
         binary_map[float_map > self._sea_level] = 1
-        print binary_map.dtype
+        print(binary_map.dtype)
 
         if is_plot:
             f = plt.figure(figsize=(20, 8))
