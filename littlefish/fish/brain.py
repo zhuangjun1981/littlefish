@@ -6,25 +6,24 @@ import numpy as np
 
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
 # per time unit
-SIMULATION_LENGTH = 1e5 # number of time units in simulation
+SIMULATION_LENGTH = int(1e5) # number of time units in simulation
 
 class Neuron(object):
     """
     a very simple neuron class
     """
 
-    def __init__(self, baseline_rate=0.0001, refractory_period=10, action_history=[]):
+    def __init__(self, baseline_rate=0.0001, refractory_period=10):
         """
         action is the equivalent of action potential in biology, and consider one time unit is 0.1 milisecond
 
         :param baseline_rate: float, probablity of a action per time unit.
         :param refractory_period: float, refractory_period in time unit
-        :param action_history: list of ints, timing of all actions as indices in time axis of time unit
         """
 
         self._baseline_rate = baseline_rate
         self._refractory_period = refractory_period
-        self._action_history = action_history
+        self._action_history = []
 
     def get_baseline_rate(self):
         return self._baseline_rate
@@ -33,6 +32,9 @@ class Neuron(object):
         return self._refractory_period
 
     def get_action_history(self):
+        """
+        :return: action_history, list of ints, timing of all actions as indices in time axis of time unit
+        """
         return self._action_history
 
     def act(self, t_point, input=0):
@@ -54,6 +56,10 @@ class Neuron(object):
             else:
                 return False
 
+class Eye(Neuron):
+    """
+    Eye class is a subclass of neuron. With 0 baseline rate.
+    """
 
 class Connection(object):
     """
@@ -76,19 +82,38 @@ class Connection(object):
         self._rise_time = rise_time
         self._decay_time = decay_time
 
-    @property
-    def psp(self):
+        self._generate_psp()
+
+    def _generate_psp(self):
         """
-        post synaptic probability wave form
+        generate post synaptic probability wave form
         """
 
-        psp_waveform = np.zeros(self._latency + self._rise_time + self._decay_time)
-        psp_waveform[self._latency: self._latency + self._rise_time] = self._amplitude * \
-                                                                       (np.arange(self._rise_time, dtype=np.float32) +\
-                                                                        1) / self._rise_time
-        psp_waveform[-self._decay_time:] = self._amplitude * (np.arange(self._decay_time, 0, -1, dtype=np.float32)
-                                                                - 1) / self._decay_time
-        return psp_waveform
+        self._psp = np.zeros(self._latency + self._rise_time + self._decay_time)
+        self._psp[self._latency: self._latency + self._rise_time] = self._amplitude * \
+                                                                   (np.arange(self._rise_time, dtype=np.float32) +
+                                                                    1) / self._rise_time
+        self._psp[-self._decay_time:] = self._amplitude * (np.arange(self._decay_time, 0, -1, dtype=np.float32)
+                                                          - 1) / self._decay_time
+
+    def get_psp(self):
+        return self._psp
+
+    def act(self, time_point, postsynaptic_input):
+        """
+        if the presynaptic neuron fires at the 'time_point', a psp wave form will be generated and add to the
+        input array of the postsynaptic neuron
+        :param time_point: int, current time point as the index of time unit axis
+        :param postsynaptic_input: 1-d array of floats
+        :return:
+        """
+
+
+        psp_end = time_point + len(self._psp)
+        if psp_end <= len(postsynaptic_input):
+            postsynaptic_input[time_point: psp_end] += self._psp
+        else:
+            postsynaptic_input[time_point:] += self._psp[:len(postsynaptic_input)-time_point]
 
 
 if __name__ == '__main__':
@@ -101,7 +126,41 @@ if __name__ == '__main__':
     # ===========================================
 
     # ===========================================
+    # connection = Connection(amplitude=10, latency=5)
+    # print(connection.get_psp())
+    # ===========================================
+
+    # ===========================================
+    # SIMULATION_LENGTH = 50
+    # postsynaptic_input = np.zeros(SIMULATION_LENGTH)
+    # connection = Connection(amplitude=10, latency=5, rise_time=5, decay_time=10)
+    # connection.act(2, postsynaptic_input)
+    # print(postsynaptic_input)
+    # connection.act(4, postsynaptic_input)
+    # print(postsynaptic_input)
+    # connection.act(40, postsynaptic_input)
+    # print(postsynaptic_input)
+    # ===========================================
+
+    # ===========================================
+    SIMULATION_LENGTH = 500
+    neuron_pre = Neuron(baseline_rate=0.005)
+    neuron_post = Neuron(baseline_rate=0.002)
     connection = Connection()
-    print(connection.psp)
+
+    postsynaptic_input = np.zeros(SIMULATION_LENGTH)
+
+    for i in range(SIMULATION_LENGTH):
+
+        is_firing = neuron_pre.act(i)
+        if is_firing:
+            connection.act(i, postsynaptic_input)
+        neuron_post.act(i, postsynaptic_input[i])
+
+    print(postsynaptic_input)
+    print(neuron_pre.get_action_history())
+    print(neuron_post.get_action_history())
+    # ===========================================
+
 
     print('debug...')
