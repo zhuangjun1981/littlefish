@@ -3,6 +3,8 @@ from __future__ import (absolute_import, division,
 from builtins import *
 import random
 import numpy as np
+import matplotlib.pyplot as plt
+import littlefish.utilities as util
 
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
 # per time unit
@@ -60,6 +62,8 @@ class Eye(Neuron):
     """
     Eye class is a subclass of neuron. With 0 baseline rate.
     """
+    # todo: add eye class
+    pass
 
 class Connection(object):
     """
@@ -143,10 +147,10 @@ if __name__ == '__main__':
     # ===========================================
 
     # ===========================================
-    SIMULATION_LENGTH = 500
+    SIMULATION_LENGTH = 500000
     neuron_pre = Neuron(baseline_rate=0.005)
     neuron_post = Neuron(baseline_rate=0.002)
-    connection = Connection()
+    connection = Connection(amplitude=0.01, latency=5)
 
     postsynaptic_input = np.zeros(SIMULATION_LENGTH)
 
@@ -157,9 +161,16 @@ if __name__ == '__main__':
             connection.act(i, postsynaptic_input)
         neuron_post.act(i, postsynaptic_input[i])
 
-    print(postsynaptic_input)
-    print(neuron_pre.get_action_history())
-    print(neuron_post.get_action_history())
+    spk_train_pre = neuron_pre.get_action_history()
+    spk_train_post = neuron_post.get_action_history()
+
+    # print(postsynaptic_input)
+    print(len(spk_train_pre))
+    print(len(spk_train_post))
+
+    ccg, t = util.discreat_crosscorrelation(np.array(spk_train_pre), np.array(spk_train_post))
+    plt.bar(t, ccg)
+    plt.show()
     # ===========================================
 
 
