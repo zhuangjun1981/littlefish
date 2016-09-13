@@ -5,6 +5,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import littlefish.utilities as util
+import time
 
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
 # per time unit
@@ -39,19 +40,25 @@ class Neuron(object):
         """
         return self._action_history
 
-    def act(self, t_point, input=0):
+    def act(self, t_point, base=None, input=0):
         """
         evaluate if the neuron will fire at given time point
+        :param base: float, a random number between 0 and 1, as base for deciding firing
         :param t_point: int, current time point as the index of time unit axis
         :param input: float, summed connection inputs, as add on to baseline_rate
         :return: bool, True: fire; False: quite
         """
 
+        if base is None:
+            base = random.random()
+        elif base < 0 or base >=1:
+            raise(ValueError, 'base should be no less than 0 and smaller than one.')
+
         if len(self._action_history) > 0 and t_point - self._action_history[-1] <= self._refractory_period:
             return False
         else:
             curr_rate = self._baseline_rate + input
-            if random.random() <= curr_rate:
+            if base <= curr_rate:
                 self._action_history.append(t_point)
                 # print(t_point)
                 return True
@@ -147,7 +154,8 @@ if __name__ == '__main__':
     # ===========================================
 
     # ===========================================
-    SIMULATION_LENGTH = 500000
+    t1 = time.time()
+    SIMULATION_LENGTH = 5000000
     neuron_pre = Neuron(baseline_rate=0.005)
     neuron_post = Neuron(baseline_rate=0.002)
     connection = Connection(amplitude=0.01, latency=5)
@@ -159,10 +167,12 @@ if __name__ == '__main__':
         is_firing = neuron_pre.act(i)
         if is_firing:
             connection.act(i, postsynaptic_input)
-        neuron_post.act(i, postsynaptic_input[i])
+        neuron_post.act(i, input=postsynaptic_input[i])
 
     spk_train_pre = neuron_pre.get_action_history()
     spk_train_post = neuron_post.get_action_history()
+
+    print(time.time()-t1)
 
     # print(postsynaptic_input)
     print(len(spk_train_pre))
