@@ -6,7 +6,6 @@ import os
 import sys
 package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(package_path)
-
 import fish.brain as brain
 import utilities as util
 import numpy as np
@@ -91,11 +90,26 @@ def test_neuron_connection():
     assert(np.argmax(ccg) == 15)
 
 
+def test_muscle_action():
+    SIMULATION_LENGTH = 20000
+    muscle = brain.Muscle(direction='east', baseline_rate=0., refractory_period=5000)
+    movements = []
+    for i in range(SIMULATION_LENGTH):
+        movement = muscle.act(i, probability_input=0.5, probability_base=0.1)
+        if movement:
+            movements.append(movement)
+    assert(movements == [(0, 1), (0, 1), (0, 1), (0, 1)])
+    assert(muscle.get_action_history() == [0, 5000, 10000, 15000])
+
+
 def run():
     test_connection_psp()
     test_connection_act()
     test_eye_get_input_pixels()
     test_neuron_connection()
+    test_muscle_action()
+
 
 if __name__ == '__main__':
+
     run()

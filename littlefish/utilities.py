@@ -44,6 +44,31 @@ def discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-10., 20.), bin
 
     return ccg, t_axis
 
+
+def get_random_number(distribution, shape):
+    """
+    get a random number from given distribution
+    :param distribution: tuple in the format, (distribution type, parameter1, parameter2, ...)
+                        supported: ('flat', mean, range)
+                                   ('gaussian, mean, sigma)
+                                   ('exponential', mean)
+    :param shape: output shape
+    :return: a random number
+    """
+    if distribution is None:
+        output = np.zeros(shape, dtype=np.float64)
+    elif distribution[0] == 'flat':
+        output = np.random.rand(*shape) * float(distribution[2]) - 0.5 * distribution[2] + distribution[1]
+    elif distribution[0] == 'gaussian':
+        output = np.random.randn(*shape) * float(distribution[2]) + float(distribution[1])
+    elif distribution[0] == 'exponential':
+        if distribution[1] <= 0:
+            raise(ValueError, 'The mean of the exponential distribution should be larger than 0!')
+        output = np.random.exponential(float(distribution[1]), shape)
+    else:
+        raise (LookupError, 'the first element of "noise" should be "gaussian", "flat" or "exponential"!')
+
+
 if __name__ == '__main__':
 
     #==================================================
