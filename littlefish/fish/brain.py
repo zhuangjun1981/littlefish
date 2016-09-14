@@ -2,18 +2,15 @@
 #                         print_function, unicode_literals)
 # from builtins import *
 
-import os
-import sys
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(package_path)
-import utilities as util
+import littlefish.utilities as util
+
 
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
 # per time unit
-SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
+SIMULATION_LENGTH = int(1e5) # number of time units in simulation
 
 
 class Neuron(object):
@@ -45,25 +42,19 @@ class Neuron(object):
         """
         return self._action_history
 
-    def act(self, t_point, probability_base=None, probability_input=0):
+    def act(self, t_point, probability_input=0):
         """
         evaluate if the neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
-        :param probability_base, float, a random number no less than 0 and less than 1 to determine if the neuron is
-                               going to act or not.
         :param probability_input: float, summed connection inputs, as add on to baseline_rate
         :return: bool, True: fire; False: quite
         """
-        if probability_base is None:
-            probability_base = random.random()
-        elif probability_base < 0 or probability_base >= 1:
-            raise (ValueError, 'probability_base should be no less than 0 and smaller than one.')
 
         if len(self._action_history) > 0 and t_point - self._action_history[-1] <= self._refractory_period:
             return False
         else:
             curr_rate = self._baseline_rate + probability_input
-            if probability_base <= curr_rate:
+            if random.random() <= curr_rate:
                 self._action_history.append(t_point)
                 # print(t_point)
                 return True
@@ -120,7 +111,7 @@ class Eye(Neuron):
         :param refractory_period: float, refractory_period in time unit
         """
 
-        super(Eye, self).__init__(baseline_rate=baseline_rate, refractory_period=refractory_period)
+        super(Eye, self).__init__(baseline_rate=baseline_rate,refractory_period=refractory_period)
 
         if len(position) != 2:
             raise(ValueError, 'position should have 2 elements.')
@@ -133,8 +124,8 @@ class Eye(Neuron):
         if direction in ['north', 'south', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']:
             self._direction = direction
         else:
-            raise(ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', "
-                              "'northwest', 'northeast', 'southwest', 'southeast'].")
+            raise(ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', 'northwest', "
+                              "'northeast', 'southwest', 'southeast'].")
 
         if input_filter is None:
             self._input_filter = np.array([0.2, 0.6, 0.2])
@@ -177,34 +168,34 @@ class Eye(Neuron):
         elif self._direction == 'northeast':
             ind = [[self._position[0],     self._position[1] + 1],
                    [self._position[0] - 1, self._position[1] + 1],
-                   [self._position[0] - 1, self._position[1]]]
+                   [self._position[0] - 1, self._position[1]    ]]
         elif self._direction == 'north':
             ind = [[self._position[0] - 1, self._position[1] + 1],
-                   [self._position[0] - 1, self._position[1]],
+                   [self._position[0] - 1, self._position[1]    ],
                    [self._position[0] - 1, self._position[1] - 1]]
         elif self._direction == 'northwest':
-            ind = [[self._position[0] - 1, self._position[1]],
+            ind = [[self._position[0] - 1, self._position[1]    ],
                    [self._position[0] - 1, self._position[1] - 1],
-                   [self._position[0],     self._position[1] - 1]]
+                   [self._position[0]    , self._position[1] - 1]]
         elif self._direction == 'west':
             ind = [[self._position[0] - 1, self._position[1] - 1],
-                   [self._position[0],     self._position[1] - 1],
+                   [self._position[0]    , self._position[1] - 1],
                    [self._position[0] + 1, self._position[1] - 1]]
         elif self._direction == 'southwest':
-            ind = [[self._position[0],     self._position[1] - 1],
+            ind = [[self._position[0]    , self._position[1] - 1],
                    [self._position[0] + 1, self._position[1] - 1],
-                   [self._position[0] + 1, self._position[1]]]
+                   [self._position[0] + 1, self._position[1]    ]]
         elif self._direction == 'south':
             ind = [[self._position[0] + 1, self._position[1] - 1],
-                   [self._position[0] + 1, self._position[1]],
+                   [self._position[0] + 1, self._position[1]    ],
                    [self._position[0] + 1, self._position[1] + 1]]
         elif self._direction == 'southeast':
-            ind = [[self._position[0] + 1, self._position[1]],
+            ind = [[self._position[0] + 1, self._position[1]    ],
                    [self._position[0] + 1, self._position[1] + 1],
-                   [self._position[0],     self._position[1] + 1]]
+                   [self._position[0]    , self._position[1] + 1]]
         else:
-            raise(ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', "
-                              "'northwest', 'northeast', 'southwest', 'southeast'].")
+            raise(ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', 'northwest', "
+                              "'northeast', 'southwest', 'southeast'].")
 
         # print(ind)
 
@@ -231,7 +222,7 @@ class Eye(Neuron):
         """
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
-        :param kwargs, border_value trace back to self._get_input_pixels
+        :param kwarg, border_value trace back to self._get_input_pixels
         :return: bool, True: fire; False: quite
         """
 
@@ -294,6 +285,8 @@ class Connection(object):
         :param postsynaptic_input: 1-d array of floats
         :return:
         """
+
+
         psp_end = time_point + len(self._psp)
         if psp_end <= len(postsynaptic_input):
             postsynaptic_input[time_point: psp_end] += self._psp
@@ -304,7 +297,6 @@ class Connection(object):
 if __name__ == '__main__':
 
     # =========================================================================================
-    # SIMULATION_LENGTH = 500000
     # neuron = Neuron()
     # for i in range(SIMULATION_LENGTH):
     #     neuron.act(i)
@@ -330,8 +322,8 @@ if __name__ == '__main__':
 
     # =========================================================================================
     SIMULATION_LENGTH = 500000
-    neuron_pre = Neuron(baseline_rate=0.0005)
-    neuron_post = Neuron(baseline_rate=0.0002)
+    neuron_pre = Neuron(baseline_rate=0.005)
+    neuron_post = Neuron(baseline_rate=0.002)
     connection = Connection(amplitude=0.01, latency=5)
 
     postsynaptic_input = np.zeros(SIMULATION_LENGTH)
@@ -363,10 +355,12 @@ if __name__ == '__main__':
     # print(world_map)
     #
     # eye = Eye(position=(2, 3), direction='south')
+    # print(eye._get_input(world_map=world_map))
     #
     # for i in range(SIMULATION_LENGTH):
     #     eye.act(i, world_map=world_map)
     # print(len(eye.get_action_history()))
     # =========================================================================================
+
 
     print('debug...')
