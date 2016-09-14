@@ -1,8 +1,9 @@
 # the 2-d terrain generator
 
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import *
+# from __future__ import (absolute_import, division,
+#                         print_function, unicode_literals)
+# from builtins import *
+
 import littlefish.utilities as util
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ class TerrainBase(object):
 
     def __init__(self,size=(256,256),sea_level=0.5):
         '''
-        :param size: size of map (height, width)
+        :param size: size of world_map (height, width)
         :param sea_level: a simple threshold
         '''
         self._size = size
@@ -26,7 +27,7 @@ class TerrainBase(object):
 
     def get_size(self):
         '''
-        :return: size of map (height, width)
+        :return: size of world_map (height, width)
         '''
         return self._size
 
@@ -38,8 +39,8 @@ class TerrainBase(object):
 
     def generate_float_map(self, sigma=0.):
         '''
-        generate a map with floating point with elevation [0., 1.]
-        :param sigma: filter sigma to filter the map
+        generate a world_map with floating point with elevation [0., 1.]
+        :param sigma: filter sigma to filter the world_map
         :return:
         '''
         float_map = np.random.random(self._size)
@@ -50,9 +51,9 @@ class TerrainBase(object):
 
     def generate_binary_map(self, sigma=0., is_plot=False):
         '''
-        :param sigma: filter sigma to filter the map
-        :param is_plot: if True, pop a plot of binary map
-        :return: a binary map with defined size, 0 means under water. 1 means above water
+        :param sigma: filter sigma to filter the world_map
+        :param is_plot: if True, pop a plot of binary world_map
+        :return: a binary world_map with defined size, 0 means under water. 1 means above water
         '''
         float_map = self.generate_float_map(sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)

@@ -1,6 +1,7 @@
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import *
+# from __future__ import (absolute_import, division,
+#                         print_function, unicode_literals)
+# from builtins import *
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -47,7 +48,7 @@ if __name__ == '__main__':
 
     #==================================================
     ts_trigger = np.arange(5)
-    ts_reference = np.arange(5) + 0.1
+    ts_reference = np.arange(5) + 0.1001
 
     ccg, t = discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-0.2, 0.5), bin_width=0.1)
 
