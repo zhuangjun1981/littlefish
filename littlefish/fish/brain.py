@@ -39,19 +39,25 @@ class Neuron(object):
         """
         return self._action_history
 
-    def act(self, t_point, probability_input=0):
+    def act(self, t_point, probility_base=None, probability_input=0):
         """
         evaluate if the neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
+        :param probility_base, float, a random number no less than 0 and less than 1 to determine if the neuron is
+                               going to act or not.
         :param probability_input: float, summed connection inputs, as add on to baseline_rate
         :return: bool, True: fire; False: quite
         """
+        if probility_base is None:
+            probility_base = random.random()
+        elif probility_base < 0 or probility_base >= 1:
+            raise (ValueError, 'probility_base should be no less than 0 and smaller than one.')
 
         if len(self._action_history) > 0 and t_point - self._action_history[-1] <= self._refractory_period:
             return False
         else:
             curr_rate = self._baseline_rate + probability_input
-            if random.random() <= curr_rate:
+            if probility_base <= curr_rate:
                 self._action_history.append(t_point)
                 # print(t_point)
                 return True
