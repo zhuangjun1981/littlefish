@@ -300,6 +300,66 @@ class Connection(object):
             postsynaptic_input[time_point:] += self._psp[:len(postsynaptic_input)-time_point]
 
 
+class Muscle(object):
+    """
+    muscle class for determining the motion of the fish
+    """
+
+    def __init__(self, threshold=10, integration_window=5000, refractory_period=10000):
+        """
+        :param threshold: int, if the number of actions detected in the integration_window is larger than this
+                          threshold, the muscle will try to excert movement
+        :param integration_window: int, the window duration in time unit the muscle integrates the inputs
+        :param refractory_period: int, the period in time unit that the muscle could not act after previous movement
+        """
+
+        self._threshold = int(threshold)
+        self._integration_window = int(integration_window)
+        self._refractory_period = int(refractory_period)
+        self._movement_history = []  # list of indices of action timestamps, list of ints
+        self._detected_actions = []  # list of input action timestamps within the integration window, list of ints
+
+    def get_movement_history(self):
+        """
+        return list of indices of movment timestamps, list of ints
+        note: this only record the attempts of movement, does not necessarily reflect the actual movement. i.e. the
+        attempts to move out of the terrain map will fail but the attempts will be saved in this variable
+        """
+        return self._movement_history
+
+    def _clear(self):
+        self._detected_actions = []
+
+    def move(self, t_point, action_input):
+        """
+
+        :param t_point: int, current timestamp in time unit axis
+        :param action_input: int, number of presynaptic input actions at this given time point
+        :return: True, if the muscle attempts to move
+                 False, if the muscle decides not to move
+        """
+
+        if not isinstance(action_input, int):
+            raise(ValueError, 'input should be an integer.')
+
+        # add inputs to self._detected_actions
+        self._detected_actions += [t_point] * action_input
+
+        # remove action in self._detected_actions outside the integration_window
+        self._detected_actions = [a for a in self._detected_actions if (t_point - a <= self._integration_window)]
+
+        if len(self._movement_history) > 0 and t_point - self._movement_history[-1] <= self._refractory_period:
+            # if current time is within the refractory period from last action
+            return False
+        else:
+            if len(self._detected_actions) >= self._threshold:
+                self._clear()
+                self._movement_history.append(t_point)
+                return True
+            else:
+                return False
+
+
 if __name__ == '__main__':
 
     # =========================================================================================
@@ -367,5 +427,16 @@ if __name__ == '__main__':
     #     eye.act(i, world_map=world_map)
     # print(len(eye.get_action_history()))
     # =========================================================================================
+
+    # =========================================================================================
+    SIMULATION_LENGTH = 20000
+    neuron = Neuron(baseline_rate=1.)
+    muscle = Muscle()
+    for i in range(SIMULATION_LENGTH):
+        is_action = neuron.act(i, probability_base=0.5, probability_input=0.)
+        if is_action:
+            muscle.move(i, action_input=1)
+    print(muscle.get_movement_history())
+
 
     print('debug...')
