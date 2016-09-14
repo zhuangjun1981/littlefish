@@ -8,9 +8,8 @@ package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(package_path)
 
 import fish.brain as brain
+import utilities as util
 import numpy as np
-
-SIMULATION_LENGTH = 50
 
 
 def test_connection_psp():
@@ -19,6 +18,7 @@ def test_connection_psp():
 
 
 def test_connection_act():
+    SIMULATION_LENGTH = 50
     connection = brain.Connection(amplitude=10, latency=5, rise_time=5, decay_time=10)
     postsynaptic_input = np.zeros(SIMULATION_LENGTH)
     connection.act(2, postsynaptic_input)
@@ -70,10 +70,32 @@ def test_eye_get_input_pixels():
     assert (np.array_equal(eye._get_input_pixels(map), [0, 0, 1]))
 
 
+def test_neuron_connection():
+    SIMULATION_LENGTH = 5000
+    neuron_pre = brain.Neuron(baseline_rate=0.005)
+    neuron_post = brain.Neuron(baseline_rate=0.000)
+    connection = brain.Connection(amplitude=1, latency=5, rise_time=1, decay_time=1)
+
+    postsynaptic_input = np.zeros(SIMULATION_LENGTH)
+
+    for i in range(SIMULATION_LENGTH):
+
+        is_firing = neuron_pre.act(i)
+        if is_firing:
+            connection.act(i, postsynaptic_input)
+        neuron_post.act(i, probability_input=postsynaptic_input[i])
+
+    spk_train_pre = neuron_pre.get_action_history()
+    spk_train_post = neuron_post.get_action_history()
+    ccg, t = util.discreat_crosscorrelation(np.array(spk_train_pre), np.array(spk_train_post))
+    assert(np.argmax(ccg) == 15)
+
+
 def run():
     test_connection_psp()
     test_connection_act()
     test_eye_get_input_pixels()
+    test_neuron_connection()
 
 if __name__ == '__main__':
     run()
