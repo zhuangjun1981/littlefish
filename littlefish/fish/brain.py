@@ -1,9 +1,15 @@
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import *
+# from __future__ import (absolute_import, division,
+#                         print_function, unicode_literals)
+# from builtins import *
+
+import os
+import sys
 import random
 import numpy as np
-
+import matplotlib.pyplot as plt
+package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(package_path)
+import utilities as util
 
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
 # per time unit
@@ -39,25 +45,25 @@ class Neuron(object):
         """
         return self._action_history
 
-    def act(self, t_point, probility_base=None, probability_input=0):
+    def act(self, t_point, probability_base=None, probability_input=0):
         """
         evaluate if the neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
-        :param probility_base, float, a random number no less than 0 and less than 1 to determine if the neuron is
+        :param probability_base, float, a random number no less than 0 and less than 1 to determine if the neuron is
                                going to act or not.
         :param probability_input: float, summed connection inputs, as add on to baseline_rate
         :return: bool, True: fire; False: quite
         """
-        if probility_base is None:
-            probility_base = random.random()
-        elif probility_base < 0 or probility_base >= 1:
-            raise (ValueError, 'probility_base should be no less than 0 and smaller than one.')
+        if probability_base is None:
+            probability_base = random.random()
+        elif probability_base < 0 or probability_base >= 1:
+            raise (ValueError, 'probability_base should be no less than 0 and smaller than one.')
 
         if len(self._action_history) > 0 and t_point - self._action_history[-1] <= self._refractory_period:
             return False
         else:
             curr_rate = self._baseline_rate + probability_input
-            if probility_base <= curr_rate:
+            if probability_base <= curr_rate:
                 self._action_history.append(t_point)
                 # print(t_point)
                 return True
@@ -298,6 +304,7 @@ class Connection(object):
 if __name__ == '__main__':
 
     # =========================================================================================
+    # SIMULATION_LENGTH = 500000
     # neuron = Neuron()
     # for i in range(SIMULATION_LENGTH):
     #     neuron.act(i)
@@ -322,44 +329,44 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    # SIMULATION_LENGTH = 500000
-    # neuron_pre = Neuron(baseline_rate=0.005)
-    # neuron_post = Neuron(baseline_rate=0.002)
-    # connection = Connection(amplitude=0.01, latency=5)
-    #
-    # postsynaptic_input = np.zeros(SIMULATION_LENGTH)
-    #
-    # for i in range(SIMULATION_LENGTH):
-    #
-    #     is_firing = neuron_pre.act(i)
-    #     if is_firing:
-    #         connection.act(i, postsynaptic_input)
-    #     neuron_post.act(i, postsynaptic_input[i])
-    #
-    # spk_train_pre = neuron_pre.get_action_history()
-    # spk_train_post = neuron_post.get_action_history()
-    #
-    # # print(postsynaptic_input)
-    # print(len(spk_train_pre))
-    # print(len(spk_train_post))
-    #
-    # ccg, t = util.discreat_crosscorrelation(np.array(spk_train_pre), np.array(spk_train_post))
-    # plt.bar(t, ccg)
-    # plt.show()
-    # =========================================================================================
+    SIMULATION_LENGTH = 500000
+    neuron_pre = Neuron(baseline_rate=0.0005)
+    neuron_post = Neuron(baseline_rate=0.0002)
+    connection = Connection(amplitude=0.01, latency=5)
 
-    # =========================================================================================
-    SIMULATION_LENGTH = 100000
-
-    world_map = np.zeros((5, 5), dtype=np.uint8)
-    world_map[3, 3] = 1
-    print(world_map)
-
-    eye = Eye(position=(2, 3), direction='south')
+    postsynaptic_input = np.zeros(SIMULATION_LENGTH)
 
     for i in range(SIMULATION_LENGTH):
-        eye.act(i, world_map=world_map)
-    print(len(eye.get_action_history()))
+
+        is_firing = neuron_pre.act(i)
+        if is_firing:
+            connection.act(i, postsynaptic_input)
+        neuron_post.act(i, postsynaptic_input[i])
+
+    spk_train_pre = neuron_pre.get_action_history()
+    spk_train_post = neuron_post.get_action_history()
+
+    # print(postsynaptic_input)
+    print(len(spk_train_pre))
+    print(len(spk_train_post))
+
+    ccg, t = util.discreat_crosscorrelation(np.array(spk_train_pre), np.array(spk_train_post))
+    plt.bar(t, ccg)
+    plt.show()
+    # =========================================================================================
+
+    # =========================================================================================
+    # SIMULATION_LENGTH = 100000
+    #
+    # world_map = np.zeros((5, 5), dtype=np.uint8)
+    # world_map[3, 3] = 1
+    # print(world_map)
+    #
+    # eye = Eye(position=(2, 3), direction='south')
+    #
+    # for i in range(SIMULATION_LENGTH):
+    #     eye.act(i, world_map=world_map)
+    # print(len(eye.get_action_history()))
     # =========================================================================================
 
     print('debug...')
