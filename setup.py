@@ -15,7 +15,7 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = read('readme.md')
+long_description = read('README.md')
 
 def prepend_find_packages(*roots):
     '''
