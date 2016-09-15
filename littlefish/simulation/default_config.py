@@ -32,7 +32,7 @@ def generate_default_config_file(save_path):
             'EYE_DIRECTIONS': ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast'],
             'EYE_BASELINE_RATE': 0.,
             'EYE_REFRACTORY_PERIOD': 10,
-            'EYE_BORDER_VALUE': 1.,
+            'EYE_BORDER_VALUE': 1,
 
             'NEURON_REFRACTORY_PERIOD': 10,
             'NEURON_BASELINE_RATE': 0.00001,

@@ -20,7 +20,7 @@ SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
 EYE_GAIN = 0.001
 EYE_BASELINE_RATE = 0.
 EYE_REFRACTORY_PERIOD = 10
-EYE_BORDER_VALUE = 1.
+EYE_BORDER_VALUE = 1
 EYE_INPUT_FILTER = np.array([0.2, 0.6, 0.2])
 EYE2_INPUT_FILTER = np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1])
 EYE_DIRECTIONS = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
@@ -66,6 +66,9 @@ class Neuron(object):
         :return: action_history, list of ints, timing of all actions as indices in time axis of time unit
         """
         return self._action_history
+
+    def reset_action_history(self):
+        self._action_history = []
 
     def act(self, t_point, probability_input=0., probability_base=None):
         """
@@ -219,7 +222,7 @@ class Eye(Neuron):
         input_pixels = []
 
         for cor in ind:
-            if cor[0] < 0 or cor[0] > world_map.shape[0] or cor[1] < 0 or cor[1] >= world_map.shape[1]:
+            if cor[0] < 0 or cor[0] >= world_map.shape[0] or cor[1] < 0 or cor[1] >= world_map.shape[1]:
                 input_pixels.append(border_value)
             else:
                 input_pixels.append(world_map[cor[0], cor[1]])
@@ -412,7 +415,7 @@ class Eye2(Neuron):
         input_pixels = []
 
         for cor in ind:
-            if cor[0] < 0 or cor[0] > world_map.shape[0] or cor[1] < 0 or cor[1] >= world_map.shape[1]:
+            if cor[0] < 0 or cor[0] >= world_map.shape[0] or cor[1] < 0 or cor[1] >= world_map.shape[1]:
                 input_pixels.append(border_value)
             else:
                 input_pixels.append(world_map[cor[0], cor[1]])
@@ -642,6 +645,8 @@ class Brain(object):
         else:
             self._generate_connections(connections_df)
 
+        self._psp_waveforms = None
+
     def _generate_neurons(self, neurons_df, verbose_level=1):
         """
         generate a dataframe containing actual Neuron objects from a dataframe containing neuron parameters.
@@ -740,8 +745,89 @@ class Brain(object):
                   ' neurons has been generated.')
             print(self._connections)
 
+    def act(self, t_point, body_position, world_map, food_map=None):
+        """
+        :param t_point: int, current time stamp of time unit axis
+        :param body_position: tuple of two ints, (row, col), current position of body center of the fish
+        :param world_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
+        :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
+        :return: movement attemps: tuple of 2 ints, represting the movement attempt, be careful, this may not
+                                   represent the actual movement, it will be evaluated by the fish object (fish class)
+                                   containing this brain to see if the movement is possible. if the fish is hitting
+                                   the edge the world map, then the it will not move out of the map
+                                   None: no movement has been attempted,
+        """
+        if len(body_position) != 2:
+            raise (ValueError, 'body_position should contain two elements.')
+
+        if (not isinstance(body_position[0], int)) or (not isinstance(body_position[1], int)):
+            raise (ValueError, 'body_position should contain two integers.')
+
+        if len(world_map.shape) != 2:
+            raise(ValueError, 'world_map should be a 2-d array.')
+
+        if not np.issubdtype(world_map.dtype, np.integer):
+            raise(ValueError, 'dtype of world_map should be integer.')
+
+        if np.max(world_map) > 1 or np.min(world_map) < 0:
+            raise(ValueError, 'world_map should only contain 0s and 1s.')
+
+        if body_position[0] < 1 or body_position[0] > world_map.shape[0] - 2 or \
+            body_position[1] < 1 or body_position[1] > world_map.shape[1] - 2:
+            raise(ValueError, 'body_position out of the range.')
+
+        if not self.has_psp_waveforms():
+            self._generate_empty_psp_waveforms()
+
+        # todo: finish this method.
+
+    def has_action_histories(self):
+        for neuron in self._neurons['neuron']:
+            if len(neuron.get_action_history()) > 0:
+                return True
+        return False
+
+    def has_psp_waveforms(self):
+        if self._psp_waveforms is not None:
+            return True
+        else:
+            return False
+
+    def _generate_empty_psp_waveforms(self):
+        if self.has_psp_waveforms():
+            raise(ValueError, 'Brain: can not generate empty psp waveforms, psp waveforms already exist.')
+        neuron_layers = self._neurons['layer']
+        postsynaptic_neuron_num = len(neuron_layers[neuron_layers > 0])
+        self._psp_waveforms = np.zeros((postsynaptic_neuron_num, SIMULATION_LENGTH), dtype=np.float32)
+        print('\nBrain: empty psp waveforms created. shape: '+ str(self._psp_waveforms.shape))
+
+    def _clear_psp_waveforms(self):
+        if self.has_psp_waveforms():
+            self._psp_waveforms = None
+            print('Brain: all psp waveforms deleted.')
+        else:
+            print('Brain: no psp waveforms found. Do nothing.')
+
+    def _clear_action_histories(self):
+        if self.has_action_histories():
+            for neuron in self._neurons['neuron']:
+                neuron.reset_action_history([])
+            print('Brain: action histories of all neurons have been deleted.')
+        else:
+            print('Brain: no action history is found for any neuron. Do nothing.')
+
+    def clear_simulation_data(self):
+        self._clear_psp_waveforms()
+        self._clear_action_histories()
+
     def to_h5_group(self):
         pass
+
+    def get_neurons(self):
+        return self._neurons
+
+    def get_connections(self):
+        return self._connections
 
     @staticmethod
     def from_h5_group(h5_group):
@@ -934,6 +1020,8 @@ if __name__ == '__main__':
 
     # =========================================================================================
     brain = Brain()
+    # print(brain.has_action_histories())
+    brain._generate_empty_psp_waveforms()
     # =========================================================================================
 
     print('debug...')

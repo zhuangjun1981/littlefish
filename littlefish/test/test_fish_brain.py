@@ -69,6 +69,38 @@ def test_eye_get_input_pixels():
     assert (np.array_equal(eye._get_input_pixels(position=(0, 0), world_map=world_map), [0, 0, 1]))
 
 
+def test_eye2_get_input_pixels():
+
+    world_map = np.zeros((5, 5), dtype=np.uint8)
+    world_map[3, 3] = 1
+    world_map[2, 2] = 1
+    world_map[2, 1] = 1
+    world_map[1, 1] = 1
+
+    eye2 = brain.Eye2(direction='south')
+    assert(np.array_equal(eye2._get_input_pixels(position=(2, 3), world_map=world_map), [0, 1, 0, 0, 0, 0]))
+    eye2 = brain.Eye2(direction='southeast')
+    assert (np.array_equal(eye2._get_input_pixels(position=(2, 3), world_map=world_map), [1, 0, 0, 0, 1, 1]))
+    eye2 = brain.Eye2(direction='east')
+    assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), world_map=world_map), [0, 1, 0, 0, 0, 0]))
+    eye2 = brain.Eye2(direction='northeast')
+    assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), world_map=world_map), [1, 0, 1, 0, 0, 0]))
+    eye2 = brain.Eye2(direction='north')
+    assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), world_map=world_map), [0, 1, 1, 0, 0, 1]))
+    eye2 = brain.Eye2(direction='northwest')
+    assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), world_map=world_map), [1, 1, 0, 1, 0, 0]))
+    eye2 = brain.Eye2(direction='west')
+    assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), world_map=world_map), [1, 0, 0, 0, 0, 0]))
+    eye2 = brain.Eye2(direction='southwest')
+    assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), world_map=world_map), [0, 0, 0, 0, 1, 1]))
+    eye2 = brain.Eye2(direction='north')
+    assert (np.array_equal(eye2._get_input_pixels(position=(0, 0), world_map=world_map), [1, 1, 1, 1, 1, 1]))
+    eye2 = brain.Eye2(direction='northeast')
+    assert (np.array_equal(eye2._get_input_pixels(position=(0, 0), world_map=world_map), [0, 1, 1, 1, 1, 1]))
+    eye2 = brain.Eye2(direction='east')
+    assert (np.array_equal(eye2._get_input_pixels(position=(0, 0), world_map=world_map), [1, 0, 1, 0, 0, 1]))
+
+
 def test_neuron_connection():
     SIMULATION_LENGTH = 5000
     neuron_pre = brain.Neuron(baseline_rate=0.005)
@@ -102,12 +134,22 @@ def test_muscle_action():
     assert(muscle.get_action_history() == [0, 5000, 10000, 15000])
 
 
+def test_brain_default():
+    brain1 = brain.Brain()
+    assert(len(brain1.get_neurons()) == 20)
+    assert(len(brain1.get_connections()) == 96)
+    assert(not brain1.has_action_histories())
+    assert(not brain1.has_psp_waveforms())
+
+
 def run():
     test_connection_psp()
     test_connection_act()
     test_eye_get_input_pixels()
+    test_eye2_get_input_pixels()
     test_neuron_connection()
     test_muscle_action()
+    test_brain_default()
 
 
 if __name__ == '__main__':
