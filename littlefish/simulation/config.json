@@ -47,6 +47,7 @@
         "FISH_MAX_HEALTH": 100.0
     },
     "simulation": {
+        "RANDOM_SEED": 123,
         "SIMULATION_LENGTH": 100000
     }
 }

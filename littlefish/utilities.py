@@ -69,6 +69,19 @@ def get_random_number(distribution, shape):
         raise (LookupError, 'the first element of "noise" should be "gaussian", "flat" or "exponential"!')
 
 
+def int2str(num,length=None):
+    '''
+    generate a string representation for a integer with a given length
+    :param num: input number
+    :param length: length of the string
+    :return: string represetation of the integer
+    '''
+    rawstr = str(int(num))
+    if length is None or length == len(rawstr):return rawstr
+    elif length < len(rawstr): raise ValueError, 'Length of the number is longer then defined display length!'
+    elif length > len(rawstr): return '0'*(length-len(rawstr)) + rawstr
+
+
 if __name__ == '__main__':
 
     #==================================================

@@ -522,10 +522,23 @@ class Connection(object):
         :param decay_time: int, temporal duration from peak to baseline, number of time units
         """
 
-        self._latency = latency
-        self._amplitude = float(amplitude)
-        self._rise_time = rise_time
-        self._decay_time = decay_time
+        if latency is not None:
+            if not isinstance(latency, int):
+                raise (ValueError, 'latency should be an integer.')
+            self._latency = latency
+
+        if amplitude is not None:
+            self._amplitude = float(amplitude)
+
+        if rise_time is not None:
+            if not isinstance(rise_time, int):
+                raise (ValueError, 'rise_time should be an integer.')
+            self._rise_time = rise_time
+
+        if decay_time is not None:
+            if not isinstance(decay_time, int):
+                raise (ValueError, 'decay_time should be an integer.')
+            self._decay_time = decay_time
 
         self._generate_psp()
 
@@ -536,9 +549,9 @@ class Connection(object):
 
         self._psp = np.zeros(self._latency + self._rise_time + self._decay_time)
         self._psp[self._latency: self._latency + self._rise_time] = self._amplitude * \
-            (np.arange(self._rise_time, dtype=np.float32) + 1) / self._rise_time
+            (np.arange(self._rise_time) + 1).astype(np.float32) / float(self._rise_time)
         self._psp[-self._decay_time:] = self._amplitude * \
-            (np.arange(self._decay_time, 0, -1, dtype=np.float32) - 1) / self._decay_time
+            (np.arange(self._decay_time, 0, -1) - 1).astype(np.float32) / float(self._decay_time)
 
     def get_psp(self):
         return self._psp
@@ -611,16 +624,151 @@ class Brain(object):
     (brain.Connections object). Number of layers and number of neurons can be specified.
     """
 
-    def __init__(self):
+    def __init__(self, neurons_df=None, connections_df=None):
+        """
+
+        :param neurons_df:
+        :param connections_df:
+        """
+
+        if neurons_df is None:
+            neurons_df = self.generate_default_neurons_df()
+            self._generate_neurons(neurons_df)
+        else:
+            self._generate_neurons(neurons_df)
+
+        if connections_df is None:
+            self._generate_connections(self.generate_default_connections_df(neurons_df))
+        else:
+            self._generate_connections(connections_df)
+
+    def _generate_neurons(self, neurons_df, verbose_level=1):
+        """
+        generate a dataframe containing actual Neuron objects from a dataframe containing neuron parameters.
+        assign it to self._neurons
+        """
+
+        self._neurons = pd.DataFrame(columns=['layer', 'type', 'neuron_id', 'neuron'])
+
+        for i, row in neurons_df.iterrows():
+            if 'baseline_rate' not in neurons_df.columns.values.tolist():
+                baseline_rate = NEURON_BASELINE_RATE
+            else:
+                baseline_rate = row.baseline_rate
+
+            if 'refractory_period' not in neurons_df.columns.values.tolist():
+                refractory_period = NEURON_REFRACTORY_PERIOD
+            else:
+                refractory_period = row.refractory_period
+
+            self._neurons.loc[i] = [row.layer, row.type, row.neuron_id, Neuron(baseline_rate, refractory_period)]
+
+        self._neurons['layer'] = self._neurons['layer'].astype(np.uint32)
+        self._neurons['neuron_id'] = self._neurons['neuron_id'].astype(np.uint32)
+
+        if verbose_level == 0:
+            print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.\n')
+        elif verbose_level == 1:
+            print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
+            layer_num = max(self._neurons['layer']) + 1
+            for layer in range(layer_num):
+                layer_name = self.get_layer_name(layer, layer_num)
+                neuron_num = len(self._neurons[self._neurons.layer == layer])
+                print(layer_name + ' : ' + str(neuron_num) + ' neurons.')
+        elif verbose_level == 2:
+            print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
+            print(self._neurons)
+            print('\n')
+
+    def _generate_connections(self, connections_df, verbose_level=1):
+        """
+        generate a dataframe containing actual Connection objects from a dataframe containing connection parameters.
+        assign it to self._connections
+        """
+        self._connections = pd.DataFrame(columns=['presynaptic_layer', 'presynaptic_neuron_ind',
+                                                  'postsynaptic_layer', 'postsynaptic_neuron_ind', 
+                                                  'connection'])
+        for i, row in connections_df.iterrows():
+
+            if 'latency' not in connections_df.columns.values.tolist():
+                latency = CONNECTION_LATENCY
+            else:
+                latency = int(row.latency)
+
+            if 'amplitude' not in connections_df.columns.values.tolist():
+                amplitude = CONNECTION_AMPLITUDE
+            else:
+                amplitude = float(row.amplitude)
+
+            if 'rise_time' not in connections_df.columns.values.tolist():
+                rise_time = CONNECTION_RISE_TIME
+            else:
+                rise_time = int(row.rise_time)
+
+            if 'decay_time' not in connections_df.columns.values.tolist():
+                decay_time = CONNECTION_DECAY_TIME
+            else:
+                decay_time = int(row.decay_time)
+
+            self._connections.loc[i] = [row.presynaptic_layer, row.presynaptic_neuron_ind,
+                                        row.postsynaptic_layer, row.postsynaptic_neuron_ind,
+                                        Connection(latency, amplitude, rise_time, decay_time)]
+
+        self._connections['presynaptic_layer'] = self._connections['presynaptic_layer'].astype(np.uint32)
+        self._connections['postsynaptic_layer'] = self._connections['postsynaptic_layer'].astype(np.uint32)
+        self._connections['presynaptic_neuron_ind'] = self._connections['presynaptic_neuron_ind'].astype(np.uint32)
+        self._connections['postsynaptic_neuron_ind'] = self._connections['postsynaptic_neuron_ind'].astype(np.uint32)
+
+        if verbose_level == 0:
+            print('\nBrain: self._connections dataframe with ' + str(len(self._connections)) +
+                  ' neurons has been generated.\n')
+        if verbose_level == 1:
+            print('\nBrain: self._connections dataframe with ' + str(len(self._connections)) +
+                  ' neurons has been generated.')
+            presynaptic_layer_num = max(self._connections.presynaptic_layer) + 1
+            for presynaptic_layer in range(presynaptic_layer_num):
+                postsynaptic_layer = presynaptic_layer + 1
+                connection_num = len(self._connections[(self._connections.presynaptic_layer == presynaptic_layer) & \
+                        (self._connections.postsynaptic_layer == postsynaptic_layer)])
+                presynaptic_layer_name = self.get_layer_name(presynaptic_layer, presynaptic_layer_num + 1)
+                postsynaptic_layer_name = self.get_layer_name(postsynaptic_layer, presynaptic_layer_num + 1)
+                print('number of connections from "' + presynaptic_layer_name + '" to "' + postsynaptic_layer_name +
+                      '": ' + str(connection_num))
+            print('\n')
+        if verbose_level == 2:
+            print('\nBrain: self._connections dataframe with ' + str(len(self._connections)) +
+                  ' neurons has been generated.')
+            print(self._connections)
+
+    def to_h5_group(self):
         pass
+
+    @staticmethod
+    def from_h5_group(h5_group):
+        pass
+
+    @staticmethod
+    def get_layer_name(layer_ind, layer_num):
+        """
+        return name of a layer given the total number of layers and index of the layer
+        """
+        if layer_num < 3:
+            raise(ValueError, 'layer_num should be no less than 3.')
+
+        if layer_ind == 0:
+            layer_name = 'eye layer'
+        elif layer_ind == layer_num - 1:
+            layer_name = 'muscle layer'
+        else:
+            layer_name = 'hidden layer ' + util.int2str(layer_ind, 2)
+        return layer_name
     
     @staticmethod
     def generate_default_neurons_df():
         """
-        
-        :return: 
+        generate and return a dataframe containing all neurons with default parameters
         """
-        neurons = pd.DataFrame(columns=['layer', 'type', 'set_id', 'baseline_rate', 'refractory_period'])
+        neurons = pd.DataFrame(columns=['layer', 'type', 'neuron_id', 'baseline_rate', 'refractory_period'])
 
         ind = 0
         for i in range(8):
@@ -636,7 +784,7 @@ class Brain(object):
             ind += 1
 
         neurons['layer'] = neurons['layer'].astype(np.uint32)
-        neurons['set_id'] = neurons['set_id'].astype(np.uint32)
+        neurons['neuron_id'] = neurons['neuron_id'].astype(np.uint32)
         neurons['baseline_rate'] = neurons['baseline_rate'].astype(np.float64)
         neurons['refractory_period'] = neurons['refractory_period'].astype(np.uint64)
 
@@ -645,21 +793,20 @@ class Brain(object):
     @staticmethod
     def generate_default_connections_df(neurons_df):
         """
-
-        :return:
+        from a dataframe containing parameters of all neurons, generate and return a dataframe containing all
+        connections with default parameters
         """
         layer_num = np.max(neurons_df['layer']) + 1
 
-        connections = pd.DataFrame(columns=['presynaptic_layer', 'presynaptic_set_ind',
-                                            'postsynaptic_layer', 'postsynaptic_set_ind',
+        connections = pd.DataFrame(columns=['presynaptic_layer', 'presynaptic_neuron_ind',
+                                            'postsynaptic_layer', 'postsynaptic_neuron_ind',
                                             'latency', 'amplitude', 'rise_time', 'decay_time'])
 
         ind = 0
-
         for pre_layer in range(layer_num-1):
             post_layer = pre_layer + 1
-            pre_layer_neuron_num = max(neurons_df[neurons_df['layer']==pre_layer]['set_id']) + 1
-            post_layer_neuron_num = max(neurons_df[neurons_df['layer'] == post_layer]['set_id']) + 1
+            pre_layer_neuron_num = max(neurons_df[neurons_df['layer']==pre_layer]['neuron_id']) + 1
+            post_layer_neuron_num = max(neurons_df[neurons_df['layer'] == post_layer]['neuron_id']) + 1
 
             for i in range(pre_layer_neuron_num):
                 for j in range(post_layer_neuron_num):
@@ -672,14 +819,14 @@ class Brain(object):
 
         connections['presynaptic_layer'] = connections['presynaptic_layer'].astype(np.uint32)
         connections['postsynaptic_layer'] = connections['postsynaptic_layer'].astype(np.uint32)
-        connections['presynaptic_set_ind'] = connections['presynaptic_set_ind'].astype(np.uint32)
-        connections['postsynaptic_set_ind'] = connections['postsynaptic_set_ind'].astype(np.uint32)
+        connections['presynaptic_neuron_ind'] = connections['presynaptic_neuron_ind'].astype(np.uint32)
+        connections['postsynaptic_neuron_ind'] = connections['postsynaptic_neuron_ind'].astype(np.uint32)
         connections['latency'] = connections['latency'].astype(np.uint64)
         connections['amplitude'] = connections['amplitude'].astype(np.float)
         connections['rise_time'] = connections['rise_time'].astype(np.uint64)
         connections['decay_time'] = connections['decay_time'].astype(np.uint64)
 
-        print(connections)
+        return connections
 
 
 if __name__ == '__main__':
@@ -763,8 +910,30 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
+    # brain = Brain()
+    # neurons_df = brain.generate_default_neurons_df()
+    # connections_df = brain.generate_default_connections_df(neurons_df)
+    # =========================================================================================
+
+    # =========================================================================================
+    # SIMULATION_LENGTH = 100000
+    #
+    # world_map = np.zeros((5, 5), dtype=np.uint8)
+    # world_map[3, 3] = 1
+    # print(world_map)
+    #
+    # eye = Eye2(direction='south')
+    # position = (2, 3)
+    # print(eye._get_input_pixels(position=position, world_map=world_map))
+    # print(eye._get_input(position=position, world_map=world_map))
+    #
+    # for i in range(SIMULATION_LENGTH):
+    #     eye.act(t_point=i, position=position, world_map=world_map)
+    # print(len(eye.get_action_history()))
+    # =========================================================================================
+
+    # =========================================================================================
     brain = Brain()
-    neurons_df = brain.generate_default_neurons_df()
-    connections_df = brain.generate_default_connections_df(neurons_df)
+    # =========================================================================================
 
     print('debug...')
