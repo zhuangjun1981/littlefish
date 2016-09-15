@@ -4,6 +4,7 @@
 
 import json
 import os
+import numpy as np
 
 
 def generate_default_config_file(save_path):
@@ -18,7 +19,16 @@ def generate_default_config_file(save_path):
             'SIMULATION_LENGTH' : int(1e5), # number of time units (consider 0.1 ms per time unit) for simulation
         }
 
-    config_dict.update({ 'simulation' : config_dict_simulation})
+    config_dict_brain = \
+        {
+            'EYE_GAIN' : 0.001,
+            'EYE_INPUT_FILTER' : [0.2, 0.6, 0.2],
+            'EYE_DIRECTIONS' : ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast'],
+            'MUSCLE_DIRECTIONS' : ['east', 'north', 'west', 'south']
+        }
+
+    config_dict.update({ 'simulation' : config_dict_simulation,
+                         'brain': config_dict_brain})
 
     with open(save_path, 'w') as f:
         json.dump(config_dict, f, indent=4, separators=(',',': '))

@@ -6,114 +6,135 @@ import brain as brain
 import numpy as np
 import pandas as pd
 
+SIMULATION_LENGTH = 100000
+
 class Fish(object):
     """
     the main fish class
 
     a 'fish' has a body occupies a 3x3 space.
 
-    a 'fish' has a couple of sets of 8 eyes (brain.Eye object, each at each border pixel of the body). each set of eyes
-    are receiving inputs from different objects. i.e. one set of eyes will look at land/water, another set of eyes will
-    look for food, another set of eyes will look for other fish.
-
-    a 'fish' has 4 invisible muscles (brain.Muscle object, each controlling the movement in each direction), each
-    muscle receive inputs from one motor neuron (so the output layer of the fish's brain will be 4 motor neurons)
-
-    between eyes and muscles are a neural network consists of neurons (brain.Neuron object) and connections
-    (brain.Connections object). Number of layers and number of neurons can be specified. fish will have health point
-    (going down over time and increase after eating a food). fish moves around in a 2d landscape (2-d binary map,
-    0 represents water, 1 represents land), when hits land, health point will go down quickly.
+    a 'fish' has health point (goes down over time and increases after eating a food). fish moves around in a 2d
+    landscape (2-d binary map, 0 represents water, 1 represents land), when hits land, health point will go down
+    quickly.
 
     the purpose of simulation is to train the fish use its eyes, brain and muscles to avoid land and look for food.
 
     the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
     millisecond.
+
+    self._simulation_status: 0, has not simulated
+                             1, during simulation
+                             2, after simulation
+
+    self._position_history: pandas dataframe, columns: ['t_point', 'row', 'column']
     """
 
-    def __init__(self, position, health=100., eyes=None, hidden_layers=None, muscles=None,
-                 health_decay_rate=0.001):
+    def __init__(self, brain=None, max_health=100., health_decay_rate=0.001):
 
 
-        if len(position) != 2:
-            raise(ValueError, 'position should contain two elements.')
-
-        if (not isinstance(position[0], int)) or (not isinstance(position[1], int)):
-            raise(ValueError, 'position should contain two integers.')
-
-        self._position = position
-        self._health = float(health)
+        self._max_health = float(max_health)
         self._health_decay_rate = float(health_decay_rate)
 
-        if eyes is None:
-            self._eyes = {'eye_set_terrain': self._get_default_eye_set(),
-                          'eye_set_food': self._get_default_eye_set()}
+        if brain is None:
+            self._brain = brain.Brain()
         else:
-            self._eyes = eyes
+            self._brain = brain
 
-        if hidden_layers is None:
-            self._hidden_layers = {'hidden_layers_001': self._get_default_hidden_layer()}
-        else:
-            self._hidden_layers = hidden_layers
+        self._simulation_status = 0
+        self._curr_position = (None, None)
+        self._curr_health = None
+        self._position_history = pd.DataFrame(columns=['t_point', 'row', 'column'])
 
-        if muscles is None:
-            # todo: function to get default muscles
+    def get_simulation_status(self):
+        return self._simulation_status
+
+    def get_curr_position(self):
+        return self._curr_position
+
+    def get_curr_health(self):
+        return self._curr_health
+
+    def initialize_simulation(self, curr_position=(10, 10), world_map=np.zeros((20, 20), dtype=np.uint8)):
+        """
+        create all psp waveforms as internal attributes
+        turn self._simulation_status to be 1
+        """
+        if len(curr_position) != 2:
+            raise (ValueError, 'curr_position should contain two elements.')
+
+        if (not isinstance(curr_position[0], int)) or (not isinstance(curr_position[1], int)):
+            raise (ValueError, 'curr_position should contain two integers.')
+
+        if len(world_map.shape) != 2:
+            raise(ValueError, 'world_map should be a 2-d array.')
+
+        if not np.issubdtype(world_map.dtype, np.integer):
+            raise(ValueError, 'dtype of world_map should be integer.')
+
+        if np.max(world_map) > 1 or np.min(world_map) < 0:
+            raise(ValueError, 'world_map should only contain 0s and 1s.')
+
+        if curr_position[0] < 1 or curr_position[0] > world_map.shape[0] - 2 or \
+            curr_position[1] < 1 or curr_position[1] > world_map.shape[1] - 2:
+            raise(ValueError, 'curr_position out of the range.')
+
+        if np.sum(world_map[curr_position[0] - 1: curr_position[0] + 2,
+                            curr_position[1] - 1: curr_position[1] + 2,]) > 0:
+            raise(ValueError, 'the body of fish at curr_position cover 1s.')
+
+        if self._simulation_status == 0:  # has not been simulated
+
+            self._curr_position = curr_position
+            self._curr_health = self._max_health
+            self._position_history.append(pd.DataFrame([[0, self._curr_position[0], self._curr_position[1]]],
+                                                       columns=['t_point', 'row', 'column']),
+                                          ignore_index=True)
+            self._simulation_status = 1
+            print('Fish: Simulation initialization successful.')
+            return True
+        elif self._simulation_status == 1:
+            raise(RuntimeError, 'Fish: Simulation initialization fail. Already in simulation.')
+        elif self._simulation_status == 2:
+            raise(RuntimeError, 'Fish: Simulation initialization fail. Already after simulation. '
+                                'Please clear simulation data first.')
+
+    def clear_simulation(self):
+        """
+        clear all psp waveforms, clear action history for all neurons, clear position
+        """
+        if self._simulation_status == 1:
+            raise(RuntimeError, 'Fish: clear simulation fail. Still in simulation.')
+
+        elif self._simulation_status == 0 or self._simulation_status == 2:
+            self._curr_position = (None, None)
+            self._curr_health = None
+            self._clear_position_history()
+            self._simulation_status = 0
+            print('Fish: all simulation data cleared. Simulation now can be initialized.')
+
+    def _clear_position_history(self):
+        self._position_history = pd.DataFrame(columns=['t_point', 'row', 'column'])
+
+    def save_simulation(self, save_path):
+        if self._simulation_status == 1:
+            raise(RuntimeError, 'Fish: Simulation save fail. Still in simulation.')
+        if self._simulation_status == 0:
+            raise(ValueError, 'Fish: Simulation save fail. No simulation data found.')
+        if self._simulation_status== 2:
+            # todo: save simulation data
             pass
-        else:
-            self._muscles = muscles
 
-    def _get_default_eye_set(self):
-        """
-        :return: a data frame, representing a full default set of eight eyes
-                 columns: ['baseline_rate', 'direction', 'gain', 'input_filter', 'pos_col',
-                           'pos_raw', 'refractory_period']
-        """
-        if len(self._position) != 2:
-            raise(ValueError, 'position should contain two elements.')
-
-        if (not isinstance(self._position[0], int)) or (not isinstance(self._position[1], int)):
-            raise(ValueError, 'position should contain two integers.')
-
-        row_list = np.array([0, -1, -1, -1, 0, 1, 1, 1]) + self._position[0]
-        col_list = np.array([1, 1, 0, -1, -1, -1, 0, 1]) + self._position[1]
-        direction_list = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
-        input_filter = np.array([[0.2, 0.6, 0.2]])
-
-        eye_set = pd.DataFrame({'pos_raw': row_list,
-                                'pos_col': col_list,
-                                'direction': direction_list,
-                                'input_filter': list(np.repeat(input_filter, 8, axis=0)),
-                                'gain': 0.001,
-                                'baseline_rate': 0.,
-                                'refractory_period': 0})
-        return eye_set
-
-    def _get_default_hidden_layer(self):
-        """
-        :return: a data frame, representing a default hidden layer
-        """
-        hidden_layer = pd.DataFrame({'baseline_rate': [0.0001] * 16,
-                                     'refractory_period': [10] *16})
-        return hidden_layer
-
-    def _get_default_motor_neuron_layer(self):
-        """
-        :return: a data frame, representing a default motor neuron layer
-        """
-        motor_neuron_layer = pd.DataFrame({'direction': ['east', 'north', 'west', 'south'],
-                                           'baseline_rate': [0.0001] * 4,
-                                           'refractory_period': [10] * 4})
-
-    def _get_default_muscles(self):
-        pass
+    def stop_simulation(self):
+        if self._simulation_status == 1:
+            self._simulation_status = 2
+            print('Fish: Simulation stopped.')
+        elif self._simulation_status == 0:
+            raise(RuntimeError, 'Fish: Stop simulation fail. Not in simulation.')
+        elif self._simulation_status == 2:
+            print('Fish: No need to stop simulation. Already stopped.')
 
 
 if __name__ == '__main__':
 
-    fish = Fish((5,6))
-    fish._get_default_eye_set()
-    fish._get_default_hidden_layer()
-
-
-
-
-
+    print('for debug ...')

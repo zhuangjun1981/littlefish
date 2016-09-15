@@ -40,33 +40,33 @@ def test_connection_act():
 
 def test_eye_get_input_pixels():
 
-    map = np.zeros((5, 5), dtype=np.uint8)
-    map[3, 3] = 1
-    map[2, 2] = 1
-    map[2, 1] = 1
+    world_map = np.zeros((5, 5), dtype=np.uint8)
+    world_map[3, 3] = 1
+    world_map[2, 2] = 1
+    world_map[2, 1] = 1
 
-    eye = brain.Eye(position=(2, 3), direction='south')
-    assert(np.array_equal(eye._get_input_pixels(map), [0, 1, 0]))
-    eye = brain.Eye(position=(2, 3), direction='southeast')
-    assert (np.array_equal(eye._get_input_pixels(map), [1, 0, 0]))
-    eye = brain.Eye(position=(3, 2), direction='east')
-    assert (np.array_equal(eye._get_input_pixels(map), [0, 1, 0]))
-    eye = brain.Eye(position=(3, 2), direction='northeast')
-    assert (np.array_equal(eye._get_input_pixels(map), [1, 0, 1]))
-    eye = brain.Eye(position=(3, 2), direction='north')
-    assert (np.array_equal(eye._get_input_pixels(map), [0, 1, 1]))
-    eye = brain.Eye(position=(3, 2), direction='northwest')
-    assert (np.array_equal(eye._get_input_pixels(map), [1, 1, 0]))
-    eye = brain.Eye(position=(3, 2), direction='west')
-    assert (np.array_equal(eye._get_input_pixels(map), [1, 0, 0]))
-    eye = brain.Eye(position=(3, 2), direction='southwest')
-    assert (np.array_equal(eye._get_input_pixels(map), [0, 0, 0]))
-    eye = brain.Eye(position=(0, 0), direction='north')
-    assert (np.array_equal(eye._get_input_pixels(map), [1, 1, 1]))
-    eye = brain.Eye(position=(0, 0), direction='northeast')
-    assert (np.array_equal(eye._get_input_pixels(map), [0, 1, 1]))
-    eye = brain.Eye(position=(0, 0), direction='east')
-    assert (np.array_equal(eye._get_input_pixels(map), [0, 0, 1]))
+    eye = brain.Eye(direction='south')
+    assert(np.array_equal(eye._get_input_pixels(position=(2, 3), world_map=world_map), [0, 1, 0]))
+    eye = brain.Eye(direction='southeast')
+    assert (np.array_equal(eye._get_input_pixels(position=(2, 3), world_map=world_map), [1, 0, 0]))
+    eye = brain.Eye(direction='east')
+    assert (np.array_equal(eye._get_input_pixels(position=(3, 2), world_map=world_map), [0, 1, 0]))
+    eye = brain.Eye(direction='northeast')
+    assert (np.array_equal(eye._get_input_pixels(position=(3, 2), world_map=world_map), [1, 0, 1]))
+    eye = brain.Eye(direction='north')
+    assert (np.array_equal(eye._get_input_pixels(position=(3, 2), world_map=world_map), [0, 1, 1]))
+    eye = brain.Eye(direction='northwest')
+    assert (np.array_equal(eye._get_input_pixels(position=(3, 2), world_map=world_map), [1, 1, 0]))
+    eye = brain.Eye(direction='west')
+    assert (np.array_equal(eye._get_input_pixels(position=(3, 2), world_map=world_map), [1, 0, 0]))
+    eye = brain.Eye(direction='southwest')
+    assert (np.array_equal(eye._get_input_pixels(position=(3, 2), world_map=world_map), [0, 0, 0]))
+    eye = brain.Eye(direction='north')
+    assert (np.array_equal(eye._get_input_pixels(position=(0, 0), world_map=world_map), [1, 1, 1]))
+    eye = brain.Eye(direction='northeast')
+    assert (np.array_equal(eye._get_input_pixels(position=(0, 0), world_map=world_map), [0, 1, 1]))
+    eye = brain.Eye(direction='east')
+    assert (np.array_equal(eye._get_input_pixels(position=(0, 0), world_map=world_map), [0, 0, 1]))
 
 
 def test_neuron_connection():

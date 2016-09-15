@@ -6,6 +6,7 @@ import os
 import sys
 import random
 import numpy as np
+import pandas as pd
 package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(package_path)
 import matplotlib.pyplot as plt
@@ -15,6 +16,12 @@ import utilities as util
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
 # per time unit
 SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
+
+EYE_GAIN = 0.001
+EYE_INPUT_FILTER = np.array([0.2, 0.6, 0.2])
+EYE_DIRECTIONS = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+
+MUSCLE_DIRECTIONS = ['east', 'north', 'west', 'south']
 
 
 class Neuron(object):
@@ -80,7 +87,7 @@ class Eye(Neuron):
     Eye class to observe the environment, subclass of Neuron
     """
 
-    def __init__(self, position, direction, input_filter=None, gain=None, baseline_rate=0., refractory_period=10):
+    def __init__(self, direction, input_filter=None, gain=None, baseline_rate=0., refractory_period=10):
         """
         for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 8 pixels surrounding the
         central pixel. Each pixel is an eye, receiving the input from the closest 3 pixels in the environment.
@@ -117,7 +124,6 @@ class Eye(Neuron):
         a single value as the base of its input. this value will be multiplied by a float number gain to generate
         final input probability
 
-        :param position: the coordinate of the eye, tuple of two ints, (row, col)
         :param direction: the aim of the eye, should be one of the following, 'north', 'south', 'east', 'west',
                           'northwest', 'northeast', 'southwest', 'southeast'
         :param baseline_rate: float, probablity of a action per time unit.
@@ -125,14 +131,6 @@ class Eye(Neuron):
         """
 
         super(Eye, self).__init__(baseline_rate=baseline_rate, refractory_period=refractory_period)
-
-        if len(position) != 2:
-            raise(ValueError, 'position should have 2 elements.')
-
-        if isinstance(position[0], int) and isinstance(position[1], int):
-            self._position = position
-        else:
-            raise(ValueError, 'Elements in position should both be integers.')
 
         if direction in ['north', 'south', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']:
             self._direction = direction
@@ -150,62 +148,74 @@ class Eye(Neuron):
         else:
             self._gain = float(gain)
 
-    def move(self, movement):
-        """
-        update eye position
+    # def move(self, movement):
+    #     """
+    #     update eye position
+    # 
+    #     :param movement: movement vector, tuple of two ints, (row, col)
+    #     """
+    #     if len(movement) != 2:
+    #         raise(ValueError, 'Movement vector should have 2 elements.')
+    # 
+    #     if isinstance(movement[0], int) and isinstance(movement[1], int):
+    #         self._position = (self._position[0] + movement[0],
+    #                           self._position[1] + movement[1])
+    #     else:
+    #         raise(ValueError, 'Elements in movement should both be integers.')
 
-        :param movement: movement vector, tuple of two ints, (row, col)
-        """
-        if len(movement) != 2:
-            raise(ValueError, 'Movement vector should have 2 elements.')
-
-        if isinstance(movement[0], int) and isinstance(movement[1], int):
-            self._position = (self._position[0] + movement[0],
-                              self._position[1] + movement[1])
-        else:
-            raise(ValueError, 'Elements in movement should both be integers.')
-
-    def _get_input_pixels(self, world_map, border_value=1.):
+    def _get_input_pixels(self, world_map, position, border_value=1.):
         """
         :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the world_map
         range will be returned as border_value
         """
+        
+        if len(position) != 2:
+            raise(ValueError, 'position should have 2 elements.')
+
+        if isinstance(position[0], int) and isinstance(position[1], int):
+            self._position = position
+        else:
+            raise(ValueError, 'Elements in position should both be integers.')
 
         if len(world_map.shape) != 2:
             raise(ValueError, 'world_map should a 2-d array.')
+        
+        if position[0] < 0 or position[0] >= world_map.shape[0] or \
+            position[1] < 0 or position[1] >= world_map.shape[1]:
+            raise(ValueError, 'position out of range.')
 
         if self._direction == 'east':
-            ind = [[self._position[0] + 1, self._position[1] + 1],
-                   [self._position[0],     self._position[1] + 1],
-                   [self._position[0] - 1, self._position[1] + 1]]
+            ind = [[position[0] + 1, position[1] + 1],
+                   [position[0],     position[1] + 1],
+                   [position[0] - 1, position[1] + 1]]
         elif self._direction == 'northeast':
-            ind = [[self._position[0],     self._position[1] + 1],
-                   [self._position[0] - 1, self._position[1] + 1],
-                   [self._position[0] - 1, self._position[1]]]
+            ind = [[position[0],     position[1] + 1],
+                   [position[0] - 1, position[1] + 1],
+                   [position[0] - 1, position[1]]]
         elif self._direction == 'north':
-            ind = [[self._position[0] - 1, self._position[1] + 1],
-                   [self._position[0] - 1, self._position[1]],
-                   [self._position[0] - 1, self._position[1] - 1]]
+            ind = [[position[0] - 1, position[1] + 1],
+                   [position[0] - 1, position[1]],
+                   [position[0] - 1, position[1] - 1]]
         elif self._direction == 'northwest':
-            ind = [[self._position[0] - 1, self._position[1]],
-                   [self._position[0] - 1, self._position[1] - 1],
-                   [self._position[0],     self._position[1] - 1]]
+            ind = [[position[0] - 1, position[1]],
+                   [position[0] - 1, position[1] - 1],
+                   [position[0],     position[1] - 1]]
         elif self._direction == 'west':
-            ind = [[self._position[0] - 1, self._position[1] - 1],
-                   [self._position[0],     self._position[1] - 1],
-                   [self._position[0] + 1, self._position[1] - 1]]
+            ind = [[position[0] - 1, position[1] - 1],
+                   [position[0],     position[1] - 1],
+                   [position[0] + 1, position[1] - 1]]
         elif self._direction == 'southwest':
-            ind = [[self._position[0],     self._position[1] - 1],
-                   [self._position[0] + 1, self._position[1] - 1],
-                   [self._position[0] + 1, self._position[1]]]
+            ind = [[position[0],     position[1] - 1],
+                   [position[0] + 1, position[1] - 1],
+                   [position[0] + 1, position[1]]]
         elif self._direction == 'south':
-            ind = [[self._position[0] + 1, self._position[1] - 1],
-                   [self._position[0] + 1, self._position[1]],
-                   [self._position[0] + 1, self._position[1] + 1]]
+            ind = [[position[0] + 1, position[1] - 1],
+                   [position[0] + 1, position[1]],
+                   [position[0] + 1, position[1] + 1]]
         elif self._direction == 'southeast':
-            ind = [[self._position[0] + 1, self._position[1]],
-                   [self._position[0] + 1, self._position[1] + 1],
-                   [self._position[0],     self._position[1] + 1]]
+            ind = [[position[0] + 1, position[1]],
+                   [position[0] + 1, position[1] + 1],
+                   [position[0],     position[1] + 1]]
         else:
             raise(ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', "
                               "'northwest', 'northeast', 'southwest', 'southeast'].")
@@ -215,7 +225,7 @@ class Eye(Neuron):
         input_pixels = []
 
         for cor in ind:
-            if cor[0] < 0 or cor[0] > world_map.shape[0] or cor[1] < 0 or cor[1] > world_map.shape[1]:
+            if cor[0] < 0 or cor[0] > world_map.shape[0] or cor[1] < 0 or cor[1] >= world_map.shape[1]:
                 input_pixels.append(border_value)
             else:
                 input_pixels.append(world_map[cor[0], cor[1]])
@@ -235,7 +245,9 @@ class Eye(Neuron):
         """
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
-        :param kwargs, border_value trace back to self._get_input_pixels
+        :param position: tuple of two ints, (row, col),  position of the eye
+        :param world_map: binary 2-d map, for now it should only contain 0s and 1s
+        :param border_value: int, default 1, value for pixels outside the world_map
         :return: bool, True: fire; False: quite
         """
 
@@ -358,64 +370,50 @@ class Connection(object):
             postsynaptic_input[time_point:] += self._psp[:len(postsynaptic_input)-time_point]
 
 
-# class Muscle(object):
-#     """
-#     muscle class for determining the motion of the fish
-#     """
-#
-#     def __init__(self, threshold=10, integration_window=5000, refractory_period=10000):
-#         """
-#         :param threshold: int, if the number of actions detected in the integration_window is larger than this
-#                           threshold, the muscle will try to excert movement
-#         :param integration_window: int, the window duration in time unit the muscle integrates the inputs
-#         :param refractory_period: int, the period in time unit that the muscle could not act after previous movement
-#         """
-#
-#         self._threshold = int(threshold)
-#         self._integration_window = int(integration_window)
-#         self._refractory_period = int(refractory_period)
-#         self._movement_history = []  # list of indices of action timestamps, list of ints
-#         self._detected_actions = []  # list of input action timestamps within the integration window, list of ints
-#
-#     def get_movement_history(self):
-#         """
-#         return list of indices of movment timestamps, list of ints
-#         note: this only record the attempts of movement, does not necessarily reflect the actual movement. i.e. the
-#         attempts to move out of the terrain map will fail but the attempts will be saved in this variable
-#         """
-#         return self._movement_history
-#
-#     def _clear(self):
-#         self._detected_actions = []
-#
-#     def move(self, t_point, action_input):
-#         """
-#
-#         :param t_point: int, current timestamp in time unit axis
-#         :param action_input: int, number of presynaptic input actions at this given time point
-#         :return: True, if the muscle attempts to move
-#                  False, if the muscle decides not to move
-#         """
-#
-#         if not isinstance(action_input, int):
-#             raise(ValueError, 'input should be an integer.')
-#
-#         # add inputs to self._detected_actions
-#         self._detected_actions += [t_point] * action_input
-#
-#         # remove action in self._detected_actions outside the integration_window
-#         self._detected_actions = [a for a in self._detected_actions if (t_point - a < self._integration_window)]
-#
-#         if len(self._movement_history) > 0 and t_point - self._movement_history[-1] < self._refractory_period:
-#             # if current time is within the refractory period from last action
-#             return False
-#         else:
-#             if len(self._detected_actions) >= self._threshold:
-#                 self._clear()
-#                 self._movement_history.append(t_point)
-#                 return True
-#             else:
-#                 return False
+class Brain(object):
+    """
+    brain class, the neural network from eye to muscle
+
+    a 'brain' has a couple of sets of 8 eyes (brain.Eye object, each at each border pixel of the body). each set of
+    eyes are receiving inputs from different objects. i.e. one set of eyes will look at land/water, another set of eyes
+    will look for food, another set of eyes will look for other fish.
+
+    a 'brain' has 4 invisible muscles (brain.Muscle object, each controlling the movement in each direction).
+
+    between eyes and muscles are a neural network consists of neurons (brain.Neuron object) and connections
+    (brain.Connections object). Number of layers and number of neurons can be specified.
+    """
+
+    def __init__(self):
+        pass
+    
+    @staticmethod
+    def generate_default_neuron_df():
+        """
+        
+        :return: 
+        """
+        neurons = pd.DataFrame(columns=['layer', 'type', 'set_id', 'baseline_rate','refractory_period'])
+
+        ind = 0
+        for i in range(8):
+            neurons.loc[ind] = [0, 'eye_terrain', i, 0, 10]
+            ind += 1
+
+        for i in range(8):
+            neurons.loc[ind] = [1, 'hidden_001', i, 0.0001, 10]
+            ind += 1
+
+        for i in range(4):
+            neurons.loc[ind] = [2, 'muscle', i, 0.0001, 5000]
+            ind += 1
+
+        neurons['layer'] = neurons['layer'].astype(np.int)
+        neurons['set_id'] = neurons['set_id'].astype(np.int)
+        neurons['refractory_period'] = neurons['refractory_period'].astype(np.int)
+
+        return neurons
+
 
 
 if __name__ == '__main__':
@@ -487,15 +485,19 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    SIMULATION_LENGTH = 20000
-    muscle = Muscle(direction='east', baseline_rate=0., refractory_period=5000)
-    movements = []
-    for i in range(SIMULATION_LENGTH):
-        movement=muscle.act(i, probability_input=0.5, probability_base=0.1)
-        if movement:
-            movements.append(movement)
-    print(movements)
-    print(muscle.get_action_history())
+    # SIMULATION_LENGTH = 20000
+    # muscle = Muscle(direction='east', baseline_rate=0., refractory_period=5000)
+    # movements = []
+    # for i in range(SIMULATION_LENGTH):
+    #     movement=muscle.act(i, probability_input=0.5, probability_base=0.1)
+    #     if movement:
+    #         movements.append(movement)
+    # print(movements)
+    # print(muscle.get_action_history())
     # =========================================================================================
+
+    # =========================================================================================
+    brain = Brain()
+    brain.generate_default_neuron_df()
 
     print('debug...')

@@ -1,4 +1,28 @@
 {
+    "brain": {
+        "EYE_INPUT_FILTER": [
+            0.2,
+            0.6,
+            0.2
+        ],
+        "EYE_GAIN": 0.001,
+        "MUSCLE_DIRECTIONS": [
+            "east",
+            "north",
+            "west",
+            "south"
+        ],
+        "EYE_DIRECTIONS": [
+            "east",
+            "northeast",
+            "north",
+            "northwest",
+            "west",
+            "southwest",
+            "south",
+            "southeast"
+        ]
+    },
     "simulation": {
         "SIMULATION_LENGTH": 100000
     }
