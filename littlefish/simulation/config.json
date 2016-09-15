@@ -1,6 +1,19 @@
 {
     "brain": {
+        "CONNECTION_AMPLITUDE": 0.0001,
+        "CONNECTION_DECAY_TIME": 10,
+        "CONNECTION_LATENCY": 30,
+        "CONNECTION_RISE_TIME": 5,
+        "EYE2_INPUT_FILTER": [
+            0.15,
+            0.3,
+            0.15,
+            0.1,
+            0.2,
+            0.1
+        ],
         "EYE_BASELINE_RATE": 0.0,
+        "EYE_BORDER_VALUE": 1.0,
         "EYE_DIRECTIONS": [
             "east",
             "northeast",
@@ -18,6 +31,7 @@
             0.2
         ],
         "EYE_REFRACTORY_PERIOD": 10,
+        "MUSCLE_BASELINE_RATE": 0.0001,
         "MUSCLE_DIRECTIONS": [
             "east",
             "north",
@@ -25,6 +39,7 @@
             "south"
         ],
         "MUSCLE_REFRACTORY_PERIOD": 5000,
+        "NEURON_BASELINE_RATE": 1e-05,
         "NEURON_REFRACTORY_PERIOD": 10
     },
     "fish": {

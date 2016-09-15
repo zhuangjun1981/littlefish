@@ -28,14 +28,23 @@ def generate_default_config_file(save_path):
         {
             'EYE_GAIN' : 0.001,
             'EYE_INPUT_FILTER' : [0.2, 0.6, 0.2],
+            'EYE2_INPUT_FILTER' : [0.15, 0.3, 0.15, 0.1, 0.2, 0.1],
             'EYE_DIRECTIONS' : ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast'],
             'EYE_BASELINE_RATE' : 0.,
             'EYE_REFRACTORY_PERIOD' : 10,
+            'EYE_BORDER_VALUE' : 1.,
 
             'NEURON_REFRACTORY_PERIOD' : 10,
+            'NEURON_BASELINE_RATE' : 0.00001,
 
             'MUSCLE_DIRECTIONS' : ['east', 'north', 'west', 'south'],
-            'MUSCLE_REFRACTORY_PERIOD' : 5000
+            'MUSCLE_REFRACTORY_PERIOD' : 5000,
+            'MUSCLE_BASELINE_RATE' : 0.0001,
+
+            'CONNECTION_LATENCY' : 30,
+            'CONNECTION_AMPLITUDE' : 0.0001,
+            'CONNECTION_RISE_TIME' : 5,
+            'CONNECTION_DECAY_TIME' : 10
         }
 
 

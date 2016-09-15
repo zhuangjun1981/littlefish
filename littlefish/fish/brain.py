@@ -20,20 +20,30 @@ SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
 EYE_GAIN = 0.001
 EYE_BASELINE_RATE = 0.
 EYE_REFRACTORY_PERIOD = 10
+EYE_BORDER_VALUE = 1.
 EYE_INPUT_FILTER = np.array([0.2, 0.6, 0.2])
+EYE2_INPUT_FILTER = np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1])
 EYE_DIRECTIONS = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
 
 NEURON_REFRACTORY_PERIOD = 10
+NEURON_BASELINE_RATE = 0.0001
 
 MUSCLE_DIRECTIONS = ['east', 'north', 'west', 'south']
 MUSCLE_REFRACTORY_PERIOD = 5000
+MUSCLE_BASELINE_RATE = 0.00001
+
+CONNECTION_LATENCY = 30
+CONNECTION_AMPLITUDE = 0.0001
+CONNECTION_RISE_TIME = 5
+CONNECTION_DECAY_TIME = 10
+
 
 class Neuron(object):
     """
     a very simple neuron class
     """
 
-    def __init__(self, baseline_rate=0.0001, refractory_period=10):
+    def __init__(self, baseline_rate=NEURON_BASELINE_RATE, refractory_period=NEURON_REFRACTORY_PERIOD):
         """
         action is the equivalent of action potential in biology, and consider one time unit is 0.1 milisecond
 
@@ -88,10 +98,11 @@ class Neuron(object):
 
 class Eye(Neuron):
     """
-    Eye class to observe the environment, subclass of Neuron
+    Eye class to observe the environment, subclass of Neuron, has eye sight as 1 pixel
     """
 
-    def __init__(self, direction, input_filter=None, gain=None, baseline_rate=0., refractory_period=10):
+    def __init__(self, direction, input_filter=EYE_INPUT_FILTER, gain=EYE_GAIN,
+                 baseline_rate=EYE_BASELINE_RATE, refractory_period=EYE_REFRACTORY_PERIOD):
         """
         for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 8 pixels surrounding the
         central pixel. Each pixel is an eye, receiving the input from the closest 3 pixels in the environment.
@@ -142,32 +153,11 @@ class Eye(Neuron):
             raise(ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', "
                               "'northwest', 'northeast', 'southwest', 'southeast'].")
 
-        if input_filter is None:
-            self._input_filter = np.array([0.2, 0.6, 0.2])
-        else:
-            self._input_filter = input_filter.astype(np.float)
+        self._input_filter = input_filter.astype(np.float)
 
-        if gain is None:
-            self._gain = 0.001
-        else:
-            self._gain = float(gain)
+        self._gain = float(gain)
 
-    # def move(self, movement):
-    #     """
-    #     update eye position
-    # 
-    #     :param movement: movement vector, tuple of two ints, (row, col)
-    #     """
-    #     if len(movement) != 2:
-    #         raise(ValueError, 'Movement vector should have 2 elements.')
-    # 
-    #     if isinstance(movement[0], int) and isinstance(movement[1], int):
-    #         self._position = (self._position[0] + movement[0],
-    #                           self._position[1] + movement[1])
-    #     else:
-    #         raise(ValueError, 'Elements in movement should both be integers.')
-
-    def _get_input_pixels(self, world_map, position, border_value=1.):
+    def _get_input_pixels(self, world_map, position, border_value=EYE_BORDER_VALUE):
         """
         :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the world_map
         range will be returned as border_value
@@ -185,7 +175,7 @@ class Eye(Neuron):
             raise(ValueError, 'world_map should a 2-d array.')
         
         if position[0] < 0 or position[0] >= world_map.shape[0] or \
-            position[1] < 0 or position[1] >= world_map.shape[1]:
+                position[1] < 0 or position[1] >= world_map.shape[1]:
             raise(ValueError, 'position out of range.')
 
         if self._direction == 'east':
@@ -241,9 +231,202 @@ class Eye(Neuron):
         :return: calculate real time input from the visual field
         """
         input_pixels = self._get_input_pixels(**kwargs)
-        probablity_input = self._gain * np.sum(input_pixels * self._input_filter)
+        probability_input = self._gain * np.sum(input_pixels * self._input_filter)
 
-        return probablity_input
+        return probability_input
+
+    def act(self, t_point, **kwargs):
+        """
+        evaluate if the eye neuron will fire at given time point
+        :param t_point: int, current time point as the index of time unit axis
+        :param position: tuple of two ints, (row, col),  position of the eye
+        :param world_map: binary 2-d map, for now it should only contain 0s and 1s
+        :param border_value: int, default 1, value for pixels outside the world_map
+        :return: bool, True: fire; False: quite
+        """
+
+        probability_input = self._get_input(**kwargs)
+
+        if len(self._action_history) > 0 and t_point - self._action_history[-1] < self._refractory_period:
+            return False
+        else:
+            curr_rate = self._baseline_rate + probability_input
+            if random.random() <= curr_rate:
+                self._action_history.append(t_point)
+                return True
+            else:
+                return False
+
+
+class Eye2(Neuron):
+    """
+    Eye class to observe the environment, subclass of Neuron, has eye sight as 2 pixels
+    """
+
+    def __init__(self, direction, input_filter=EYE2_INPUT_FILTER, gain=EYE_GAIN, baseline_rate=EYE_BASELINE_RATE,
+                 refractory_period=EYE_REFRACTORY_PERIOD):
+        """
+        for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 8 pixels surrounding the
+        central pixel. Each pixel is an eye, receiving the input from the closest 6 pixels in the environment.
+        for example:
+
+        fish (1) in the environment(0):
+        0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+        0 0 1 1 1 0 0
+        0 0 1 1 1 0 0
+        0 0 1 1 1 0 0
+        0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+
+        eye (2) in the northwest connor is:
+        0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+        0 0 2 1 1 0 0
+        0 0 1 1 1 0 0
+        0 0 1 1 1 0 0
+        0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+
+        it receive inputs from pixels labelled as 3 in the environment:
+        3 3 0 0 0 0 0
+        3 3 3 0 0 0 0
+        0 3 2 1 1 0 0
+        0 0 1 1 1 0 0
+        0 0 1 1 1 0 0
+        0 0 0 0 0 0 0
+        0 0 0 0 0 0 0
+
+        the inputs from the environment (1x3 array) will be filtered by a array with same size, to generate
+        a single value as the base of its input. this value will be multiplied by a float number gain to generate
+        final input probability
+
+        :param direction: the aim of the eye, should be one of the following, 'north', 'south', 'east', 'west',
+                          'northwest', 'northeast', 'southwest', 'southeast'
+        :param baseline_rate: float, probablity of a action per time unit.
+        :param refractory_period: float, refractory_period in time unit
+        """
+
+        super(Eye2, self).__init__(baseline_rate=baseline_rate, refractory_period=refractory_period)
+
+        if direction in ['north', 'south', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']:
+            self._direction = direction
+        else:
+            raise(ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', "
+                              "'northwest', 'northeast', 'southwest', 'southeast'].")
+
+        if input_filter is None:
+            self._input_filter = EYE2_INPUT_FILTER
+        else:
+            self._input_filter = input_filter.astype(np.float)
+
+        if gain is None:
+            self._gain = 0.001
+        else:
+            self._gain = float(gain)
+
+    def _get_input_pixels(self, world_map, position, border_value=EYE_BORDER_VALUE):
+        """
+        :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the world_map
+        range will be returned as border_value
+        """
+
+        if len(position) != 2:
+            raise (ValueError, 'position should have 2 elements.')
+
+        if isinstance(position[0], int) and isinstance(position[1], int):
+            self._position = position
+        else:
+            raise (ValueError, 'Elements in position should both be integers.')
+
+        if len(world_map.shape) != 2:
+            raise (ValueError, 'world_map should a 2-d array.')
+
+        if position[0] < 0 or position[0] >= world_map.shape[0] or \
+                position[1] < 0 or position[1] >= world_map.shape[1]:
+            raise (ValueError, 'position out of range.')
+
+        if self._direction == 'east':
+            ind = [[position[0] + 1, position[1] + 1],
+                   [position[0], position[1] + 1],
+                   [position[0] - 1, position[1] + 1],
+                   [position[0] + 1, position[1] + 2],
+                   [position[0], position[1] + 2],
+                   [position[0] - 1, position[1] + 2]]
+        elif self._direction == 'northeast':
+            ind = [[position[0], position[1] + 1],
+                   [position[0] - 1, position[1] + 1],
+                   [position[0] - 1, position[1]],
+                   [position[0] - 1, position[1] + 2],
+                   [position[0] - 2, position[1] + 2],
+                   [position[0] - 2, position[1] + 1]]
+        elif self._direction == 'north':
+            ind = [[position[0] - 1, position[1] + 1],
+                   [position[0] - 1, position[1]],
+                   [position[0] - 1, position[1] - 1],
+                   [position[0] - 2, position[1] + 1],
+                   [position[0] - 2, position[1]],
+                   [position[0] - 2, position[1] - 1]]
+        elif self._direction == 'northwest':
+            ind = [[position[0] - 1, position[1]],
+                   [position[0] - 1, position[1] - 1],
+                   [position[0], position[1] - 1],
+                   [position[0] - 2, position[1] - 1],
+                   [position[0] - 2, position[1] - 2],
+                   [position[0] - 1, position[1] - 2]]
+        elif self._direction == 'west':
+            ind = [[position[0] - 1, position[1] - 1],
+                   [position[0], position[1] - 1],
+                   [position[0] + 1, position[1] - 1],
+                   [position[0] - 1, position[1] - 2],
+                   [position[0], position[1] - 2],
+                   [position[0] + 1, position[1] - 2]]
+        elif self._direction == 'southwest':
+            ind = [[position[0], position[1] - 1],
+                   [position[0] + 1, position[1] - 1],
+                   [position[0] + 1, position[1]],
+                   [position[0] + 1, position[1] - 2],
+                   [position[0] + 2, position[1] - 2],
+                   [position[0] + 2, position[1] - 2]]
+        elif self._direction == 'south':
+            ind = [[position[0] + 1, position[1] - 1],
+                   [position[0] + 1, position[1]],
+                   [position[0] + 1, position[1] + 1],
+                   [position[0] + 2, position[1] - 1],
+                   [position[0] + 2, position[1]],
+                   [position[0] + 2, position[1] + 1]]
+        elif self._direction == 'southeast':
+            ind = [[position[0] + 1, position[1]],
+                   [position[0] + 1, position[1] + 1],
+                   [position[0], position[1] + 1],
+                   [position[0] + 2, position[1] + 1],
+                   [position[0] + 2, position[1] + 2],
+                   [position[0] + 1, position[1] + 2]
+                   ]
+        else:
+            raise (ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', "
+                               "'northwest', 'northeast', 'southwest', 'southeast'].")
+
+        # print(ind)
+
+        input_pixels = []
+
+        for cor in ind:
+            if cor[0] < 0 or cor[0] > world_map.shape[0] or cor[1] < 0 or cor[1] >= world_map.shape[1]:
+                input_pixels.append(border_value)
+            else:
+                input_pixels.append(world_map[cor[0], cor[1]])
+
+        return np.array(input_pixels)
+
+    def _get_input(self, **kwargs):
+        """
+        :return: calculate real time input from the visual field
+        """
+        input_pixels = self._get_input_pixels(**kwargs)
+        probability_input = self._gain * np.sum(input_pixels * self._input_filter)
+
+        return probability_input
 
     def act(self, t_point, **kwargs):
         """
@@ -273,7 +456,7 @@ class Muscle(Neuron):
     muscle class for determining the motion of the fish. Subclass of Neuron class
     """
 
-    def __init__(self, direction, baseline_rate=0.0001, refractory_period=5000):
+    def __init__(self, direction, baseline_rate=MUSCLE_BASELINE_RATE, refractory_period=MUSCLE_REFRACTORY_PERIOD):
 
         if direction in ['east', 'north', 'west', 'south']:
             self._direction = direction
@@ -308,13 +491,13 @@ class Muscle(Neuron):
                 self._action_history.append(t_point)
                 # print(t_point)
                 if self._direction == 'east':
-                    return (0, 1)
+                    return 0, 1
                 elif self._direction == 'north':
-                    return (-1, 0)
+                    return -1, 0
                 elif self._direction == 'west':
-                    return (0, -1)
+                    return 0, -1
                 elif self._direction == 'south':
-                    return (1, 0)
+                    return 1, 0
                 else:
                     raise(ValueError, "self.direction should be one of the following: "
                                       "['east', 'north', 'west', 'south'].")
@@ -327,7 +510,8 @@ class Connection(object):
     synaptic connection between two neurons
     """
 
-    def __init__(self, latency=30, amplitude=0.0001, rise_time=5, decay_time=10):
+    def __init__(self, latency=CONNECTION_LATENCY, amplitude=CONNECTION_AMPLITUDE, rise_time=CONNECTION_RISE_TIME,
+                 decay_time=CONNECTION_DECAY_TIME):
         """
 
         :param latency: int, temporal latency from presynaptic neuron action to the postsynaptic effect onset, number
@@ -431,12 +615,12 @@ class Brain(object):
         pass
     
     @staticmethod
-    def generate_default_neuron_df():
+    def generate_default_neurons_df():
         """
         
         :return: 
         """
-        neurons = pd.DataFrame(columns=['layer', 'type', 'set_id', 'baseline_rate','refractory_period'])
+        neurons = pd.DataFrame(columns=['layer', 'type', 'set_id', 'baseline_rate', 'refractory_period'])
 
         ind = 0
         for i in range(8):
@@ -444,19 +628,58 @@ class Brain(object):
             ind += 1
 
         for i in range(8):
-            neurons.loc[ind] = [1, 'hidden_001', i, 0.0001, NEURON_REFRACTORY_PERIOD]
+            neurons.loc[ind] = [1, 'hidden_001', i, NEURON_BASELINE_RATE, NEURON_REFRACTORY_PERIOD]
             ind += 1
 
         for i in range(4):
-            neurons.loc[ind] = [2, 'muscle', i, 0.0001, MUSCLE_REFRACTORY_PERIOD]
+            neurons.loc[ind] = [2, 'muscle', i, MUSCLE_BASELINE_RATE, MUSCLE_REFRACTORY_PERIOD]
             ind += 1
 
-        neurons['layer'] = neurons['layer'].astype(np.int)
-        neurons['set_id'] = neurons['set_id'].astype(np.int)
-        neurons['refractory_period'] = neurons['refractory_period'].astype(np.int)
+        neurons['layer'] = neurons['layer'].astype(np.uint32)
+        neurons['set_id'] = neurons['set_id'].astype(np.uint32)
+        neurons['baseline_rate'] = neurons['baseline_rate'].astype(np.float64)
+        neurons['refractory_period'] = neurons['refractory_period'].astype(np.uint64)
 
         return neurons
 
+    @staticmethod
+    def generate_default_connections_df(neurons_df):
+        """
+
+        :return:
+        """
+        layer_num = np.max(neurons_df['layer']) + 1
+
+        connections = pd.DataFrame(columns=['presynaptic_layer', 'presynaptic_set_ind',
+                                            'postsynaptic_layer', 'postsynaptic_set_ind',
+                                            'latency', 'amplitude', 'rise_time', 'decay_time'])
+
+        ind = 0
+
+        for pre_layer in range(layer_num-1):
+            post_layer = pre_layer + 1
+            pre_layer_neuron_num = max(neurons_df[neurons_df['layer']==pre_layer]['set_id']) + 1
+            post_layer_neuron_num = max(neurons_df[neurons_df['layer'] == post_layer]['set_id']) + 1
+
+            for i in range(pre_layer_neuron_num):
+                for j in range(post_layer_neuron_num):
+
+                    connections.loc[ind] = [pre_layer, i, post_layer, j, CONNECTION_LATENCY,
+                                            CONNECTION_AMPLITUDE, CONNECTION_RISE_TIME, CONNECTION_DECAY_TIME]
+
+                    ind += 1
+
+
+        connections['presynaptic_layer'] = connections['presynaptic_layer'].astype(np.uint32)
+        connections['postsynaptic_layer'] = connections['postsynaptic_layer'].astype(np.uint32)
+        connections['presynaptic_set_ind'] = connections['presynaptic_set_ind'].astype(np.uint32)
+        connections['postsynaptic_set_ind'] = connections['postsynaptic_set_ind'].astype(np.uint32)
+        connections['latency'] = connections['latency'].astype(np.uint64)
+        connections['amplitude'] = connections['amplitude'].astype(np.float)
+        connections['rise_time'] = connections['rise_time'].astype(np.uint64)
+        connections['decay_time'] = connections['decay_time'].astype(np.uint64)
+
+        print(connections)
 
 
 if __name__ == '__main__':
@@ -541,6 +764,7 @@ if __name__ == '__main__':
 
     # =========================================================================================
     brain = Brain()
-    brain.generate_default_neuron_df()
+    neurons_df = brain.generate_default_neurons_df()
+    connections_df = brain.generate_default_connections_df(neurons_df)
 
     print('debug...')
