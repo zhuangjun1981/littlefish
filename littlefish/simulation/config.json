@@ -1,17 +1,6 @@
 {
     "brain": {
-        "EYE_INPUT_FILTER": [
-            0.2,
-            0.6,
-            0.2
-        ],
-        "EYE_GAIN": 0.001,
-        "MUSCLE_DIRECTIONS": [
-            "east",
-            "north",
-            "west",
-            "south"
-        ],
+        "EYE_BASELINE_RATE": 0.0,
         "EYE_DIRECTIONS": [
             "east",
             "northeast",
@@ -21,7 +10,26 @@
             "southwest",
             "south",
             "southeast"
-        ]
+        ],
+        "EYE_GAIN": 0.001,
+        "EYE_INPUT_FILTER": [
+            0.2,
+            0.6,
+            0.2
+        ],
+        "EYE_REFRACTORY_PERIOD": 10,
+        "MUSCLE_DIRECTIONS": [
+            "east",
+            "north",
+            "west",
+            "south"
+        ],
+        "MUSCLE_REFRACTORY_PERIOD": 5000,
+        "NEURON_REFRACTORY_PERIOD": 10
+    },
+    "fish": {
+        "FISH_HEALTH_DECAY_RATE": 0.0001,
+        "FISH_MAX_HEALTH": 100.0
     },
     "simulation": {
         "SIMULATION_LENGTH": 100000

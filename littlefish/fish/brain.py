@@ -18,11 +18,15 @@ import utilities as util
 SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
 
 EYE_GAIN = 0.001
+EYE_BASELINE_RATE = 0.
+EYE_REFRACTORY_PERIOD = 10
 EYE_INPUT_FILTER = np.array([0.2, 0.6, 0.2])
 EYE_DIRECTIONS = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
 
-MUSCLE_DIRECTIONS = ['east', 'north', 'west', 'south']
+NEURON_REFRACTORY_PERIOD = 10
 
+MUSCLE_DIRECTIONS = ['east', 'north', 'west', 'south']
+MUSCLE_REFRACTORY_PERIOD = 5000
 
 class Neuron(object):
     """
@@ -335,7 +339,7 @@ class Connection(object):
         """
 
         self._latency = latency
-        self._amplitude = amplitude
+        self._amplitude = float(amplitude)
         self._rise_time = rise_time
         self._decay_time = decay_time
 
@@ -354,6 +358,45 @@ class Connection(object):
 
     def get_psp(self):
         return self._psp
+
+    def set_params(self, latency=None, amplitude=None, rise_time=None, decay_time=None):
+        """
+        set new parameters and regenerate psp waveform
+
+        :param latency: int, number of time units for time delay
+        :param amplitude: float, peak probability
+        :param rise_time: int, number of time units to rise to peak
+        :param decay_time: int, number of time units to decay to baseline
+        """
+
+        changed = False
+
+        if latency is not None:
+            if not isinstance(latency, int):
+                raise (ValueError, 'latency should be an integer.')
+            self._latency = latency
+            changed = True
+
+        if amplitude is not None:
+            self._amplitude = float(amplitude)
+            changed = True
+
+        if rise_time is not None:
+            if not isinstance(rise_time, int):
+                raise (ValueError, 'rise_time should be an integer.')
+            self._rise_time = rise_time
+            changed = True
+
+        if decay_time is not None:
+            if not isinstance(decay_time, int):
+                raise (ValueError, 'decay_time should be an integer.')
+            self._decay_time = decay_time
+            changed = True
+
+        if changed:
+            self._generate_psp()
+        else:
+            print('Brain.Connection: no parameter has been changed. Do nothing.')
 
     def act(self, time_point, postsynaptic_input):
         """
@@ -397,15 +440,15 @@ class Brain(object):
 
         ind = 0
         for i in range(8):
-            neurons.loc[ind] = [0, 'eye_terrain', i, 0, 10]
+            neurons.loc[ind] = [0, 'eye_terrain', i, EYE_BASELINE_RATE, EYE_REFRACTORY_PERIOD]
             ind += 1
 
         for i in range(8):
-            neurons.loc[ind] = [1, 'hidden_001', i, 0.0001, 10]
+            neurons.loc[ind] = [1, 'hidden_001', i, 0.0001, NEURON_REFRACTORY_PERIOD]
             ind += 1
 
         for i in range(4):
-            neurons.loc[ind] = [2, 'muscle', i, 0.0001, 5000]
+            neurons.loc[ind] = [2, 'muscle', i, 0.0001, MUSCLE_REFRACTORY_PERIOD]
             ind += 1
 
         neurons['layer'] = neurons['layer'].astype(np.int)

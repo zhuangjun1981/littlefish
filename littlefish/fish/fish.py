@@ -8,6 +8,9 @@ import pandas as pd
 
 SIMULATION_LENGTH = 100000
 
+FISH_MAX_HEALTH = 100.
+FISH_HEALTH_DECAY_RATE = 0.0001
+
 class Fish(object):
     """
     the main fish class
@@ -30,7 +33,7 @@ class Fish(object):
     self._position_history: pandas dataframe, columns: ['t_point', 'row', 'column']
     """
 
-    def __init__(self, brain=None, max_health=100., health_decay_rate=0.001):
+    def __init__(self, brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE):
 
 
         self._max_health = float(max_health)
