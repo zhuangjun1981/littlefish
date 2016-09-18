@@ -17,7 +17,7 @@ import littlefish.utilities as util
 # per time unit
 SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
 
-EYE_GAIN = 0.001
+EYE_GAIN = 0.005
 EYE_BASELINE_RATE = 0.
 EYE_REFRACTORY_PERIOD = 10
 EYE_BORDER_VALUE = 1
@@ -35,8 +35,8 @@ MUSCLE_BASELINE_RATE = 0.00001
 
 CONNECTION_LATENCY = 30
 CONNECTION_AMPLITUDE = 0.0001
-CONNECTION_RISE_TIME = 5
-CONNECTION_DECAY_TIME = 10
+CONNECTION_RISE_TIME = 50
+CONNECTION_DECAY_TIME = 100
 
 
 class Neuron(object):
@@ -692,19 +692,19 @@ class Connection(object):
         else:
             print('Brain.Connection: no parameter has been changed. Do nothing.')
 
-    def act(self, time_point, postsynaptic_input):
+    def act(self, t_point, postsynaptic_input):
         """
         if the presynaptic neuron fires at the 'time_point', a psp wave form will be generated and add to the
         input array of the postsynaptic neuron
-        :param time_point: int, current time point as the index of time unit axis
+        :param t_point: int, current time point as the index of time unit axis
         :param postsynaptic_input: 1-d array of floats
         :return:
         """
-        psp_end = time_point + len(self._psp)
+        psp_end = t_point + len(self._psp)
         if psp_end <= len(postsynaptic_input):
-            postsynaptic_input[time_point: psp_end] += self._psp
+            postsynaptic_input[t_point: psp_end] += self._psp
         else:
-            postsynaptic_input[time_point:] += self._psp[:len(postsynaptic_input)-time_point]
+            postsynaptic_input[t_point:] += self._psp[:len(postsynaptic_input) - t_point]
 
 
 class Brain(object):
@@ -777,15 +777,15 @@ class Brain(object):
                 else:
                     eye_gain = float(row['eye_gain'])
 
-                if 'eye_baseline_rate' not in params:
+                if 'baseline_rate' not in params:
                     eye_baseline_rate = EYE_BASELINE_RATE
                 else:
-                    eye_baseline_rate = float(row['eye_baseline_rate'])
+                    eye_baseline_rate = float(row['baseline_rate'])
 
-                if 'eye_refractory_period' not in params:
+                if 'refractory_period' not in params:
                     eye_refractory_period = EYE_REFRACTORY_PERIOD
                 else:
-                    eye_refractory_period = int(row['eye_refractory_period'])
+                    eye_refractory_period = int(row['refractory_period'])
 
                 self._neurons.loc[i] = \
                     [row['layer'],
@@ -804,15 +804,15 @@ class Brain(object):
                 curr_ind = int(row['neuron_ind'])
                 curr_dir = self.get_muscle_direction(curr_ind)
 
-                if 'muscle_baseline_rate' not in params:
+                if 'baseline_rate' not in params:
                     muscle_baseline_rate = MUSCLE_BASELINE_RATE
                 else:
-                    muscle_baseline_rate = row['muscle_baseline_rate']
+                    muscle_baseline_rate = row['baseline_rate']
 
-                if 'muscle_refractory_period' not in params:
+                if 'refractory_period' not in params:
                     muscle_refractory_period = MUSCLE_REFRACTORY_PERIOD
                 else:
-                    muscle_refractory_period = row['muscle_refractory_period']
+                    muscle_refractory_period = row['refractory_period']
 
                 self._neurons.loc[i] = \
                     [row['layer'],
@@ -824,15 +824,15 @@ class Brain(object):
                 # print(row['layer'], 'muscle')
 
             else:  # hidden layer
-                if 'neuron_baseline_rate' not in params:
+                if 'baseline_rate' not in params:
                     neuron_baseline_rate = NEURON_BASELINE_RATE
                 else:
-                    neuron_baseline_rate = row['neuron_baseline_rate']
+                    neuron_baseline_rate = row['baseline_rate']
 
-                if 'neuron_refractory_period' not in params:
+                if 'refractory_period' not in params:
                     neuron_refractory_period = NEURON_REFRACTORY_PERIOD
                 else:
-                    neuron_refractory_period = row['neuron_refractory_period']
+                    neuron_refractory_period = row['refractory_period']
 
                 self._neurons.loc[i] = \
                     [row['layer'],
@@ -1117,8 +1117,6 @@ class Brain(object):
         if not self.has_psp_waveforms():
             self.generate_empty_psp_waveforms()
 
-        self.check_integrity()
-
         movement_attempt = [0, 0]
 
         for i, neuron in self._neurons.iterrows():
@@ -1127,14 +1125,14 @@ class Brain(object):
                 curr_eye = neuron['neuron']
                 curr_eye_pos = curr_eye.get_position(body_position=body_position)
 
-                if curr_eye.get_input_type == 'terrain':
+                if curr_eye.get_input_type() == 'terrain':
                     is_fire = curr_eye.act(t_point=t_point, position=curr_eye_pos, input_map=terrain_map)
-                elif curr_eye.get_input_type == 'food':
+                elif curr_eye.get_input_type() == 'food':
                     if food_map is not None:
                         is_fire = curr_eye.act(t_point=t_point, position=curr_eye_pos, input_map=food_map)
                     else:
                         is_fire = False
-                elif curr_eye.get_input_type == 'fish':
+                elif curr_eye.get_input_type() == 'fish':
                     if fish_map is not None:
                         is_fire = curr_eye.act(t_point=t_point, position=curr_eye_pos, input_map=fish_map)
                     else:
@@ -1144,18 +1142,21 @@ class Brain(object):
                                       '"terrain", "food" or "fish".')
 
                 if is_fire:  # the current eye fires
-                    brain.neuron_fire(neuron_ind=i, t_point=t_point)
+                    # print('eye spike')
+                    self.neuron_fire(neuron_ind=i, t_point=t_point)
 
             elif neuron['layer'] < self.layer_num - 1:  # hidden layer
                 curr_neuron = neuron['neuron']
                 is_fire = curr_neuron.act(t_point=t_point, probability_input=self._psp_waveforms[i][t_point])
                 if is_fire:
-                    brain.neuron_fire(neuron_ind=i, t_point=t_point)
+                    # print('neuron spike')
+                    self.neuron_fire(neuron_ind=i, t_point=t_point)
 
             elif neuron['layer'] == self.layer_num - 1:  # muscle layer
-                curr_neuron = neuron['neuron']
-                curr_movement_attempt = curr_neuron.act(t_point=t_point, probability_input=self._psp_waveforms[i][t_point])
+                curr_muscle = neuron['neuron']
+                curr_movement_attempt = curr_muscle.act(t_point=t_point, probability_input=self._psp_waveforms[i][t_point])
                 if curr_movement_attempt:
+                    # print('muscle spike')
                     movement_attempt[0] += curr_movement_attempt[0]
                     movement_attempt[1] += curr_movement_attempt[1]
 
@@ -1177,11 +1178,11 @@ class Brain(object):
         if not self.has_connection_map():
             raise(ValueError, 'Brain: cannot find self._connection_map, please generate it first.')
 
-        neuron_layer = int(round(self._neurons[neuron_ind]['layer']))
+        neuron_layer = int(round(self._neurons.loc[neuron_ind, 'layer']))
 
         if neuron_layer >= 0 and neuron_layer < self.layer_num -1:  # eye layer or hidden layer
             for postsynaptic_component in self._connection_map[neuron_ind]:
-                curr_connection = self._connections[postsynaptic_component[0]]
+                curr_connection = self._connections.loc[postsynaptic_component[0], 'connection']
                 curr_psp_waveform = self._psp_waveforms[postsynaptic_component[1]]
                 curr_connection.act(t_point=t_point, postsynaptic_input=curr_psp_waveform)
         elif neuron_layer == self.layer_num -1:  # muscle layer
