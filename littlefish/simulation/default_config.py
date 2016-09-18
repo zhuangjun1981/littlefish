@@ -30,6 +30,7 @@ def generate_default_config_file(save_path):
             'EYE_INPUT_FILTER': [0.2, 0.6, 0.2],
             'EYE2_INPUT_FILTER': [0.15, 0.3, 0.15, 0.1, 0.2, 0.1],
             'EYE_DIRECTIONS': ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast'],
+            'EYE_TYPES' : ['terrain', 'food', 'fish'],
             'EYE_BASELINE_RATE': 0.,
             'EYE_REFRACTORY_PERIOD': 10,
             'EYE_BORDER_VALUE': 1,

@@ -82,6 +82,14 @@ def int2str(num,length=None):
     elif length > len(rawstr): return '0'*(length-len(rawstr)) + rawstr
 
 
+def check_df_index(df):
+    """
+    check if the indices of a pandas dataframe is a series in an ascending order with increment as 1 and starts at 0
+    :return: bool
+    """
+    return np.array_equal(df.index, np.arange(len(df)))
+
+
 if __name__ == '__main__':
 
     #==================================================
