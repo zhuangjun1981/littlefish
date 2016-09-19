@@ -1081,7 +1081,7 @@ class Brain(object):
                 print('Brain: the keys of self._psp_waveforms do represent all postsynaptic neurons in '
                       'self._neurons. PASS')
 
-        print('Brain: integrity checking finished. All pass.')
+        print('Brain: integrity checking finished. All pass.\n')
 
     def act(self, t_point, body_position, terrain_map, food_map=None, fish_map=None):
         """
