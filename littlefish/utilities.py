@@ -90,18 +90,58 @@ def check_df_index(df):
     return np.array_equal(df.index, np.arange(len(df)))
 
 
+def plot_spike_ticks(spike_history, y=0., plot_axis=None, color='#ff0000', **kwargs):
+    """
+    plot spike ticks as separate dots
+    :param spike_history: list of ints, spike timestamps on time unit axis
+    :param y: float, vertical locations of spike line
+    :param plot_axis: plotting axis, matplotlib.pyplot.axis object
+    :param color: plotting color
+    :param kwargs: other inputs to matplotlib.pyplot.plot function
+    :return: plot_axis
+    """
+
+    if plot_axis is None:
+        f = plt.figure(figsize=(10, 5))
+        plot_axis = f.add_subplot(111)
+
+    spk_num = len(spike_history)
+
+    plot_axis.plot(spike_history, [float(y)] * spk_num, '.', mfc=color, **kwargs)
+
+
+def short(str):
+    """
+    retrun abbreviation of a string
+    """
+
+    if str in ['north', 'south', 'east', 'west']:
+        return str[0] * 2
+    elif str in ['northwest', 'northeast', 'southwest', 'southeast']:
+        return str[0] + str[5]
+    elif str in ['hidden', 'eye', 'muscle']:
+        return str[0]
+    elif str in ['terrain', 'food', 'fish']:
+        return str[0:4]
+
+
 if __name__ == '__main__':
 
     #==================================================
-    ts_trigger = np.arange(5)
-    ts_reference = np.arange(5) + 0.1001
+    # ts_trigger = np.arange(5)
+    # ts_reference = np.arange(5) + 0.1001
+    #
+    # ccg, t = discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-0.2, 0.5), bin_width=0.1)
+    #
+    # print(t)
+    # print(ccg)
+    #
+    # plt.plot(t, ccg)
+    # plt.show()
+    # ==================================================
 
-    ccg, t = discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-0.2, 0.5), bin_width=0.1)
-
-    print(t)
-    print(ccg)
-
-    plt.plot(t, ccg)
+    # ==================================================
+    plot_spike_ticks(range(5))
     plt.show()
     # ==================================================
 

@@ -1,10 +1,11 @@
 from littlefish.fish import brain
 from littlefish import utilities as util
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import time
 
-SIMULATION_LENGTH = int(1e5)
+SIMULATION_LENGTH = int(1e4)
 CONNECTION_AMPLITUDE = 0.01
 
 neurons_df = pd.DataFrame([[0, 0, 0.0, 10],
@@ -32,10 +33,13 @@ for i in range(SIMULATION_LENGTH):
 
 print('simulation time: ' + str(time.time() - t1) + ' seconds.')
 
-print(brain.get_neurons().loc[0, 'neuron'].get_action_history())
-print(len(brain.get_neurons().loc[0, 'neuron'].get_action_history()) / 10.)
-print(brain.get_neurons().loc[1, 'neuron'].get_action_history())
-print(len(brain.get_neurons().loc[1, 'neuron'].get_action_history()) / 10.)
-print(brain.get_neurons().loc[2, 'neuron'].get_action_history())
-print(len(brain.get_neurons().loc[2, 'neuron'].get_action_history()) / 10.)
+# print(brain.get_neurons().loc[0, 'neuron'].get_action_history())
+# print(len(brain.get_neurons().loc[0, 'neuron'].get_action_history()) / 10.)
+# print(brain.get_neurons().loc[1, 'neuron'].get_action_history())
+# print(len(brain.get_neurons().loc[1, 'neuron'].get_action_history()) / 10.)
+# print(brain.get_neurons().loc[2, 'neuron'].get_action_history())
+# print(len(brain.get_neurons().loc[2, 'neuron'].get_action_history()) / 10.)
+
+brain.plot_action_histories_scatter(plot_length=SIMULATION_LENGTH, ms=10, mec='none')
+plt.show()
 

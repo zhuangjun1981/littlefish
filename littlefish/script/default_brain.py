@@ -3,8 +3,9 @@ from littlefish import utilities as util
 import pandas as pd
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
-SIMULATION_LENGTH = int(1e5)
+SIMULATION_LENGTH = int(5e4)
 CONNECTION_AMPLITUDE = 0.01
 
 brain = brain.Brain()
@@ -25,4 +26,10 @@ for i in range(SIMULATION_LENGTH):
         print(i, movement)
 
 print('simulation time: ' + str(time.time() - t1) + ' seconds.')
+
+
+f = plt.figure(figsize=(20, 5))
+ax = f.add_subplot(111)
+brain.plot_action_histories_scatter(plot_axis=ax, plot_length=SIMULATION_LENGTH, ms=10, mec='none')
+plt.show()
 

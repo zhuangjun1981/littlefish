@@ -851,9 +851,9 @@ class Brain(object):
             print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
             layer_num = max(self._neurons['layer']) + 1
             for layer in range(layer_num):
-                layer_name = self.get_layer_name(layer, layer_num)
+                layer_name = self.get_layer_type(layer)
                 neuron_num = len(self._neurons[self._neurons.layer == layer])
-                print(layer_name + ' : ' + str(neuron_num) + ' neurons.')
+                print(layer_name + ' layer: ' + str(neuron_num) + ' neurons.')
         elif verbose_level == 2:
             print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
             print(self._neurons)
@@ -906,6 +906,48 @@ class Brain(object):
     @property
     def layer_num(self):
         return int(round(max(self._neurons['layer']))) + 1
+
+    def get_layer_type(self, layer):
+        """
+        return layer type (str) given the layer number
+        """
+        if not isinstance(layer, int):
+            raise (ValueError, 'Input layer number should be integer.')
+
+        if layer == 0:
+            return 'eye'
+        elif layer == self.layer_num - 1:
+            return 'muscle'
+        elif layer > 0 and layer < self.layer_num - 1:
+            return 'hidden' + util.int2str(layer, 3)
+        else:
+            raise (ValueError, 'layer number out of range.')
+
+    def get_neuron_type(self, ind):
+        """
+        return neuron type as a pair of strings given the index in self._neurons
+        :param ind: int
+        :return: for eyes : ('eye', type + short of direction)
+                 for hidden neurons: ('hidden', str(layer))
+                 for muscles ('muscle', short of direction)
+        """
+
+        self.check_integrity_neurons()
+
+        curr_row = self._neurons.loc[ind]
+        curr_layer = curr_row['layer']
+        if curr_layer == 0:  # eye layer
+            curr_dir, curr_type = self.get_eye_type(curr_row['neuron_ind'])
+            return util.short('eye') + '_' + util.short(curr_type) + '_' + util.short(curr_dir)
+        elif curr_layer == self.layer_num - 1:  # muscle layer
+            curr_dir = MUSCLE_DIRECTIONS[curr_row['neuron_ind'] % len(MUSCLE_DIRECTIONS)]
+            return util.short('muscle') + '_' + util.short(curr_dir)
+        elif curr_layer > 0 and curr_layer < self.layer_num - 1:
+            curr_layer_num = util.int2str(curr_layer, 3)
+            curr_neuron_num = util.int2str(curr_row['neuron_ind'], 3)
+            return '_'.join([util.short('hidden'), curr_layer_num, curr_neuron_num])
+        else:
+            raise (ValueError, 'layer number out of range.')
 
     def get_connections(self):
         return self._connections
@@ -978,44 +1020,7 @@ class Brain(object):
 
         print('\nBrain: checking integrity of attrbitue data structure ...')
 
-        if not util.check_df_index(self._neurons):
-            raise(ValueError, 'Brain: the indices of self._neurons are not starting at 0 and increasing with step 1.')
-        else:
-            print('Brain: the indices of self._neurons are starting at 0 and increasing with step 1. PASS.')
-
-        layer = 0
-        ind = -1
-        for i, neuron in self._neurons.iterrows():
-            curr_layer = int(round(neuron['layer']))
-            curr_neuron_ind = neuron['neuron_ind']
-            if curr_layer < layer:
-                raise(ValueError, 'Brain: the "layer" in self._neurons is not in ascending order.')
-            elif curr_layer == layer:
-                if curr_neuron_ind != ind + 1:
-                    raise(ValueError, 'Brain: the "neuron_ind" in self._neurons is not in ascending by step 1 for each '
-                                      '"layer"')
-                else:
-                    ind += 1
-            else:
-                layer = curr_layer
-                if curr_neuron_ind != 0:
-                    raise(ValueError, 'Brain: the "neuron_ind" in self._neurons does not start with 0 for each "layer".')
-                ind = 0
-
-            if curr_layer == 0:  # eye layer
-                if not (str(neuron['neuron']) == 'littlefish.brain.Eye object' or \
-                        str(neuron['neuron']) == 'littlefish.brain.Eye2 object'):
-                    raise(ValueError, 'Brain: non-eye object in eye layer.')
-            elif curr_layer == self.layer_num - 1:  # muscle layer
-                if not str(neuron['neuron']) == 'littlefish.brain.Muscle object':
-                    raise(ValueError, 'Brain: non-muscle object in muscle layer.')
-            else:  # hidden layer
-                if not str(neuron['neuron']) == 'littlefish.brain.Neuron object':
-                    raise(ValueError, 'Brain: non-neuron object in hidden layer.')
-
-        print('Brain: the "layer" of self._neurons is in a non-descending order. PASS')
-        print('Brain: the "neuron_ind" of self._neurons for each layer is ascending from 0 by step 1. PASS')
-        print('Brain: eyes in eye layer, muscles in muscle layer, neurons in hidden layer. PASS')
+        self.check_integrity_neurons(verbose=True)
 
         if not util.check_df_index(self._connections):
             raise(ValueError, 'Brain: the indices of self._connections are not starting at 0 and increasing with '
@@ -1082,6 +1087,51 @@ class Brain(object):
                       'self._neurons. PASS')
 
         print('Brain: integrity checking finished. All pass.\n')
+
+    def check_integrity_neurons(self, verbose=False):
+
+        if not util.check_df_index(self._neurons):
+            raise(ValueError, 'Brain: the indices of self._neurons are not starting at 0 and increasing with step 1.')
+        else:
+            if verbose:
+                print('Brain: the indices of self._neurons are starting at 0 and increasing with step 1. PASS.')
+            else:
+                pass
+
+        layer = 0
+        ind = -1
+        for i, neuron in self._neurons.iterrows():
+            curr_layer = int(round(neuron['layer']))
+            curr_neuron_ind = neuron['neuron_ind']
+            if curr_layer < layer:
+                raise(ValueError, 'Brain: the "layer" in self._neurons is not in ascending order.')
+            elif curr_layer == layer:
+                if curr_neuron_ind != ind + 1:
+                    raise(ValueError, 'Brain: the "neuron_ind" in self._neurons is not in ascending by step 1 for each '
+                                      '"layer"')
+                else:
+                    ind += 1
+            else:
+                layer = curr_layer
+                if curr_neuron_ind != 0:
+                    raise(ValueError, 'Brain: the "neuron_ind" in self._neurons does not start with 0 for each "layer".')
+                ind = 0
+
+            if curr_layer == 0:  # eye layer
+                if not (str(neuron['neuron']) == 'littlefish.brain.Eye object' or \
+                        str(neuron['neuron']) == 'littlefish.brain.Eye2 object'):
+                    raise(ValueError, 'Brain: non-eye object in eye layer.')
+            elif curr_layer == self.layer_num - 1:  # muscle layer
+                if not str(neuron['neuron']) == 'littlefish.brain.Muscle object':
+                    raise(ValueError, 'Brain: non-muscle object in muscle layer.')
+            else:  # hidden layer
+                if not str(neuron['neuron']) == 'littlefish.brain.Neuron object':
+                    raise(ValueError, 'Brain: non-neuron object in hidden layer.')
+
+        if verbose:
+            print('Brain: the "layer" of self._neurons is in a non-descending order. PASS')
+            print('Brain: the "neuron_ind" of self._neurons for each layer is ascending from 0 by step 1. PASS')
+            print('Brain: eyes in eye layer, muscles in muscle layer, neurons in hidden layer. PASS')
 
     def act(self, t_point, body_position, terrain_map, food_map=None, fish_map=None):
         """
@@ -1232,6 +1282,61 @@ class Brain(object):
         self._clear_psp_waveforms()
         self._clear_action_histories()
 
+    def plot_action_histories_scatter(self, plot_length, plot_axis=None, is_separated=True, **kwargs):
+        """
+        plot action histories of all neurons as scatter plot, eye spikes: red, hidden layer spikes: green,
+        muscle spikes: blue
+        :param plot_length: int, total length of plot, number of time units
+        :param is_separated: bool, plot separation line or not
+        :param plot_axis: matplotlib.pyplot.axis object
+        :param kwargs: other inputs to matplotlib.pyplot.plot function
+        :return:
+        """
+
+        if not self.has_action_histories():
+            raise(LookupError, 'Brain: No action history found. Cannot plot.')
+
+        self.check_integrity_neurons()
+
+        if plot_axis is None:
+            f = plt.figure(figsize=(15, 10))
+            plot_axis = f.add_subplot(111)
+
+        if plot_length is None:
+            plot_length = SIMULATION_LENGTH
+
+        total_neuron_num = len(self._neurons)
+        total_y = range(total_neuron_num)
+
+        if is_separated:
+            total_separation = [y + 0.5 for y in total_y]
+            for separation in total_separation:
+                plot_axis.plot([0, plot_length], [separation, separation], '--', color='#888888')
+
+        yticklaybels = []
+
+        for i, neuron_df in self._neurons.iterrows():
+            curr_layer_type = self.get_layer_type(int(neuron_df['layer']))
+            curr_action_history = neuron_df['neuron'].get_action_history()
+            curr_y = total_y[i]
+
+            if 'eye' in curr_layer_type:
+                util.plot_spike_ticks(curr_action_history, y=curr_y, plot_axis=plot_axis, color='r', **kwargs)
+            elif 'hidden' in curr_layer_type:
+                util.plot_spike_ticks(curr_action_history, y=curr_y, plot_axis=plot_axis, color='g', **kwargs)
+            elif 'muscle' in curr_layer_type:
+                util.plot_spike_ticks(curr_action_history, y=curr_y, plot_axis=plot_axis, color='b', **kwargs)
+
+            yticklaybels.append(self.get_neuron_type(i))
+
+        plot_axis.set_xlim([0, plot_length])
+        plot_axis.set_ylim([-0.5, total_neuron_num - 0.5])
+        plot_axis.invert_yaxis()
+        plot_axis.set_xlabel('time (time unit)')
+        plot_axis.set_ylabel('neuron index')
+        plot_axis.set_yticks(total_y)
+        plot_axis.set_yticklabels(yticklaybels, family='monospace')
+
     def to_h5_group(self):
         pass
 
@@ -1256,22 +1361,6 @@ class Brain(object):
     @staticmethod
     def from_h5_group(h5_group):
         pass
-
-    @staticmethod
-    def get_layer_name(layer_ind, layer_num):
-        """
-        return name of a layer given the total number of layers and index of the layer
-        """
-        if layer_num < 3:
-            raise(ValueError, 'layer_num should be no less than 3.')
-
-        if layer_ind == 0:
-            layer_name = 'eye layer'
-        elif layer_ind == layer_num - 1:
-            layer_name = 'muscle layer'
-        else:
-            layer_name = 'hidden layer ' + util.int2str(layer_ind, 2)
-        return layer_name
     
     @staticmethod
     def generate_default_neurons_df():
