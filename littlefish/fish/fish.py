@@ -30,7 +30,7 @@ class Fish(object):
                              1, during simulation
                              2, after simulation
 
-    self._position_history: pandas dataframe, columns: ['t_point', 'row', 'column']
+    self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
     """
 
     def __init__(self, brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE):
@@ -47,7 +47,8 @@ class Fish(object):
         self._simulation_status = 0
         self._curr_position = (None, None)
         self._curr_health = None
-        self._position_history = pd.DataFrame(columns=['t_point', 'row', 'column'])
+        self._end_time = None
+        self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column', 'health'])
 
     def get_simulation_status(self):
         return self._simulation_status
@@ -90,9 +91,9 @@ class Fish(object):
 
             self._curr_position = curr_position
             self._curr_health = self._max_health
-            self._position_history.append(pd.DataFrame([[0, self._curr_position[0], self._curr_position[1]]],
-                                                       columns=['t_point', 'row', 'column']),
-                                          ignore_index=True)
+            self._simulation_history.append(pd.DataFrame([[0, self._curr_position[0], self._curr_position[1]]],
+                                                         columns=['t_point', 'row', 'column']),
+                                            ignore_index=True)
             self._simulation_status = 1
             print('Fish: Simulation initialization successful.')
             return True
@@ -101,6 +102,43 @@ class Fish(object):
         elif self._simulation_status == 2:
             raise(RuntimeError, 'Fish: Simulation initialization fail. Already after simulation. '
                                 'Please clear simulation data first.')
+
+    def act(self, t_point, terrain_map, food_map=None, fish_map=None):
+
+        if self._simulation_status == 0:
+            raise(RuntimeError, 'Fish: action failed. simulation not initialized.')
+        elif self._simulation_status == 2:
+            raise(RuntimeError, 'Fish: action failed. simulation already stopped.')
+
+        if not self._simulation_status == 1:
+            raise(RuntimeError, 'Fish: action failed. self._simulation_status should be 1.')
+
+        self._eval_terrain()
+        self._eval_food()
+        self._eval_fish()
+
+        movement_attempt = self._brain.act(t_point, self._curr_position, terrain_map, food_map=None, fish_map=None)
+
+        self._move(movement_attempt)
+
+        self._simulation_history.loc[len(self._simulation_history)] = [t_point, self._curr_position[0],
+                                                                       self._curr_position[1], self._curr_health]
+
+    def _eval_fish(self, fish_map):
+        # todo: finish this method. have no idea how to do it
+        pass
+
+    def _eval_terrain(self, terrain_map):
+        # todo: finish this method
+        pass
+
+    def _eval_food(self, food_map):
+        # todo: finish this method
+        pass
+
+    def _move(self, terrain_map):
+        # todo: finish this method
+        pass
 
     def clear_simulation(self):
         """
@@ -112,12 +150,14 @@ class Fish(object):
         elif self._simulation_status == 0 or self._simulation_status == 2:
             self._curr_position = (None, None)
             self._curr_health = None
-            self._clear_position_history()
+            self._end_time = None
+            self._clear_simulation_history()
+            self._brain._simulation_data()
             self._simulation_status = 0
             print('Fish: all simulation data cleared. Simulation now can be initialized.')
 
-    def _clear_position_history(self):
-        self._position_history = pd.DataFrame(columns=['t_point', 'row', 'column'])
+    def _clear_simulation_history(self):
+        self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column, ''health'])
 
     def save_simulation(self, save_path):
         if self._simulation_status == 1:
@@ -128,9 +168,10 @@ class Fish(object):
             # todo: save simulation data
             pass
 
-    def stop_simulation(self):
+    def stop_simulation(self, end_time):
         if self._simulation_status == 1:
             self._simulation_status = 2
+            self._end_time = end_time
             print('Fish: Simulation stopped.')
         elif self._simulation_status == 0:
             raise(RuntimeError, 'Fish: Stop simulation fail. Not in simulation.')
