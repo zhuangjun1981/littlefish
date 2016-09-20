@@ -10,6 +10,8 @@ SIMULATION_LENGTH = 100000
 
 FISH_MAX_HEALTH = 100.
 FISH_HEALTH_DECAY_RATE = 0.0001
+FISH_LAND_PENALTY_RATE = 0.005
+FISH_FOOD_RATE = 20.
 
 class Fish(object):
     """
@@ -33,11 +35,14 @@ class Fish(object):
     self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
     """
 
-    def __init__(self, brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE):
+    def __init__(self, brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE,
+                 land_penalty_rate=FISH_LAND_PENALTY_RATE, food_rate=FISH_FOOD_RATE):
 
 
         self._max_health = float(max_health)
         self._health_decay_rate = float(health_decay_rate)
+        self._land_penalty_rate = land_penalty_rate
+        self._food_rate = food_rate
 
         if brain is None:
             self._brain = brain.Brain()
@@ -119,7 +124,9 @@ class Fish(object):
 
         movement_attempt = self._brain.act(t_point, self._curr_position, terrain_map, food_map=None, fish_map=None)
 
-        self._move(movement_attempt)
+        self._move(movement_attempt, terrain_map=terrain_map)
+
+        self._curr_health += (- self._health_decay_rate)
 
         self._simulation_history.loc[len(self._simulation_history)] = [t_point, self._curr_position[0],
                                                                        self._curr_position[1], self._curr_health]
@@ -129,16 +136,35 @@ class Fish(object):
         pass
 
     def _eval_terrain(self, terrain_map):
-        # todo: finish this method
-        pass
+        """
+        Evaluate the coverage of fish body on terrain map, apply land penalty to current health accordingly
+        """
+        curr_body = terrain_map[self._curr_position[0] - 1: self._curr_position[0] + 2,
+                                self._curr_position[1] - 1: self._curr_position[1] + 2]
+
+        self._curr_health += (-1. * np.sum(curr_body[:]) * self._land_penalty_rate)
 
     def _eval_food(self, food_map):
         # todo: finish this method
         pass
 
-    def _move(self, terrain_map):
-        # todo: finish this method
-        pass
+    def _move(self, movement_attempt, terrain_map):
+        """
+        update self._curr_position according to the movement_attempt but not moving out of the terrain map
+        """
+        if self._curr_position[0] + movement_attempt[0] < 1:
+            self._curr_position[0] = 1
+        elif self._curr_position[0] + movement_attempt[0] > terrain_map.shape[0] - 2:
+            self._curr_position[0] = terrain_map.shape[0] - 2
+        else:
+            self._curr_position[0] += movement_attempt[0]
+
+        if self._curr_position[1] + movement_attempt[1] < 1:
+            self._curr_position[1] = 1
+        elif self._curr_position[1] + movement_attempt[1] > terrain_map.shape[1] - 2:
+            self._curr_position[1] = terrain_map.shape[1] - 2
+        else:
+            self._curr_position[1] += movement_attempt[1]
 
     def clear_simulation(self):
         """
