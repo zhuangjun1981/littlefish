@@ -132,39 +132,70 @@ class Fish(object):
                                                                        self._curr_position[1], self._curr_health]
 
     def _eval_fish(self, fish_map):
-        # todo: finish this method. have no idea how to do it
-        pass
+
+        if self._simulation_status == 1:
+            # todo: add code for action here.
+            pass
+        elif self._simulation_status == 0:
+            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+        elif self._simulation_status == 2:
+            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+        else:
+            raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
 
     def _eval_terrain(self, terrain_map):
         """
         Evaluate the coverage of fish body on terrain map, apply land penalty to current health accordingly
         """
-        curr_body = terrain_map[self._curr_position[0] - 1: self._curr_position[0] + 2,
-                                self._curr_position[1] - 1: self._curr_position[1] + 2]
 
-        self._curr_health += (-1. * np.sum(curr_body[:]) * self._land_penalty_rate)
+        if self._simulation_status == 1:
+            curr_body = terrain_map[self._curr_position[0] - 1: self._curr_position[0] + 2,
+                                    self._curr_position[1] - 1: self._curr_position[1] + 2]
+
+            self._curr_health += (-1. * np.sum(curr_body[:]) * self._land_penalty_rate)
+        elif self._simulation_status == 0:
+            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+        elif self._simulation_status == 2:
+            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+        else:
+            raise(RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
 
     def _eval_food(self, food_map):
-        # todo: finish this method
-        pass
+
+        if self._simulation_status == 1:
+            # todo: add code for action here. return the location where food has been eaten.
+            pass
+        elif self._simulation_status == 0:
+            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+        elif self._simulation_status == 2:
+            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+        else:
+            raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
 
     def _move(self, movement_attempt, terrain_map):
         """
         update self._curr_position according to the movement_attempt but not moving out of the terrain map
         """
-        if self._curr_position[0] + movement_attempt[0] < 1:
-            self._curr_position[0] = 1
-        elif self._curr_position[0] + movement_attempt[0] > terrain_map.shape[0] - 2:
-            self._curr_position[0] = terrain_map.shape[0] - 2
-        else:
-            self._curr_position[0] += movement_attempt[0]
+        if self._simulation_status == 1:
+            if self._curr_position[0] + movement_attempt[0] < 1:
+                self._curr_position[0] = 1
+            elif self._curr_position[0] + movement_attempt[0] > terrain_map.shape[0] - 2:
+                self._curr_position[0] = terrain_map.shape[0] - 2
+            else:
+                self._curr_position[0] += movement_attempt[0]
 
-        if self._curr_position[1] + movement_attempt[1] < 1:
-            self._curr_position[1] = 1
-        elif self._curr_position[1] + movement_attempt[1] > terrain_map.shape[1] - 2:
-            self._curr_position[1] = terrain_map.shape[1] - 2
+            if self._curr_position[1] + movement_attempt[1] < 1:
+                self._curr_position[1] = 1
+            elif self._curr_position[1] + movement_attempt[1] > terrain_map.shape[1] - 2:
+                self._curr_position[1] = terrain_map.shape[1] - 2
+            else:
+                self._curr_position[1] += movement_attempt[1]
+        elif self._simulation_status == 0:
+            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+        elif self._simulation_status == 2:
+            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
         else:
-            self._curr_position[1] += movement_attempt[1]
+            raise(RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
 
     def clear_simulation(self):
         """
