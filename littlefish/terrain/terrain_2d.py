@@ -8,6 +8,7 @@ import littlefish.utilities as util
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.ndimage as ni
+import random
 
 
 plt.ioff()
@@ -97,8 +98,12 @@ class BinaryTerrain(object):
         return self._terrain_map
 
     def generate_fish_starting_position(self):
-        # todo: finish this method, first dilating with [[1 1 1],[1 1 1],[1 1 1]], then pick a zero
-        pass
+        """
+        :return: a possible position for a 3x3 fish, where its body will not cover 1s in self._terrain_map
+        """
+        dilated_terrain = ni.binary_dilation(self._terrain_map, structure=[[1,1,1], [1,1,1], [1,1,1]])
+        possible_positions = zip(*np.where(dilated_terrain == 0))
+        return list(random.choice(possible_positions))
 
     def generate_next_food_position(self):
         # todo: finish this method
@@ -120,7 +125,15 @@ class BinaryTerrain(object):
 if __name__ == '__main__':
 
     #=============================================================
-    terrain_generator = TerrainGenerator(sea_level=0.5)
+    terrain_generator = TerrainGenerator(sea_level=0.6)
     terrain_map = terrain_generator.generate_binary_map(sigma=5., is_plot=True)
     binary_terrain = BinaryTerrain(terrain_map)
+    fish_pos = binary_terrain.generate_fish_starting_position()
+    fish_map = np.zeros(binary_terrain.get_terrain_shape(), dtype=np.uint8)
+    fish_map[fish_pos[0] - 1: fish_pos[0] + 2, fish_pos[1] - 1: fish_pos[1] + 2] = 1
+    f = plt.figure(figsize=(10, 10))
+    ax = f.add_subplot(111)
+    ax.imshow(binary_terrain.get_terrain_map(), cmap='gray', vmin=0, vmax=1, interpolation='nearest')
+    util.plot_mask(fish_map, plot_axis=ax, color='#ff0000')
+    plt.show()
     #=============================================================

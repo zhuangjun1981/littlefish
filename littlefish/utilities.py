@@ -4,6 +4,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.ndimage as ni
 
 
 def array_nor(arr):
@@ -145,6 +146,65 @@ def short(str):
         return str[0:4]
 
 
+def plot_mask_borders(mask, plot_axis=None, color='#ff0000', border_width=2, closing_iteration=None, **kwargs):
+    '''
+    plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
+    as background, and non-zero, non-nan pixel will be considered in ROI.
+    '''
+    if not check_binary_2d_array(mask):
+        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with dtype as integer and contains '
+                          'only 0s and 1s.')
+
+    if not plot_axis:
+        f = plt.figure()
+        plot_axis = f.add_subplot(111)
+
+    if closing_iteration is not None:
+        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(np.uint8)
+    else:
+        ploting_mask = mask
+
+    currfig = plot_axis.contour(ploting_mask, levels=[0.5], colors=color, linewidths=border_width, **kwargs)
+
+    # put y axis in decreasing order
+    y_lim = list(plot_axis.get_ylim())
+    y_lim.sort()
+    plot_axis.set_ylim(y_lim[::-1])
+
+    plot_axis.set_aspect('equal')
+
+    return currfig
+
+def plot_mask(mask, plot_axis=None, color='#ff0000', closing_iteration=None, **kwargs):
+    '''
+    plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
+    as background, and non-zero, non-nan pixel will be considered in ROI.
+    '''
+    if not check_binary_2d_array(mask):
+        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with dtype as integer and contains '
+                          'only 0s and 1s.')
+
+    if not plot_axis:
+        f = plt.figure()
+        plot_axis = f.add_subplot(111)
+
+    if closing_iteration is not None:
+        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(np.uint8)
+    else:
+        ploting_mask = mask
+
+    currfig = plot_axis.contourf(ploting_mask, levels=[0.5, 1], colors=color, **kwargs)
+
+    # put y axis in decreasing order
+    y_lim = list(plot_axis.get_ylim())
+    y_lim.sort()
+    plot_axis.set_ylim(y_lim[::-1])
+
+    plot_axis.set_aspect('equal')
+
+    return currfig
+
+
 if __name__ == '__main__':
 
     #==================================================
@@ -161,7 +221,15 @@ if __name__ == '__main__':
     # ==================================================
 
     # ==================================================
-    plot_spike_ticks(range(5))
+    # plot_spike_ticks(range(5))
+    # plt.show()
+    # ==================================================
+
+    # ==================================================
+    array = np.zeros((100, 100), dtype=np.uint8)
+    array[35: 38, 40: 43] = 1
+    # array[35, 40] = 1
+    plot_mask(array)
     plt.show()
     # ==================================================
 
