@@ -35,7 +35,7 @@ class Fish(object):
     self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
     """
 
-    def __init__(self, brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE,
+    def __init__(self, input_brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE,
                  land_penalty_rate=FISH_LAND_PENALTY_RATE, food_rate=FISH_FOOD_RATE):
 
 
@@ -44,16 +44,19 @@ class Fish(object):
         self._land_penalty_rate = land_penalty_rate
         self._food_rate = food_rate
 
-        if brain is None:
+        if input_brain is None:
             self._brain = brain.Brain()
         else:
-            self._brain = brain
+            input_brain.check_integrity()
+            self._brain = input_brain
 
         self._simulation_status = 0
-        self._curr_position = (None, None)
+        self._curr_position = None
         self._curr_health = None
         self._end_time = None
         self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column', 'health'])
+
+        print('\nFish: fish object generated successfully.')
 
     def get_simulation_status(self):
         return self._simulation_status
@@ -64,63 +67,63 @@ class Fish(object):
     def get_curr_health(self):
         return self._curr_health
 
-    def initialize_simulation(self, curr_position=(10, 10), world_map=np.zeros((20, 20), dtype=np.uint8)):
+    def initialize_simulation(self, starting_position, terrain_map):
         """
         create all psp waveforms as internal attributes
         turn self._simulation_status to be 1
         """
-        if len(curr_position) != 2:
-            raise (ValueError, 'curr_position should contain two elements.')
+        if len(starting_position) != 2:
+            raise (ValueError, 'starting_position should contain two elements.')
 
-        if (not isinstance(curr_position[0], int)) or (not isinstance(curr_position[1], int)):
-            raise (ValueError, 'curr_position should contain two integers.')
+        if (not isinstance(starting_position[0], int)) or (not isinstance(starting_position[1], int)):
+            raise (ValueError, 'starting_position should contain two integers.')
 
-        if len(world_map.shape) != 2:
-            raise(ValueError, 'world_map should be a 2-d array.')
+        if len(terrain_map.shape) != 2:
+            raise(ValueError, 'terrain_map should be a 2-d array.')
 
-        if not np.issubdtype(world_map.dtype, np.integer):
-            raise(ValueError, 'dtype of world_map should be integer.')
+        if not np.issubdtype(terrain_map.dtype, np.integer):
+            raise(ValueError, 'dtype of terrain_map should be integer.')
 
-        if np.max(world_map) > 1 or np.min(world_map) < 0:
-            raise(ValueError, 'world_map should only contain 0s and 1s.')
+        if np.max(terrain_map) > 1 or np.min(terrain_map) < 0:
+            raise(ValueError, 'terrain_map should only contain 0s and 1s.')
 
-        if curr_position[0] < 1 or curr_position[0] > world_map.shape[0] - 2 or \
-            curr_position[1] < 1 or curr_position[1] > world_map.shape[1] - 2:
-            raise(ValueError, 'curr_position out of the range.')
+        if starting_position[0] < 1 or starting_position[0] > terrain_map.shape[0] - 2 or \
+            starting_position[1] < 1 or starting_position[1] > terrain_map.shape[1] - 2:
+            raise(ValueError, 'starting_position out of the range.')
 
-        if np.sum(world_map[curr_position[0] - 1: curr_position[0] + 2,
-                            curr_position[1] - 1: curr_position[1] + 2,]) > 0:
-            raise(ValueError, 'the body of fish at curr_position cover 1s.')
+        if np.sum(terrain_map[starting_position[0] - 1: starting_position[0] + 2,
+                  starting_position[1] - 1: starting_position[1] + 2, ]) > 0:
+            raise(ValueError, 'the body of fish at starting_position covers land.')
 
         if self._simulation_status == 0:  # has not been simulated
 
-            self._curr_position = curr_position
+            self._curr_position = np.array(starting_position, dtype=np.int)
             self._curr_health = self._max_health
             self._simulation_history.append(pd.DataFrame([[0, self._curr_position[0], self._curr_position[1]]],
                                                          columns=['t_point', 'row', 'column']),
                                             ignore_index=True)
             self._simulation_status = 1
-            print('Fish: Simulation initialization successful.')
+            print('Fish: Simulation initialized successfully.')
             return True
         elif self._simulation_status == 1:
-            raise(RuntimeError, 'Fish: Simulation initialization fail. Already in simulation.')
+            raise(RuntimeError, 'Fish: Simulation initialization failure. Already in simulation.')
         elif self._simulation_status == 2:
-            raise(RuntimeError, 'Fish: Simulation initialization fail. Already after simulation. '
+            raise(RuntimeError, 'Fish: Simulation initialization failure. Already after simulation. '
                                 'Please clear simulation data first.')
 
     def act(self, t_point, terrain_map, food_map=None, fish_map=None):
 
         if self._simulation_status == 0:
-            raise(RuntimeError, 'Fish: action failed. simulation not initialized.')
+            raise(RuntimeError, 'Fish: action failure. simulation not initialized.')
         elif self._simulation_status == 2:
-            raise(RuntimeError, 'Fish: action failed. simulation already stopped.')
+            raise(RuntimeError, 'Fish: action failure. simulation already stopped.')
 
         if not self._simulation_status == 1:
-            raise(RuntimeError, 'Fish: action failed. self._simulation_status should be 1.')
+            raise(RuntimeError, 'Fish: action failure. self._simulation_status should be 1.')
 
-        self._eval_terrain()
-        self._eval_food()
-        self._eval_fish()
+        self._eval_terrain(terrain_map=terrain_map)
+        food_taken_positions = self._eval_food(food_map=food_map)
+        self._eval_fish(fish_map=fish_map)
 
         movement_attempt = self._brain.act(t_point, self._curr_position, terrain_map, food_map=None, fish_map=None)
 
@@ -131,46 +134,68 @@ class Fish(object):
         self._simulation_history.loc[len(self._simulation_history)] = [t_point, self._curr_position[0],
                                                                        self._curr_position[1], self._curr_health]
 
+        return food_taken_positions
+
     def _eval_fish(self, fish_map):
 
-        if self._simulation_status == 1:
-            # todo: add code for action here.
-            pass
-        elif self._simulation_status == 0:
-            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
-        elif self._simulation_status == 2:
-            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
-        else:
-            raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
+        if fish_map is not None:
+
+            if self._simulation_status == 1:
+                # todo: add code for action here.
+                pass
+            elif self._simulation_status == 0:
+                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+            elif self._simulation_status == 2:
+                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+            else:
+                raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
 
     def _eval_terrain(self, terrain_map):
         """
         Evaluate the coverage of fish body on terrain map, apply land penalty to current health accordingly
         """
 
-        if self._simulation_status == 1:
-            curr_body = terrain_map[self._curr_position[0] - 1: self._curr_position[0] + 2,
-                                    self._curr_position[1] - 1: self._curr_position[1] + 2]
-
-            self._curr_health += (-1. * np.sum(curr_body[:]) * self._land_penalty_rate)
-        elif self._simulation_status == 0:
-            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
-        elif self._simulation_status == 2:
-            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+        if terrain_map is None:
+            raise(ValueError, 'Fish: _eval_terrain failure. terrain_map is None.')
         else:
-            raise(RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
+            if self._simulation_status == 1:
+
+                curr_body = terrain_map[self._curr_position[0] - 1: self._curr_position[0] + 2,
+                                        self._curr_position[1] - 1: self._curr_position[1] + 2]
+                self._curr_health += (-1. * np.sum(curr_body[:]) * self._land_penalty_rate)
+
+            elif self._simulation_status == 0:
+                raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+            elif self._simulation_status == 2:
+                raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+            else:
+                raise(RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
 
     def _eval_food(self, food_map):
 
-        if self._simulation_status == 1:
-            # todo: add code for action here. return the location where food has been eaten.
-            pass
-        elif self._simulation_status == 0:
-            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
-        elif self._simulation_status == 2:
-            raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
-        else:
-            raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
+        if food_map is not None:
+
+            if self._simulation_status == 1:
+
+                food_positions = zip(*np.where(food_map==1))
+                food_taken_positions = []
+
+                for food_position in food_positions:
+                    if food_position[0] >= self._curr_position[0] - 1 and \
+                            food_position[0] < self._curr_position[0] + 2 and \
+                            food_position[1] >= self._curr_position[1] - 1 and \
+                            food_position[1] < self._curr_position[1] + 2:
+                        self._curr_health += self._food_rate
+                        food_taken_positions.append(food_position)
+
+                return food_taken_positions
+
+            elif self._simulation_status == 0:
+                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+            elif self._simulation_status == 2:
+                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+            else:
+                raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
 
     def _move(self, movement_attempt, terrain_map):
         """
@@ -202,10 +227,19 @@ class Fish(object):
         clear all psp waveforms, clear action history for all neurons, clear position
         """
         if self._simulation_status == 1:
-            raise(RuntimeError, 'Fish: clear simulation fail. Still in simulation.')
+            raise(RuntimeError, 'Fish: clear simulation failure. Still in simulation.')
 
-        elif self._simulation_status == 0 or self._simulation_status == 2:
-            self._curr_position = (None, None)
+        elif self._simulation_status == 0:
+            self._curr_position = None
+            self._curr_health = None
+            self._end_time = None
+            self._clear_simulation_history()
+            self._brain._simulation_data()
+            self._simulation_status = 0
+            print('Fish: simulation not started. All simulation data cleared. Simulation now can be initialized.')
+
+        elif self._simulation_status == 2:
+            self._curr_position = None
             self._curr_health = None
             self._end_time = None
             self._clear_simulation_history()
@@ -231,11 +265,22 @@ class Fish(object):
             self._end_time = end_time
             print('Fish: Simulation stopped.')
         elif self._simulation_status == 0:
-            raise(RuntimeError, 'Fish: Stop simulation fail. Not in simulation.')
+            raise(RuntimeError, 'Fish: Stop simulation failure. Not in simulation.')
         elif self._simulation_status == 2:
             print('Fish: No need to stop simulation. Already stopped.')
 
 
 if __name__ == '__main__':
 
-    print('for debug ...')
+    # =========================================================================================
+    starting_position = (10, 10)
+    terrain_map = np.zeros((20, 20), dtype=np.uint8)
+
+    fish = Fish()
+    fish.initialize_simulation(starting_position=starting_position, terrain_map=terrain_map)
+    print(fish.get_curr_health())
+    print(fish.get_curr_position())
+    fish.act(0, terrain_map=terrain_map)
+    # =========================================================================================
+
+    print('\nfor debug ...')

@@ -12,7 +12,7 @@ import scipy.ndimage as ni
 
 plt.ioff()
 
-class TerrainBase(object):
+class TerrainGenerator(object):
     '''
     terrain object, a square matrix containing altitude
     '''
@@ -58,7 +58,7 @@ class TerrainBase(object):
         float_map = self.generate_float_map(sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)
         binary_map[float_map > self._sea_level] = 1
-        print(binary_map.dtype)
+        # print(binary_map.dtype)
 
         if is_plot:
             f = plt.figure(figsize=(20, 8))
@@ -68,13 +68,59 @@ class TerrainBase(object):
             ax2.imshow(binary_map, vmin=0, vmax=1, cmap='gray', interpolation='nearest')
             plt.show()
 
-        return binary_map.astype(np.bool)
+        return binary_map.astype(np.uint8)
 
+
+class BinaryTerrain(object):
+    """
+    2 dimensional binary terrain object.
+    """
+
+    def __init__(self, input_array):
+        """
+
+        :param input_array:
+        """
+
+        if util.check_binary_2d_array(input_array):
+            self._terrain_map = input_array
+        else:
+            raise(ValueError, 'BinaryTerrain: input array should be binary 2d numpy array, with dtype np.int.')
+
+        self._curr_food_positions = []
+        self._food_position_history = {}
+
+    def get_terrain_shape(self):
+        return self._terrain_map.shape
+
+    def get_terrain_map(self):
+        return self._terrain_map
+
+    def generate_fish_starting_position(self):
+        # todo: finish this method, first dilating with [[1 1 1],[1 1 1],[1 1 1]], then pick a zero
+        pass
+
+    def generate_next_food_position(self):
+        # todo: finish this method
+        pass
+
+    def generate_curr_food_map(self):
+        # tood: finish this method
+        pass
+
+    def _update_food_positions(self):
+        # todo: finish this method
+        pass
+
+    def plot_terrain(self, plot_axis=None):
+        # todo: finish this method
+        pass
 
 
 if __name__ == '__main__':
 
     #=============================================================
-    terr = TerrainBase(sea_level=0.6)
-    _ = terr.generate_binary_map(sigma=5., is_plot=True)
+    terrain_generator = TerrainGenerator(sea_level=0.5)
+    terrain_map = terrain_generator.generate_binary_map(sigma=5., is_plot=True)
+    binary_terrain = BinaryTerrain(terrain_map)
     #=============================================================

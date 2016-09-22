@@ -480,7 +480,7 @@ class Eye2(Neuron):
         """
         :return: calculate real time input from the visual field
         """
-        input_pixels = self._get_input_pixels(input_map, position, border_value=EYE_BORDER_VALUE)
+        input_pixels = self._get_input_pixels(input_map, position, border_value=border_value)
         probability_input = self._gain * np.sum(input_pixels * self._input_filter)
 
         return probability_input
@@ -519,7 +519,7 @@ class Eye2(Neuron):
     def get_input_type(self):
         return self._input_type
 
-    def act(self, t_point, position, input_map, border_value=EYE_BORDER_VALUE):
+    def act(self, t_point, position, input_map, border_value=EYE_BORDER_VALUE, probability_base=None):
         """
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
@@ -529,17 +529,24 @@ class Eye2(Neuron):
         :return: bool, True: fire; False: quite
         """
 
-        probability_input = self._get_input(input_map, position, border_value=EYE_BORDER_VALUE)
+        probability_input = self._get_input(input_map, position, border_value=border_value)
 
-        if len(self._action_history) > 0 and t_point - self._action_history[-1] < self._refractory_period:
-            return False
-        else:
-            curr_rate = self._baseline_rate + probability_input
-            if random.random() <= curr_rate:
-                self._action_history.append(t_point)
-                return True
-            else:
-                return False
+        return super(Eye2, self).act(t_point, probability_input=probability_input, probability_base=probability_base)
+
+        # if probability_base is None:
+        #     probability_base = random.random()
+        #
+        # probability_input = self._get_input(input_map, position, border_value=border_value)
+        #
+        # if len(self._action_history) > 0 and t_point - self._action_history[-1] < self._refractory_period:
+        #     return False
+        # else:
+        #     curr_rate = self._baseline_rate + probability_input
+        #     if probability_base <= curr_rate:
+        #         self._action_history.append(t_point)
+        #         return True
+        #     else:
+        #         return False
 
 
 class Muscle(Neuron):
@@ -1338,6 +1345,7 @@ class Brain(object):
         plot_axis.set_yticklabels(yticklaybels, family='monospace')
 
     def to_h5_group(self):
+        # todo: finish this method
         pass
 
     @staticmethod
@@ -1360,6 +1368,7 @@ class Brain(object):
 
     @staticmethod
     def from_h5_group(h5_group):
+        # todo: finishe this method
         pass
     
     @staticmethod

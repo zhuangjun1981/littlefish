@@ -90,6 +90,26 @@ def check_df_index(df):
     return np.array_equal(df.index, np.arange(len(df)))
 
 
+def check_binary_2d_array(array):
+    """
+    check if an array is 2 dimensional and dtype is int and only contains 0s and 1s
+    """
+
+    if not isinstance(array, np.ndarray):
+        return False
+
+    if len(array.shape) != 2:
+        return False
+
+    if not np.issubdtype(array.dtype, np.integer):
+        return False
+
+    if np.min(array[:]) < 0 or np.max(array[:]) > 1:
+        return False
+
+    return True
+
+
 def plot_spike_ticks(spike_history, y=0., plot_axis=None, color='#ff0000', **kwargs):
     """
     plot spike ticks as separate dots

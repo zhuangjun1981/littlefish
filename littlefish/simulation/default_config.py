@@ -19,7 +19,8 @@ def generate_default_config_file(save_path):
     config_dict_simulation = \
         {
             'SIMULATION_LENGTH' : int(1e5),  # number of time units (consider 0.1 ms per time unit) for simulation
-            'RANDOM_SEED': 123,  # seed to generate random numbers
+            'RANDOM_SEED_BRAIN': 123,  # seed to generate random numbers for brain simulation
+            'RANDOM_SEED_FOOD': 33,  # seed to generate random number for spawning food
         }
 
 
@@ -53,7 +54,9 @@ def generate_default_config_file(save_path):
     config_dict_fish = \
         {
             'FISH_MAX_HEALTH': 100.,
-            'FISH_HEALTH_DECAY_RATE': 0.0001
+            'FISH_HEALTH_DECAY_RATE': 0.0001,
+            'FISH_LAND_PENALTY_RATE': 0.005,
+            'FISH_FOOD_RATE': 20.
         }
 
 
