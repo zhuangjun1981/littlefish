@@ -11,6 +11,8 @@ import scipy.ndimage as ni
 import random
 
 
+
+
 plt.ioff()
 
 class TerrainGenerator(object):
@@ -89,7 +91,7 @@ class BinaryTerrain(object):
             raise(ValueError, 'BinaryTerrain: input array should be binary 2d numpy array, with dtype np.int.')
 
         self._curr_food_positions = []
-        self._food_position_history = {}
+        self._food_position_history = []
 
     def get_terrain_shape(self):
         return self._terrain_map.shape

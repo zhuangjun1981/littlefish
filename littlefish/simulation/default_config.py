@@ -60,6 +60,15 @@ def generate_default_config_file(save_path):
         }
 
 
+    # configuration for terrain
+    config_dict_terrain = \
+        {
+            'TERRAIN_SHAPE': (256, 256),
+            'TERRAIN_GENERATOR_SEE_LEVEL': 0.3,  # 0 - 1
+            'TERRAIN_FOOD_NUMBER': 5
+        }
+
+
     config_dict.update({
                          'simulation': config_dict_simulation,
                          'brain': config_dict_brain,

@@ -28,15 +28,34 @@ class Fish(object):
     the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
     millisecond.
 
+    self._brain: a brain.Brain object
+    self._max_health: float, maximum health point a fish can have
+    self._health_decay_rate: float, the constant rate of health reduction, health point / time unit
+    self._land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
+                             the terrain map, health point / (pixel * time unit)
+    self._food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+                     health point / pixel. the food after taken will disappear, so no health gaining is a
+                     transient event
     self._simulation_status: 0, has not simulated
                              1, during simulation
                              2, after simulation
-
     self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
     """
 
     def __init__(self, input_brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE,
                  land_penalty_rate=FISH_LAND_PENALTY_RATE, food_rate=FISH_FOOD_RATE):
+
+        """
+
+        :param input_brain: a brain.Brain object
+        :param max_health: float, maximum health point a fish can have
+        :param health_decay_rate: float, the constant rate of health reduction, health point / time unit
+        :param land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
+                                  the terrain map, health point / (pixel * time unit)
+        :param food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+                          health point / pixel. the food after taken will disappear, so no health gaining is a
+                          transient event
+        """
 
 
         self._max_health = float(max_health)

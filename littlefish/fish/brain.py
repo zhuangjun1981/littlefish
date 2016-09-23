@@ -7,10 +7,9 @@ import sys
 import random
 import numpy as np
 import pandas as pd
-package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(package_path)
 import matplotlib.pyplot as plt
 import littlefish.utilities as util
+import h5py
 
 
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
@@ -101,6 +100,13 @@ class Neuron(object):
                 return True
             else:
                 return False
+
+    def to_h5_group(self, h5_group):
+
+        h5_group.attrs['baseline_rate_action_per_tu'] = self._baseline_rate
+        h5_group.attrs['refractory_period_tu'] = self._refractory_period
+        h5_group.attrs['neuron_type'] = 'neuron'
+        h5_group.create_dataset('action_history_tu', data=self._action_history)
 
 
 class Eye(Neuron):
@@ -548,6 +554,17 @@ class Eye2(Neuron):
         #     else:
         #         return False
 
+    def to_h5_group(self, h5_group):
+
+        h5_group.attrs['baseline_rate_action_per_tu'] = self._baseline_rate
+        h5_group.attrs['refractory_period_tu'] = self._refractory_period
+        h5_group.attrs['neuron_type'] = 'eye2'
+        h5_group.attrs['direction'] = self._direction
+        h5_group.attrs['input_filter'] = self._input_filter
+        h5_group.attrs['gain'] = self._gain
+        h5_group.attrs['input_type'] = self._input_type
+        h5_group.create_dataset('action_history_tu', data=self._action_history)
+
 
 class Muscle(Neuron):
     """
@@ -605,6 +622,14 @@ class Muscle(Neuron):
             else:
                 return False
 
+    def to_h5_group(self, h5_group):
+
+        h5_group.attrs['baseline_rate_action_per_tu'] = self._baseline_rate
+        h5_group.attrs['refractory_period_tu'] = self._refractory_period
+        h5_group.attrs['neuron_type'] = 'muscle'
+        h5_group.attrs['direction'] = self._direction
+        h5_group.create_dataset('action_history_tu', data=self._action_history)
+
 
 class Connection(object):
     """
@@ -645,6 +670,18 @@ class Connection(object):
 
     def __str__(self):
         return 'littlefish.brain.Connection object'
+
+    def get_latency(self):
+        return self._latency
+
+    def get_amplitude(self):
+        return self._amplitude
+
+    def get_rise_time(self):
+        return self._rise_time
+
+    def get_decay_time(self):
+        return self._decay_time
 
     def _generate_psp(self):
         """
@@ -769,7 +806,7 @@ class Brain(object):
 
         for i, row in neurons_df.iterrows():
 
-            if int(row['layer']) == 0: #  eye layer
+            if int(row['layer']) == 0:  #  eye layer
 
                 curr_ind = int(row['neuron_ind'])
                 curr_dir, curr_type = self.get_eye_type(curr_ind)
@@ -806,7 +843,7 @@ class Brain(object):
 
                 # print(row['layer'], 'eye')
 
-            elif int(row['layer']) == layer_num - 1: #  muscle layer
+            elif int(row['layer']) == layer_num - 1:  #  muscle layer
 
                 curr_ind = int(row['neuron_ind'])
                 curr_dir = self.get_muscle_direction(curr_ind)
@@ -958,6 +995,51 @@ class Brain(object):
 
     def get_connections(self):
         return self._connections
+
+    def get_postsynaptic_neuron_ind(self, neuron_ind):
+
+        neuron_layer = int(round(self._neurons.loc[neuron_ind, 'layer']))
+        if neuron_layer < 0:
+            raise(ValueError, 'Brain: invalid layer. less than 0.')
+        elif neuron_layer == self.layer_num - 1:
+            print('Brain: cannot fine postsynaptic neuron of neurons in muscle layer.')
+        else:
+            postsynaptic_neuron_ind = self._neurons[self._neurons['layer'] == neuron_layer + 1].index.tolist()
+            postsynaptic_neuron_ind.sort()
+            return postsynaptic_neuron_ind
+
+    def get_presynaptic_neuron_ind(self, neuron_ind):
+
+        neuron_layer = int(round(self._neurons.loc[neuron_ind, 'layer']))
+        if neuron_layer < 0:
+            raise(ValueError, 'Brain: invalid layer. less than 0.')
+        elif neuron_layer == 0:
+            print('Brain: cannot fine presynaptic neuron of neurons in eye layer.')
+        else:
+            presynaptic_neuron_ind = self._neurons[self._neurons['layer'] == neuron_layer - 1].index.tolist()
+            presynaptic_neuron_ind.sort()
+            return presynaptic_neuron_ind
+
+    def get_single_connection(self, pre_neuron_ind, post_neuron_ind):
+
+        connection = self._connections[(self._connections['presynaptic_ind'] == pre_neuron_ind) & \
+                                       (self._connections['postsynaptic_ind'] == post_neuron_ind)]
+        if len(connection) == 1:
+            return connection.iloc[0, 2]
+        elif len(connection) == 0:
+            print('Brain: cannot find a connection between neuron ' + str(pre_neuron_ind) +' and neuron ' + \
+                  str(post_neuron_ind))
+        else:
+            raise(ValueError,'Brain: found more than one connection between neuron ' + str(pre_neuron_ind) +
+                             ' and neuron ' + str(post_neuron_ind))
+
+    def get_neuron_inds_in_layer(self, layer):
+        """
+        return a list of sorted neuron_indices of all neurons in a given layer
+        """
+        inds = self._neurons[self._neurons['layer'] == layer].index.tolist()
+        inds.sort()
+        return inds
 
     def has_action_histories(self):
         for neuron in self._neurons['neuron']:
@@ -1344,9 +1426,53 @@ class Brain(object):
         plot_axis.set_yticks(total_y)
         plot_axis.set_yticklabels(yticklaybels, family='monospace')
 
-    def to_h5_group(self):
-        # todo: finish this method
-        pass
+    def get_connection_matrices(self, pre_layer, post_layer):
+        """
+        return several numpy arrays each represent one parameter of all connections between a presynaptic layer and
+        a postsynaptic layer, each row is a postsynaptic neuron, each column is a presynaptic neuron
+
+                       pre neuron 0,  pre neuron 1,  pre neuron 2,  ... ,  pre neuron m
+        post neuron 0
+        post neuron 1
+        post neuron 2
+        ...
+        post neuron n
+
+        :param pre_layer: int, layer number of presynaptic layer
+        :param post_layer: int, layer number of postsynaptic layer
+        :return: rows, list of ints, postsynaptic neuron inds for each row
+                 cols, list of ints, presynaptic neuron inds for each column
+                 latencies, amplitudes, rise_times, decay_times: matrices for each connection parameter as described
+                 above
+        """
+
+        rows = self.get_neuron_inds_in_layer(post_layer)
+        cols = self.get_neuron_inds_in_layer(pre_layer)
+
+        latencies = np.empty((len(rows), len(cols)), dtype=np.int)
+        amplitudes = np.empty((len(rows), len(cols)), dtype=np.float)
+        rise_times = np.empty((len(rows), len(cols)), dtype=np.int)
+        decay_times = np.empty((len(rows), len(cols)), dtype=np.int)
+
+        for i, pre_ind in enumerate(cols):
+            for j, post_ind in enumerate(rows):
+                curr_conn = self.get_single_connection(pre_ind, post_ind)
+                latencies[j, i] = curr_conn.get_latency()
+                amplitudes[j, i] = curr_conn.get_amplitude()
+                rise_times[j, i] = curr_conn.get_rise_time()
+                decay_times[j, i] = curr_conn.get_decay_time()
+        return rows, cols, latencies, amplitudes, rise_times, decay_times
+
+    def to_h5_group(self, h5_group):
+
+        neuron_group = h5_group.create_group('neurons')
+        for i, neuron_df in self._neurons.iterrows():
+            neuron_name = 'neuron_' + util.int2str(i, 5)
+            curr_neuron_group = neuron_group.create_group(neuron_name)
+            neuron_df['neuron'].to_h5_group(curr_neuron_group)
+
+        connection_group = h5_group.create_group('connections')
+        # todo: add connections
 
     @staticmethod
     def get_eye_type(ind):
@@ -1428,10 +1554,12 @@ class Brain(object):
 if __name__ == '__main__':
 
     # =========================================================================================
+    # dfile = h5py.File(r"F:\littlefish\test_folder\neuron_test.hdf5")
+    # neuron_group = dfile.create_group('test_neuron')
     # neuron = Neuron()
     # for i in range(SIMULATION_LENGTH):
     #     neuron.act(i)
-    # print(len(neuron.get_action_history()))
+    # neuron.to_h5_group(neuron_group)
     # =========================================================================================
 
     # =========================================================================================
@@ -1537,6 +1665,19 @@ if __name__ == '__main__':
     # print(brain.get_all_postsynaptic_neuron_indices())
     # print(brain.get_eye_type(13))
     # print(brain.layer_num)
+    print(brain.get_postsynaptic_neuron_ind(8))
+    print(brain.get_presynaptic_neuron_ind(8))
+    print(brain.get_single_connection(8, 13))
+    print(brain.get_single_connection(8, 16))
+    print(brain.get_neuron_inds_in_layer(3))
+
+    test_file_path = r"F:\littlefish\test_folder\brain_test.hdf5"
+    if os.path.isfile(test_file_path):
+        os.remove(test_file_path)
+    test_file = h5py.File(test_file_path)
+    brain_group = test_file.create_group('brain')
+    brain.to_h5_group(brain_group)
+    test_file.close()
     # =========================================================================================
 
     print('debug...')
