@@ -983,8 +983,8 @@ class Brain(object):
             if self._neurons.loc[i, 'layer'] > 0:
                 self._psp_waveforms.update({i: np.zeros(SIMULATION_LENGTH, dtype=np.float32)})
 
-        print('\nBrain: empty psp waveforms created. number of waveforms: ' + str(len(self._psp_waveforms)) + '; length '
-              'of waveforms: ' + str(SIMULATION_LENGTH) + ' time units.')
+        print('\nBrain: empty psp waveforms created. number of waveforms: ' + str(len(self._psp_waveforms)) + \
+              '; length of waveforms: ' + str(SIMULATION_LENGTH) + ' time units.')
 
     def _generate_connection_map(self):
         """
