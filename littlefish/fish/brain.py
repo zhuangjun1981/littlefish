@@ -70,6 +70,13 @@ class Neuron(object):
         """
         return self._action_history
 
+    def set_action_history(self, action_history):
+
+        if not self._action_history:
+            print("Brain: overwriting a neuron's action history.")
+
+        self._action_history = action_history
+
     def reset_action_history(self):
         self._action_history = []
 
@@ -765,23 +772,22 @@ class Brain(object):
     (brain.Connections object). Number of layers and number of neurons can be specified.
     """
 
-    def __init__(self, neurons_df=None, connections_df=None):
+    def __init__(self, neurons=None, connections=None):
         """
 
-        :param neurons_df:
-        :param connections_df:
+        :param neurons:
+        :param connections:
         """
 
-        if neurons_df is None:
-            neurons_df = self.generate_default_neurons_df()
-            self._generate_neurons(neurons_df)
+        if neurons is None:
+            self._generate_default_neurons()
         else:
-            self._generate_neurons(neurons_df)
+            self._neurons = neurons
 
-        if connections_df is None:
-            self._generate_connections(self.generate_default_connections_df(neurons_df))
+        if connections is None:
+            self._generate_default_connections()
         else:
-            self._generate_connections(connections_df)
+            self._connections = connections
 
         self._generate_connection_map()
 
@@ -792,157 +798,62 @@ class Brain(object):
     def __str__(self):
         return 'littlefish.brain.Brain object'
 
-    def _generate_neurons(self, neurons_df, verbose_level=1):
+    def _generate_default_neurons(self):
         """
-        generate a dataframe containing actual Neuron objects from a dataframe containing neuron parameters.
-        assign it to self._neurons
+        generate and return a dataframe containing all neurons with default parameters
+        """
+        neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+
+        ind = 0
+        for i in range(8):
+            curr_dir, curr_type = self.get_eye_type(i)
+            neurons.loc[ind] = [0, i, Eye2(direction=curr_dir, input_filter=EYE2_INPUT_FILTER, gain=EYE_GAIN,
+                                           input_type=curr_type, baseline_rate=EYE_BASELINE_RATE,
+                                           refractory_period=EYE_REFRACTORY_PERIOD)]
+            ind += 1
+
+        for i in range(8):
+            neurons.loc[ind] = [1, i, Neuron(baseline_rate=NEURON_BASELINE_RATE,
+                                             refractory_period=NEURON_REFRACTORY_PERIOD)]
+            ind += 1
+
+        for i in range(4):
+            curr_dir = self.get_muscle_direction(i)
+            neurons.loc[ind] = [2, i, Muscle(direction=curr_dir, baseline_rate=MUSCLE_BASELINE_RATE,
+                                             refractory_period=MUSCLE_REFRACTORY_PERIOD)]
+            ind += 1
+
+        neurons['layer'] = neurons['layer'].astype(np.uint32)
+        neurons['neuron_ind'] = neurons['neuron_ind'].astype(np.uint32)
+
+        self._neurons = neurons
+        print('\nBrain: a dataframe with 20 default neurons and 3 layers (eye, hidden, muscle) has been generated.')
+
+    def _generate_default_connections(self):
+        """
+        generate all possible connections among self_neurons with default parameters
         """
 
-        self._neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+        connections = pd.DataFrame(columns=['presynaptic_ind', 'postsynaptic_ind', 'connection'])
 
-        layer_num = int(round(max(neurons_df['layer']))) + 1
+        ind = 0
 
-        params = neurons_df.columns.values.tolist()
+        for pre_layer in range(self.layer_num - 1):
+            post_layer = pre_layer + 1
+            post_neuron_inds = self.get_neuron_inds_in_layer(post_layer)
+            pre_neuron_inds = self.get_neuron_inds_in_layer(pre_layer)
 
-        for i, row in neurons_df.iterrows():
+            for pre_neuron_ind in pre_neuron_inds:
+                for post_neuron_ind in post_neuron_inds:
+                    connections.loc[ind] = [pre_neuron_ind, post_neuron_ind,
+                                            Connection(latency=CONNECTION_LATENCY, amplitude=CONNECTION_LATENCY,
+                                                       rise_time=CONNECTION_RISE_TIME,
+                                                       decay_time=CONNECTION_DECAY_TIME)]
+                    ind += 1
 
-            if int(row['layer']) == 0:  #  eye layer
-
-                curr_ind = int(row['neuron_ind'])
-                curr_dir, curr_type = self.get_eye_type(curr_ind)
-
-                if 'eye2_input_filter' not in params:
-                    eye2_input_filter = EYE2_INPUT_FILTER
-                else:
-                    eye2_input_filter = row['eye_input_filter']
-
-                if 'eye_gain' not in params:
-                    eye_gain = EYE_GAIN
-                else:
-                    eye_gain = float(row['eye_gain'])
-
-                if 'baseline_rate' not in params:
-                    eye_baseline_rate = EYE_BASELINE_RATE
-                else:
-                    eye_baseline_rate = float(row['baseline_rate'])
-
-                if 'refractory_period' not in params:
-                    eye_refractory_period = EYE_REFRACTORY_PERIOD
-                else:
-                    eye_refractory_period = int(row['refractory_period'])
-
-                self._neurons.loc[i] = \
-                    [row['layer'],
-                     row['neuron_ind'],
-                     Eye2(direction=curr_dir,
-                          input_filter=eye2_input_filter,
-                          gain=eye_gain,
-                          input_type=curr_type,
-                          baseline_rate=eye_baseline_rate,
-                          refractory_period=eye_refractory_period)]
-
-                # print(row['layer'], 'eye')
-
-            elif int(row['layer']) == layer_num - 1:  #  muscle layer
-
-                curr_ind = int(row['neuron_ind'])
-                curr_dir = self.get_muscle_direction(curr_ind)
-
-                if 'baseline_rate' not in params:
-                    muscle_baseline_rate = MUSCLE_BASELINE_RATE
-                else:
-                    muscle_baseline_rate = row['baseline_rate']
-
-                if 'refractory_period' not in params:
-                    muscle_refractory_period = MUSCLE_REFRACTORY_PERIOD
-                else:
-                    muscle_refractory_period = row['refractory_period']
-
-                self._neurons.loc[i] = \
-                    [row['layer'],
-                     row['neuron_ind'],
-                     Muscle(direction=curr_dir,
-                            baseline_rate=muscle_baseline_rate,
-                            refractory_period=muscle_refractory_period)]
-
-                # print(row['layer'], 'muscle')
-
-            else:  # hidden layer
-                if 'baseline_rate' not in params:
-                    neuron_baseline_rate = NEURON_BASELINE_RATE
-                else:
-                    neuron_baseline_rate = row['baseline_rate']
-
-                if 'refractory_period' not in params:
-                    neuron_refractory_period = NEURON_REFRACTORY_PERIOD
-                else:
-                    neuron_refractory_period = row['refractory_period']
-
-                self._neurons.loc[i] = \
-                    [row['layer'],
-                     row['neuron_ind'],
-                     Neuron(baseline_rate=neuron_baseline_rate,
-                            refractory_period=neuron_refractory_period)]
-
-                # print(row['layer'], 'neuron')
-
-        self._neurons['layer'] = self._neurons['layer'].astype(np.uint32)
-        self._neurons['neuron_ind'] = self._neurons['neuron_ind'].astype(np.uint32)
-
-        if verbose_level == 0:
-            print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.\n')
-        elif verbose_level == 1:
-            print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
-            layer_num = max(self._neurons['layer']) + 1
-            for layer in range(layer_num):
-                layer_name = self.get_layer_type(layer)
-                neuron_num = len(self._neurons[self._neurons.layer == layer])
-                print(layer_name + ' layer: ' + str(neuron_num) + ' neurons.')
-        elif verbose_level == 2:
-            print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
-            print(self._neurons)
-
-    def _generate_connections(self, connections_df, verbose_level=0):
-        """
-        generate a dataframe containing actual Connection objects from a dataframe containing connection parameters.
-        assign it to self._connections
-        """
-        self._connections = pd.DataFrame(columns=['presynaptic_ind', 'postsynaptic_ind', 'connection'])
-        for i, row in connections_df.iterrows():
-
-            if 'latency' not in connections_df.columns.values.tolist():
-                latency = CONNECTION_LATENCY
-            else:
-                latency = int(row.latency)
-
-            if 'amplitude' not in connections_df.columns.values.tolist():
-                amplitude = CONNECTION_AMPLITUDE
-            else:
-                amplitude = float(row.amplitude)
-
-            if 'rise_time' not in connections_df.columns.values.tolist():
-                rise_time = CONNECTION_RISE_TIME
-            else:
-                rise_time = int(row.rise_time)
-
-            if 'decay_time' not in connections_df.columns.values.tolist():
-                decay_time = CONNECTION_DECAY_TIME
-            else:
-                decay_time = int(row.decay_time)
-
-            self._connections.loc[i] = [row.presynaptic_ind, row.postsynaptic_ind,
-                                        Connection(latency, amplitude, rise_time, decay_time)]
-
-        self._connections['presynaptic_ind'] = self._connections['presynaptic_ind'].astype(np.uint32)
-        self._connections['postsynaptic_ind'] = self._connections['postsynaptic_ind'].astype(np.uint32)
-
-        if verbose_level == 0:
-            print('\nBrain: self._connections dataframe with ' + str(len(self._connections)) +
-                  ' connections has been generated.')
-        if verbose_level == 1:
-            print('\nBrain: self._connections dataframe with ' + str(len(self._connections)) +
-                  ' neurons has been generated.')
-            print(self._connections)
+        self._connections = connections
+        print('\nBrain: a dataframe of default ' + str(len(self._connections)) +
+              ' connections among self._neurons has been generated')
 
     def get_neurons(self):
         return self._neurons
@@ -1470,9 +1381,25 @@ class Brain(object):
             neuron_name = 'neuron_' + util.int2str(i, 5)
             curr_neuron_group = neuron_group.create_group(neuron_name)
             neuron_df['neuron'].to_h5_group(curr_neuron_group)
+            curr_neuron_group.attrs['ind'] = i
+            curr_neuron_group.attrs['layer'] = neuron_df['layer']
+            curr_neuron_group.attrs['neuron_ind'] = neuron_df['neuron_ind']
 
         connection_group = h5_group.create_group('connections')
-        # todo: add connections
+        for pre_layer in range(self.layer_num-1):
+            post_layer =  pre_layer + 1
+            curr_connection_matrices = self.get_connection_matrices(pre_layer=pre_layer, post_layer=post_layer)
+
+            curr_layer_group = connection_group.create_group('L' + util.int2str(pre_layer, 3) +
+                                                             '_L' + util.int2str(post_layer, 3))
+            curr_layer_group.attrs['rows'] = curr_connection_matrices[0]
+            curr_layer_group.attrs['cols'] = curr_connection_matrices[1]
+            curr_layer_group.attrs['doc'] = 'rows: indices of postsynatpic neurons in the neuron group; ' \
+                                            'cols: indices of presynaptic neurons in the neuron group.'
+            curr_layer_group.create_dataset(name='latencies_au', data=curr_connection_matrices[2])
+            curr_layer_group.create_dataset(name='amplitudes', data=curr_connection_matrices[3])
+            curr_layer_group.create_dataset(name='rise_times_au', data=curr_connection_matrices[4])
+            curr_layer_group.create_dataset(name='decay_times_au', data=curr_connection_matrices[5])
 
     @staticmethod
     def get_eye_type(ind):
@@ -1494,61 +1421,226 @@ class Brain(object):
 
     @staticmethod
     def from_h5_group(h5_group):
+
+        neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+
+        neurons_group = h5_group['neurons']
+        neuron_names = neurons_group.keys()
+        neuron_names.sort()
+        for neuron_name in neuron_names:
+            curr_neuron_group = neurons_group[neuron_name]
+
+
+        connections = pd.DataFrame(columns=['presynaptic_ind', 'postsynaptic_ind', 'connection'])
+
         # todo: finishe this method
         pass
     
-    @staticmethod
-    def generate_default_neurons_df():
-        """
-        generate and return a dataframe containing all neurons with default parameters
-        """
-        neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'baseline_rate', 'refractory_period'])
-
-        ind = 0
-        for i in range(8):
-            neurons.loc[ind] = [0, i, EYE_BASELINE_RATE, EYE_REFRACTORY_PERIOD]
-            ind += 1
-
-        for i in range(8):
-            neurons.loc[ind] = [1, i, NEURON_BASELINE_RATE, NEURON_REFRACTORY_PERIOD]
-            ind += 1
-
-        for i in range(4):
-            neurons.loc[ind] = [2, i, MUSCLE_BASELINE_RATE, MUSCLE_REFRACTORY_PERIOD]
-            ind += 1
-
-        neurons['layer'] = neurons['layer'].astype(np.uint32)
-        neurons['neuron_ind'] = neurons['neuron_ind'].astype(np.uint32)
-        neurons['baseline_rate'] = neurons['baseline_rate'].astype(np.float64)
-        neurons['refractory_period'] = neurons['refractory_period'].astype(np.uint64)
-
-        return neurons
-
-    @staticmethod
-    def generate_default_connections_df(neurons_df):
-        """
-        from a dataframe containing parameters of all neurons, generate and return a dataframe containing all
-        connections with default parameters
-        """
-        layer_num = np.max(neurons_df['layer']) + 1
-
-        connections = pd.DataFrame(columns=['presynaptic_ind', 'postsynaptic_ind', 'latency', 'amplitude',
-                                            'rise_time', 'decay_time'])
-
-        ind = 0
-        for i in range(len(neurons_df)):
-            curr_presynaptic_layer = neurons_df.loc[i,'layer']
-            if curr_presynaptic_layer < layer_num - 1:
-                for j in range(len(neurons_df)):
-                    if neurons_df.loc[j, 'layer'] == curr_presynaptic_layer + 1:
-                        connections.loc[ind] = [i, j, CONNECTION_LATENCY, CONNECTION_AMPLITUDE, CONNECTION_RISE_TIME,
-                                                CONNECTION_DECAY_TIME]
-                        ind += 1
-
-        connections['presynaptic_ind'] = connections['presynaptic_ind'].astype(np.uint32)
-        connections['postsynaptic_ind'] = connections['postsynaptic_ind'].astype(np.uint32)
-
-        return connections
+    # @staticmethod
+    # def generate_default_neurons_df():
+    #     """
+    #     generate and return a dataframe containing all neurons with default parameters
+    #     """
+    #     neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'baseline_rate', 'refractory_period'])
+    #
+    #     ind = 0
+    #     for i in range(8):
+    #         neurons.loc[ind] = [0, i, EYE_BASELINE_RATE, EYE_REFRACTORY_PERIOD]
+    #         ind += 1
+    #
+    #     for i in range(8):
+    #         neurons.loc[ind] = [1, i, NEURON_BASELINE_RATE, NEURON_REFRACTORY_PERIOD]
+    #         ind += 1
+    #
+    #     for i in range(4):
+    #         neurons.loc[ind] = [2, i, MUSCLE_BASELINE_RATE, MUSCLE_REFRACTORY_PERIOD]
+    #         ind += 1
+    #
+    #     neurons['layer'] = neurons['layer'].astype(np.uint32)
+    #     neurons['neuron_ind'] = neurons['neuron_ind'].astype(np.uint32)
+    #     neurons['baseline_rate'] = neurons['baseline_rate'].astype(np.float64)
+    #     neurons['refractory_period'] = neurons['refractory_period'].astype(np.uint64)
+    #
+    #     return neurons
+    #
+    # @staticmethod
+    # def generate_default_connections_df(neurons_df):
+    #     """
+    #     from a dataframe containing parameters of all neurons, generate and return a dataframe containing all
+    #     connections with default parameters
+    #     """
+    #     layer_num = np.max(neurons_df['layer']) + 1
+    #
+    #     connections = pd.DataFrame(columns=['presynaptic_ind', 'postsynaptic_ind', 'latency', 'amplitude',
+    #                                         'rise_time', 'decay_time'])
+    #
+    #     ind = 0
+    #     for i in range(len(neurons_df)):
+    #         curr_presynaptic_layer = neurons_df.loc[i,'layer']
+    #         if curr_presynaptic_layer < layer_num - 1:
+    #             for j in range(len(neurons_df)):
+    #                 if neurons_df.loc[j, 'layer'] == curr_presynaptic_layer + 1:
+    #                     connections.loc[ind] = [i, j, CONNECTION_LATENCY, CONNECTION_AMPLITUDE, CONNECTION_RISE_TIME,
+    #                                             CONNECTION_DECAY_TIME]
+    #                     ind += 1
+    #
+    #     connections['presynaptic_ind'] = connections['presynaptic_ind'].astype(np.uint32)
+    #     connections['postsynaptic_ind'] = connections['postsynaptic_ind'].astype(np.uint32)
+    #
+    #     return connections
+    #
+    # def _generate_neurons(self, neurons_df, verbose_level=1):
+    #     """
+    #     generate a dataframe containing actual Neuron objects from a dataframe containing neuron parameters.
+    #     assign it to self._neurons
+    #     """
+    #
+    #     self._neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+    #
+    #     layer_num = int(round(max(neurons_df['layer']))) + 1
+    #
+    #     params = neurons_df.columns.values.tolist()
+    #
+    #     for i, row in neurons_df.iterrows():
+    #
+    #         if int(row['layer']) == 0:  #  eye layer
+    #
+    #             curr_ind = int(row['neuron_ind'])
+    #             curr_dir, curr_type = self.get_eye_type(curr_ind)
+    #
+    #             if 'eye2_input_filter' not in params:
+    #                 eye2_input_filter = EYE2_INPUT_FILTER
+    #             else:
+    #                 eye2_input_filter = row['eye_input_filter']
+    #
+    #             if 'eye_gain' not in params:
+    #                 eye_gain = EYE_GAIN
+    #             else:
+    #                 eye_gain = float(row['eye_gain'])
+    #
+    #             if 'baseline_rate' not in params:
+    #                 eye_baseline_rate = EYE_BASELINE_RATE
+    #             else:
+    #                 eye_baseline_rate = float(row['baseline_rate'])
+    #
+    #             if 'refractory_period' not in params:
+    #                 eye_refractory_period = EYE_REFRACTORY_PERIOD
+    #             else:
+    #                 eye_refractory_period = int(row['refractory_period'])
+    #
+    #             self._neurons.loc[i] = \
+    #                 [row['layer'],
+    #                  row['neuron_ind'],
+    #                  Eye2(direction=curr_dir,
+    #                       input_filter=eye2_input_filter,
+    #                       gain=eye_gain,
+    #                       input_type=curr_type,
+    #                       baseline_rate=eye_baseline_rate,
+    #                       refractory_period=eye_refractory_period)]
+    #
+    #             # print(row['layer'], 'eye')
+    #
+    #         elif int(row['layer']) == layer_num - 1:  #  muscle layer
+    #
+    #             curr_ind = int(row['neuron_ind'])
+    #             curr_dir = self.get_muscle_direction(curr_ind)
+    #
+    #             if 'baseline_rate' not in params:
+    #                 muscle_baseline_rate = MUSCLE_BASELINE_RATE
+    #             else:
+    #                 muscle_baseline_rate = row['baseline_rate']
+    #
+    #             if 'refractory_period' not in params:
+    #                 muscle_refractory_period = MUSCLE_REFRACTORY_PERIOD
+    #             else:
+    #                 muscle_refractory_period = row['refractory_period']
+    #
+    #             self._neurons.loc[i] = \
+    #                 [row['layer'],
+    #                  row['neuron_ind'],
+    #                  Muscle(direction=curr_dir,
+    #                         baseline_rate=muscle_baseline_rate,
+    #                         refractory_period=muscle_refractory_period)]
+    #
+    #             # print(row['layer'], 'muscle')
+    #
+    #         else:  # hidden layer
+    #             if 'baseline_rate' not in params:
+    #                 neuron_baseline_rate = NEURON_BASELINE_RATE
+    #             else:
+    #                 neuron_baseline_rate = row['baseline_rate']
+    #
+    #             if 'refractory_period' not in params:
+    #                 neuron_refractory_period = NEURON_REFRACTORY_PERIOD
+    #             else:
+    #                 neuron_refractory_period = row['refractory_period']
+    #
+    #             self._neurons.loc[i] = \
+    #                 [row['layer'],
+    #                  row['neuron_ind'],
+    #                  Neuron(baseline_rate=neuron_baseline_rate,
+    #                         refractory_period=neuron_refractory_period)]
+    #
+    #             # print(row['layer'], 'neuron')
+    #
+    #     self._neurons['layer'] = self._neurons['layer'].astype(np.uint32)
+    #     self._neurons['neuron_ind'] = self._neurons['neuron_ind'].astype(np.uint32)
+    #
+    #     if verbose_level == 0:
+    #         print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.\n')
+    #     elif verbose_level == 1:
+    #         print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
+    #         layer_num = max(self._neurons['layer']) + 1
+    #         for layer in range(layer_num):
+    #             layer_name = self.get_layer_type(layer)
+    #             neuron_num = len(self._neurons[self._neurons.layer == layer])
+    #             print(layer_name + ' layer: ' + str(neuron_num) + ' neurons.')
+    #     elif verbose_level == 2:
+    #         print('\nBrain: self._neurons dataframe with ' + str(len(self._neurons)) + ' neurons has been generated.')
+    #         print(self._neurons)
+    #
+    # def _generate_connections(self, connections_df, verbose_level=0):
+    #     """
+    #     generate a dataframe containing actual Connection objects from a dataframe containing connection parameters.
+    #     assign it to self._connections
+    #     """
+    #     self._connections = pd.DataFrame(columns=['presynaptic_ind', 'postsynaptic_ind', 'connection'])
+    #     for i, row in connections_df.iterrows():
+    #
+    #         if 'latency' not in connections_df.columns.values.tolist():
+    #             latency = CONNECTION_LATENCY
+    #         else:
+    #             latency = int(row.latency)
+    #
+    #         if 'amplitude' not in connections_df.columns.values.tolist():
+    #             amplitude = CONNECTION_AMPLITUDE
+    #         else:
+    #             amplitude = float(row.amplitude)
+    #
+    #         if 'rise_time' not in connections_df.columns.values.tolist():
+    #             rise_time = CONNECTION_RISE_TIME
+    #         else:
+    #             rise_time = int(row.rise_time)
+    #
+    #         if 'decay_time' not in connections_df.columns.values.tolist():
+    #             decay_time = CONNECTION_DECAY_TIME
+    #         else:
+    #             decay_time = int(row.decay_time)
+    #
+    #         self._connections.loc[i] = [row.presynaptic_ind, row.postsynaptic_ind,
+    #                                     Connection(latency, amplitude, rise_time, decay_time)]
+    #
+    #     self._connections['presynaptic_ind'] = self._connections['presynaptic_ind'].astype(np.uint32)
+    #     self._connections['postsynaptic_ind'] = self._connections['postsynaptic_ind'].astype(np.uint32)
+    #
+    #     if verbose_level == 0:
+    #         print('\nBrain: self._connections dataframe with ' + str(len(self._connections)) +
+    #               ' connections has been generated.')
+    #     if verbose_level == 1:
+    #         print('\nBrain: self._connections dataframe with ' + str(len(self._connections)) +
+    #               ' neurons has been generated.')
+    #         print(self._connections)
+    #
 
 
 if __name__ == '__main__':
@@ -1665,19 +1757,19 @@ if __name__ == '__main__':
     # print(brain.get_all_postsynaptic_neuron_indices())
     # print(brain.get_eye_type(13))
     # print(brain.layer_num)
-    print(brain.get_postsynaptic_neuron_ind(8))
-    print(brain.get_presynaptic_neuron_ind(8))
-    print(brain.get_single_connection(8, 13))
-    print(brain.get_single_connection(8, 16))
-    print(brain.get_neuron_inds_in_layer(3))
-
-    test_file_path = r"F:\littlefish\test_folder\brain_test.hdf5"
-    if os.path.isfile(test_file_path):
-        os.remove(test_file_path)
-    test_file = h5py.File(test_file_path)
-    brain_group = test_file.create_group('brain')
-    brain.to_h5_group(brain_group)
-    test_file.close()
+    # print(brain.get_postsynaptic_neuron_ind(8))
+    # print(brain.get_presynaptic_neuron_ind(8))
+    # print(brain.get_single_connection(8, 13))
+    # print(brain.get_single_connection(8, 16))
+    # print(brain.get_neuron_inds_in_layer(3))
+    #
+    # test_file_path = r"F:\littlefish\test_folder\brain_test.hdf5"
+    # if os.path.isfile(test_file_path):
+    #     os.remove(test_file_path)
+    # test_file = h5py.File(test_file_path)
+    # brain_group = test_file.create_group('brain')
+    # brain.to_h5_group(brain_group)
+    # test_file.close()
     # =========================================================================================
 
     print('debug...')
