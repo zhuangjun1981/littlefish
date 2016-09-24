@@ -91,6 +91,17 @@ def check_df_index(df):
     return np.array_equal(df.index, np.arange(len(df)))
 
 
+def check_arithmetic_progression(seq):
+    """
+    check a 1-d list of numbers is arithmetic progression sequence
+    :return bool
+    """
+
+    step = seq[1] - seq[0]
+
+    return np.array_equal(seq, np.arange(len(seq)) * step + seq[0])
+
+
 def check_binary_2d_array(array):
     """
     check if an array is 2 dimensional and dtype is int and only contains 0s and 1s
@@ -226,11 +237,19 @@ if __name__ == '__main__':
     # ==================================================
 
     # ==================================================
-    array = np.zeros((100, 100), dtype=np.uint8)
-    array[35: 38, 40: 43] = 1
+    # array = np.zeros((100, 100), dtype=np.uint8)
+    # array[35: 38, 40: 43] = 1
     # array[35, 40] = 1
-    plot_mask(array)
-    plt.show()
+    # plot_mask(array)
+    # plt.show()
+    # ==================================================
+
+    # ==================================================
+    print(check_arithmetic_progression(range(5)))
+    print(check_arithmetic_progression(np.arange(3, 8, 0.05)))
+    seq = np.arange(3, 8, 0.05)
+    seq[10] += 0.01
+    print(check_arithmetic_progression(seq))
     # ==================================================
 
     print('for debug ...')

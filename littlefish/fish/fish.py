@@ -92,27 +92,27 @@ class Fish(object):
         turn self._simulation_status to be 1
         """
         if len(starting_position) != 2:
-            raise (ValueError, 'starting_position should contain two elements.')
+            raise ValueError, 'starting_position should contain two elements.'
 
         if (not isinstance(starting_position[0], int)) or (not isinstance(starting_position[1], int)):
-            raise (ValueError, 'starting_position should contain two integers.')
+            raise ValueError, 'starting_position should contain two integers.'
 
         if len(terrain_map.shape) != 2:
-            raise(ValueError, 'terrain_map should be a 2-d array.')
+            raise ValueError, 'terrain_map should be a 2-d array.'
 
         if not np.issubdtype(terrain_map.dtype, np.integer):
-            raise(ValueError, 'dtype of terrain_map should be integer.')
+            raise ValueError, 'dtype of terrain_map should be integer.'
 
         if np.max(terrain_map) > 1 or np.min(terrain_map) < 0:
-            raise(ValueError, 'terrain_map should only contain 0s and 1s.')
+            raise ValueError, 'terrain_map should only contain 0s and 1s.'
 
         if starting_position[0] < 1 or starting_position[0] > terrain_map.shape[0] - 2 or \
             starting_position[1] < 1 or starting_position[1] > terrain_map.shape[1] - 2:
-            raise(ValueError, 'starting_position out of the range.')
+            raise ValueError, 'starting_position out of the range.'
 
         if np.sum(terrain_map[starting_position[0] - 1: starting_position[0] + 2,
                   starting_position[1] - 1: starting_position[1] + 2, ]) > 0:
-            raise(ValueError, 'the body of fish at starting_position covers land.')
+            raise ValueError, 'the body of fish at starting_position covers land.'
 
         if self._simulation_status == 0:  # has not been simulated
 
@@ -125,20 +125,20 @@ class Fish(object):
             print('Fish: Simulation initialized successfully.')
             return True
         elif self._simulation_status == 1:
-            raise(RuntimeError, 'Fish: Simulation initialization failure. Already in simulation.')
+            raise RuntimeError, 'Fish: Simulation initialization failure. Already in simulation.'
         elif self._simulation_status == 2:
-            raise(RuntimeError, 'Fish: Simulation initialization failure. Already after simulation. '
-                                'Please clear simulation data first.')
+            raise RuntimeError, 'Fish: Simulation initialization failure. Already after simulation. ' \
+                                'Please clear simulation data first.'
 
     def act(self, t_point, terrain_map, food_map=None, fish_map=None):
 
         if self._simulation_status == 0:
-            raise(RuntimeError, 'Fish: action failure. simulation not initialized.')
+            raise RuntimeError, 'Fish: action failure. simulation not initialized.'
         elif self._simulation_status == 2:
-            raise(RuntimeError, 'Fish: action failure. simulation already stopped.')
+            raise RuntimeError, 'Fish: action failure. simulation already stopped.'
 
         if not self._simulation_status == 1:
-            raise(RuntimeError, 'Fish: action failure. self._simulation_status should be 1.')
+            raise RuntimeError, 'Fish: action failure. self._simulation_status should be 1.'
 
         self._eval_terrain(terrain_map=terrain_map)
         food_taken_positions = self._eval_food(food_map=food_map)
@@ -163,11 +163,11 @@ class Fish(object):
                 # todo: add code for action here.
                 pass
             elif self._simulation_status == 0:
-                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+                raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!'
             elif self._simulation_status == 2:
-                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+                raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!'
             else:
-                raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
+                raise RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.'
 
     def _eval_terrain(self, terrain_map):
         """
@@ -175,7 +175,7 @@ class Fish(object):
         """
 
         if terrain_map is None:
-            raise(ValueError, 'Fish: _eval_terrain failure. terrain_map is None.')
+            raise ValueError, 'Fish: _eval_terrain failure. terrain_map is None.'
         else:
             if self._simulation_status == 1:
 
@@ -184,11 +184,11 @@ class Fish(object):
                 self._curr_health += (-1. * np.sum(curr_body[:]) * self._land_penalty_rate)
 
             elif self._simulation_status == 0:
-                raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+                raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!'
             elif self._simulation_status == 2:
-                raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+                raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!'
             else:
-                raise(RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
+                raise RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.'
 
     def _eval_food(self, food_map):
 
@@ -210,11 +210,11 @@ class Fish(object):
                 return food_taken_positions
 
             elif self._simulation_status == 0:
-                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+                raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!'
             elif self._simulation_status == 2:
-                raise (RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+                raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!'
             else:
-                raise (RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
+                raise RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.'
 
     def _move(self, movement_attempt, terrain_map):
         """
@@ -235,18 +235,18 @@ class Fish(object):
             else:
                 self._curr_position[1] += movement_attempt[1]
         elif self._simulation_status == 0:
-            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!')
+            raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation not started!'
         elif self._simulation_status == 2:
-            raise(RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!')
+            raise RuntimeError, 'Fish: cannot evaluate terrain. Simulation already stopped!'
         else:
-            raise(RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.')
+            raise RuntimeError, 'Fish: self._simulation_status should 0, 1 or 2.'
 
     def clear_simulation(self):
         """
         clear all psp waveforms, clear action history for all neurons, clear position
         """
         if self._simulation_status == 1:
-            raise(RuntimeError, 'Fish: clear simulation failure. Still in simulation.')
+            raise RuntimeError, 'Fish: clear simulation failure. Still in simulation.'
 
         elif self._simulation_status == 0:
             self._curr_position = None
@@ -271,9 +271,9 @@ class Fish(object):
 
     def save_simulation(self, save_path):
         if self._simulation_status == 1:
-            raise(RuntimeError, 'Fish: Simulation save fail. Still in simulation.')
+            raise RuntimeError, 'Fish: Simulation save fail. Still in simulation.'
         if self._simulation_status == 0:
-            raise(ValueError, 'Fish: Simulation save fail. No simulation data found.')
+            raise RuntimeError, 'Fish: Simulation save fail. No simulation data found.'
         if self._simulation_status== 2:
             # todo: save simulation data
             pass
@@ -284,7 +284,7 @@ class Fish(object):
             self._end_time = end_time
             print('Fish: Simulation stopped.')
         elif self._simulation_status == 0:
-            raise(RuntimeError, 'Fish: Stop simulation failure. Not in simulation.')
+            raise RuntimeError, 'Fish: Stop simulation failure. Not in simulation.'
         elif self._simulation_status == 2:
             print('Fish: No need to stop simulation. Already stopped.')
 

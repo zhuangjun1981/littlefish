@@ -88,7 +88,7 @@ class BinaryTerrain(object):
         if util.check_binary_2d_array(input_array):
             self._terrain_map = input_array
         else:
-            raise(ValueError, 'BinaryTerrain: input array should be binary 2d numpy array, with dtype np.int.')
+            raise ValueError, 'BinaryTerrain: input array should be binary 2d numpy array, with dtype np.int.'
 
         self._curr_food_positions = []
         self._food_position_history = []
