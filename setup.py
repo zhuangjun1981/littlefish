@@ -51,7 +51,7 @@ setup(
     url='https://github.com/zhuangjun1981/littlefish',
     author='Jun Zhuang',
     tests_require=['pytest'],
-    install_requires=['numpy','scipy','matplotlib', 'pandas'],
+    install_requires=['numpy','scipy','matplotlib', 'pandas', 'h5py'],
     cmdclass={'test': PyTest},
     author_email='wood_stocker@hotmail.com',
     description='little fish brain network simulation',

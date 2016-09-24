@@ -3,7 +3,6 @@
 # from builtins import *
 
 import os
-import sys
 import random
 import numpy as np
 import pandas as pd
@@ -95,7 +94,7 @@ class Neuron(object):
             probability_base = random.random()
 
         if probability_base < 0. or probability_base >= 1.:
-            raise ValueError, 'probability_base should be no less than 0 and less than 1.'
+            raise ValueError('probability_base should be no less than 0 and less than 1.')
 
         if len(self._action_history) > 0 and t_point - self._action_history[-1] < self._refractory_period:
             return False
@@ -119,7 +118,7 @@ class Neuron(object):
     def from_h5_group(h5_group):
 
         if h5_group.attrs['neuron_type'] != 'neuron':
-            raise ValueError, 'Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".'
+            raise ValueError('Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".')
 
         neuron = Neuron(baseline_rate=h5_group.attrs['baseline_rate_action_per_tu'],
                         refractory_period=h5_group.attrs['refractory_period_tu'])
@@ -181,8 +180,8 @@ class Eye(Neuron):
         if direction in ['north', 'south', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']:
             self._direction = direction
         else:
-            raise ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', " \
-                              "'northwest', 'northeast', 'southwest', 'southeast']."
+            raise ValueError("direction should be one of the following: ['north', 'south', 'east', 'west', "
+                             "'northwest', 'northeast', 'southwest', 'southeast'].")
 
         if input_filter is None:
             self._input_filter = EYE_INPUT_FILTER
@@ -199,7 +198,7 @@ class Eye(Neuron):
         elif input_type in ['terrain', 'food', 'fish']:
             self._input_type = input_type
         else:
-            raise ValueError, 'Eye2: type should be one of the following: "terrain", "food", "fish".'
+            raise ValueError('Eye2: type should be one of the following: "terrain", "food", "fish".')
 
         if baseline_rate is None:
             curr_baseline_rate = EYE_BASELINE_RATE
@@ -218,24 +217,24 @@ class Eye(Neuron):
 
     def _get_input_pixels(self, input_map, position, border_value=EYE_BORDER_VALUE):
         """
-        :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the terrain_map
-        range will be returned as border_value
+        :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the
+        input_map range will be returned as border_value
         """
         
         if len(position) != 2:
-            raise ValueError, 'position should have 2 elements.'
+            raise ValueError('position should have 2 elements.')
 
         if isinstance(position[0], int) and isinstance(position[1], int):
             self._position = position
         else:
-            raise ValueError, 'Elements in position should both be integers.'
+            raise ValueError('Elements in position should both be integers.')
 
         if len(input_map.shape) != 2:
-            raise ValueError, 'terrain_map should a 2-d array.'
+            raise ValueError('terrain_map should a 2-d array.')
         
         if position[0] < 0 or position[0] >= input_map.shape[0] or \
                 position[1] < 0 or position[1] >= input_map.shape[1]:
-            raise ValueError, 'position out of range.'
+            raise ValueError('position out of range.')
 
         if self._direction == 'east':
             ind = [[position[0] + 1, position[1] + 1],
@@ -270,8 +269,8 @@ class Eye(Neuron):
                    [position[0] + 1, position[1] + 1],
                    [position[0],     position[1] + 1]]
         else:
-            raise ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', " \
-                              "'northwest', 'northeast', 'southwest', 'southeast']."
+            raise ValueError("direction should be one of the following: ['north', 'south', 'east', 'west', "
+                             "'northwest', 'northeast', 'southwest', 'southeast'].")
 
         # print(ind)
 
@@ -289,7 +288,7 @@ class Eye(Neuron):
         """
         :return: calculate real time input from the visual field
         """
-        input_pixels = self._get_input_pixels(input_map, position, border_value=EYE_BORDER_VALUE)
+        input_pixels = self._get_input_pixels(input_map, position, border_value=border_value)
         probability_input = self._gain * np.sum(input_pixels * self._input_filter)
 
         return probability_input
@@ -299,7 +298,7 @@ class Eye(Neuron):
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
         :param position: tuple of two ints, (row, col),  position of the eye
-        :param terrain_map: binary 2-d map, for now it should only contain 0s and 1s
+        :param input_map: binary 2-d map, for now it should only contain 0s and 1s
         :param border_value: int, default 1, value for pixels outside the terrain_map
         :return: bool, True: fire; False: quite
         """
@@ -371,8 +370,8 @@ class Eye2(Neuron):
         if direction in ['north', 'south', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']:
             self._direction = direction
         else:
-            raise ValueError, "direction should be one of the following: ['north', 'south', 'east', 'west', " \
-                              "'northwest', 'northeast', 'southwest', 'southeast']."
+            raise ValueError("direction should be one of the following: ['north', 'south', 'east', 'west', "
+                             "'northwest', 'northeast', 'southwest', 'southeast'].")
 
         if input_filter is None:
             self._input_filter = EYE2_INPUT_FILTER
@@ -389,7 +388,7 @@ class Eye2(Neuron):
         elif input_type in ['terrain', 'food', 'fish']:
             self._input_type = input_type
         else:
-            raise ValueError, 'Eye2: type should be one of the following: "terrain", "food", "fish".'
+            raise ValueError('Eye2: type should be one of the following: "terrain", "food", "fish".')
 
         if baseline_rate is None:
             curr_baseline_rate = EYE_BASELINE_RATE
@@ -408,24 +407,24 @@ class Eye2(Neuron):
 
     def _get_input_pixels(self, input_map, position, border_value=EYE_BORDER_VALUE):
         """
-        :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the terrain_map
-        range will be returned as border_value
+        :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the
+        input_map range will be returned as border_value
         """
 
         if len(position) != 2:
-            raise ValueError, 'Eye2: position should have 2 elements.'
+            raise ValueError('Eye2: position should have 2 elements.')
 
         if isinstance(position[0], int) and isinstance(position[1], int):
             self._position = position
         else:
-            raise ValueError, 'Eye2: Elements in position should both be integers.'
+            raise ValueError('Eye2: Elements in position should both be integers.')
 
         if len(input_map.shape) != 2:
-            raise ValueError, 'Eye2: terrain_map should a 2-d array.'
+            raise ValueError('Eye2: terrain_map should a 2-d array.')
 
         if position[0] < 0 or position[0] >= input_map.shape[0] or \
                 position[1] < 0 or position[1] >= input_map.shape[1]:
-            raise ValueError, 'Eye2: position out of range.'
+            raise ValueError('Eye2: position out of range.')
 
         if self._direction == 'east':
             ind = [[position[0] + 1, position[1] + 1],
@@ -485,8 +484,8 @@ class Eye2(Neuron):
                    [position[0] + 1, position[1] + 2]
                    ]
         else:
-            raise ValueError, "Eye2: direction should be one of the following: ['north', 'south', 'east', 'west', " \
-                              "'northwest', 'northeast', 'southwest', 'southeast']."
+            raise ValueError("Eye2: direction should be one of the following: ['north', 'south', 'east', 'west', "
+                             "'northwest', 'northeast', 'southwest', 'southeast'].")
 
         # print(ind)
 
@@ -515,10 +514,10 @@ class Eye2(Neuron):
         :return: eye position given body position accroding its direction
         """
         if len(body_position) != 2:
-            raise ValueError, 'Eye2: body_position should contain two elements.'
+            raise ValueError('Eye2: body_position should contain two elements.')
 
         if (not isinstance(body_position[0], int)) or (not isinstance(body_position[1], int)):
-            raise ValueError, 'Eye2: body_position should contain two integers.'
+            raise ValueError('Eye2: body_position should contain two integers.')
 
         if self._direction == 'east':
             return body_position[0], body_position[1] + 1
@@ -537,8 +536,8 @@ class Eye2(Neuron):
         elif self._direction == 'southeast':
             return body_position[0] + 1, body_position[1] + 1
         else:
-            raise ValueError, "Eye2: direction should be one of the following: ['north', 'south', 'east', 'west', " \
-                               "'northwest', 'northeast', 'southwest', 'southeast']."
+            raise ValueError("Eye2: direction should be one of the following: ['north', 'south', 'east', 'west', "
+                             "'northwest', 'northeast', 'southwest', 'southeast'].")
 
     def get_input_type(self):
         return self._input_type
@@ -550,6 +549,7 @@ class Eye2(Neuron):
         :param position: tuple of two ints, (row, col),  position of the eye
         :param input_map: binary 2-d map, for now it should only contain 0s and 1s
         :param border_value: int, default 1, value for pixels outside the terrain_map
+        :param probability_base
         :return: bool, True: fire; False: quite
         """
 
@@ -587,7 +587,7 @@ class Eye2(Neuron):
     def from_h5_group(h5_group):
 
         if h5_group.attrs['neuron_type'] != 'eye2':
-            raise ValueError, 'Eye2: loading from h5 file failed. "neuron_type" attribute should be "eye2".'
+            raise ValueError('Eye2: loading from h5 file failed. "neuron_type" attribute should be "eye2".')
 
         eye2 = Eye2(direction=h5_group.attrs['direction'],
                     input_filter=h5_group.attrs['input_filter'],
@@ -609,7 +609,7 @@ class Muscle(Neuron):
         if direction in ['east', 'north', 'west', 'south']:
             self._direction = direction
         else:
-            raise ValueError, "direction should be one of the following: ['east', 'north', 'west', 'south']."
+            raise ValueError("direction should be one of the following: ['east', 'north', 'west', 'south'].")
 
         super(Muscle, self).__init__(baseline_rate=baseline_rate, refractory_period=refractory_period)
 
@@ -632,7 +632,7 @@ class Muscle(Neuron):
             probability_base = random.random()
 
         if probability_base < 0. or probability_base >= 1.:
-            raise ValueError, 'probability_base should be no less than 0 and less than 1.'
+            raise ValueError('probability_base should be no less than 0 and less than 1.')
 
         if len(self._action_history) > 0 and t_point - self._action_history[-1] < self._refractory_period:
             return False
@@ -650,8 +650,8 @@ class Muscle(Neuron):
                 elif self._direction == 'south':
                     return 1, 0
                 else:
-                    raise ValueError, "self.direction should be one of the following: " \
-                                      "['east', 'north', 'west', 'south']."
+                    raise ValueError("self.direction should be one of the following: "
+                                     "['east', 'north', 'west', 'south'].")
             else:
                 return False
 
@@ -667,7 +667,7 @@ class Muscle(Neuron):
     def from_h5_group(h5_group):
 
         if h5_group.attrs['neuron_type'] != 'muscle':
-            raise ValueError, 'Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".'
+            raise ValueError('Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".')
 
         muscle = Muscle(direction=h5_group.attrs['direction'],
                         baseline_rate=h5_group.attrs['baseline_rate_action_per_tu'],
@@ -695,7 +695,7 @@ class Connection(object):
 
         if latency is not None:
             if not isinstance(latency, int):
-                raise ValueError, 'latency should be an integer.'
+                raise ValueError('latency should be an integer.')
             self._latency = latency
 
         if amplitude is not None:
@@ -703,12 +703,12 @@ class Connection(object):
 
         if rise_time is not None:
             if not isinstance(rise_time, int):
-                raise ValueError, 'rise_time should be an integer.'
+                raise ValueError('rise_time should be an integer.')
             self._rise_time = rise_time
 
         if decay_time is not None:
             if not isinstance(decay_time, int):
-                raise ValueError, 'decay_time should be an integer.'
+                raise ValueError('decay_time should be an integer.')
             self._decay_time = decay_time
 
         self._generate_psp()
@@ -756,7 +756,7 @@ class Connection(object):
 
         if latency is not None:
             if not isinstance(latency, int):
-                raise ValueError, 'latency should be an integer.'
+                raise ValueError('latency should be an integer.')
             self._latency = latency
             changed = True
 
@@ -766,13 +766,13 @@ class Connection(object):
 
         if rise_time is not None:
             if not isinstance(rise_time, int):
-                raise ValueError, 'rise_time should be an integer.'
+                raise ValueError('rise_time should be an integer.')
             self._rise_time = rise_time
             changed = True
 
         if decay_time is not None:
             if not isinstance(decay_time, int):
-                raise ValueError, 'decay_time should be an integer.'
+                raise ValueError('decay_time should be an integer.')
             self._decay_time = decay_time
             changed = True
 
@@ -905,16 +905,16 @@ class Brain(object):
         return layer type (str) given the layer number
         """
         if not isinstance(layer, int):
-            raise ValueError, 'Input layer number should be integer.'
+            raise ValueError('Input layer number should be integer.')
 
         if layer == 0:
             return 'eye'
         elif layer == self.layer_num - 1:
             return 'muscle'
-        elif layer > 0 and layer < self.layer_num - 1:
+        elif 0 < layer < self.layer_num - 1:
             return 'hidden' + util.int2str(layer, 3)
         else:
-            raise ValueError, 'layer number out of range.'
+            raise ValueError('layer number out of range.')
 
     def get_neuron_type(self, ind):
         """
@@ -935,12 +935,12 @@ class Brain(object):
         elif curr_layer == self.layer_num - 1:  # muscle layer
             curr_dir = MUSCLE_DIRECTIONS[curr_row['neuron_ind'] % len(MUSCLE_DIRECTIONS)]
             return util.short('muscle') + '_' + util.short(curr_dir)
-        elif curr_layer > 0 and curr_layer < self.layer_num - 1:
+        elif 0 < curr_layer < self.layer_num - 1:
             curr_layer_num = util.int2str(curr_layer, 3)
             curr_neuron_num = util.int2str(curr_row['neuron_ind'], 3)
             return '_'.join([util.short('hidden'), curr_layer_num, curr_neuron_num])
         else:
-            raise ValueError, 'layer number out of range.'
+            raise ValueError('layer number out of range.')
 
     def get_connections(self):
         return self._connections
@@ -949,7 +949,7 @@ class Brain(object):
 
         neuron_layer = int(round(self._neurons.loc[neuron_ind, 'layer']))
         if neuron_layer < 0:
-            raise ValueError, 'Brain: invalid layer. less than 0.'
+            raise ValueError('Brain: invalid layer. less than 0.')
         elif neuron_layer == self.layer_num - 1:
             print('Brain: cannot fine postsynaptic neuron of neurons in muscle layer.')
         else:
@@ -961,7 +961,7 @@ class Brain(object):
 
         neuron_layer = int(round(self._neurons.loc[neuron_ind, 'layer']))
         if neuron_layer < 0:
-            raise ValueError, 'Brain: invalid layer. less than 0.'
+            raise ValueError('Brain: invalid layer. less than 0.')
         elif neuron_layer == 0:
             print('Brain: cannot fine presynaptic neuron of neurons in eye layer.')
         else:
@@ -975,10 +975,10 @@ class Brain(object):
         post_layer = int(round(self._neurons.loc[post_neuron_ind, 'layer']))
 
         if post_layer - pre_layer != 1:
-            raise LookupError, 'Brain: presynaptic layer' + str(pre_layer) +' and postsynaptic layer' + \
-                               str(post_layer) + ' do not form connections.'
+            raise LookupError('Brain: presynaptic layer' + str(pre_layer) + ' and postsynaptic layer' +
+                              str(post_layer) + ' do not form connections.')
 
-        conn_df = self._connections['L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer,3)]
+        conn_df = self._connections['L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)]
         return conn_df.loc[post_neuron_ind, pre_neuron_ind]
 
     def get_neuron_inds_in_layer(self, layer):
@@ -1003,16 +1003,16 @@ class Brain(object):
 
     def generate_empty_psp_waveforms(self):
         if self.has_psp_waveforms():
-            raise ValueError, 'Brain: can not generate empty psp waveforms, psp waveforms already exist.'
+            raise ValueError('Brain: can not generate empty psp waveforms, psp waveforms already exist.')
 
         self._psp_waveforms = {}
 
-        waveform_count = 0
+        # waveform_count = 0
         for i in range(len(self._neurons)):
             if self._neurons.loc[i, 'layer'] > 0:
                 self._psp_waveforms.update({i: np.zeros(SIMULATION_LENGTH, dtype=np.float32)})
 
-        print('\nBrain: empty psp waveforms created. number of waveforms: ' + str(len(self._psp_waveforms)) + \
+        print('\nBrain: empty psp waveforms created. number of waveforms: ' + str(len(self._psp_waveforms)) +
               '; length of waveforms: ' + str(SIMULATION_LENGTH) + ' time units.')
 
     def check_integrity(self):
@@ -1033,8 +1033,8 @@ class Brain(object):
             psp_waveform_keys = self._psp_waveforms.keys()
             psp_waveform_keys.sort()
             if not np.array_equal(psp_waveform_keys, self.get_all_postsynaptic_neuron_indices()):
-                raise ValueError, 'Brain: the keys of self._psp_waveforms do not represent all postsynaptic ' \
-                                  'neurons in self._neurons.'
+                raise ValueError('Brain: the keys of self._psp_waveforms do not represent all postsynaptic '
+                                 'neurons in self._neurons.')
             else:
                 print('Brain: the keys of self._psp_waveforms do represent all postsynaptic neurons in '
                       'self._neurons. PASS')
@@ -1044,7 +1044,7 @@ class Brain(object):
     def check_integrity_neurons(self, verbose=False):
 
         if not util.check_df_index(self._neurons):
-            raise ValueError, 'Brain: the indices of self._neurons are not starting at 0 and increasing with step 1.'
+            raise ValueError('Brain: the indices of self._neurons are not starting at 0 and increasing with step 1.')
         else:
             if verbose:
                 print('Brain: the indices of self._neurons are starting at 0 and increasing with step 1. PASS.')
@@ -1057,30 +1057,30 @@ class Brain(object):
             curr_layer = int(round(neuron['layer']))
             curr_neuron_ind = neuron['neuron_ind']
             if curr_layer < layer:
-                raise ValueError, 'Brain: the "layer" in self._neurons is not in ascending order.'
+                raise ValueError('Brain: the "layer" in self._neurons is not in ascending order.')
             elif curr_layer == layer:
                 if curr_neuron_ind != ind + 1:
-                    raise ValueError, 'Brain: the "neuron_ind" in self._neurons is not in ascending by step 1 for' \
-                                      ' each "layer"'
+                    raise ValueError('Brain: the "neuron_ind" in self._neurons is not in ascending by step 1 for'
+                                     ' each "layer"')
                 else:
                     ind += 1
             else:
                 layer = curr_layer
                 if curr_neuron_ind != 0:
-                    raise ValueError, 'Brain: the "neuron_ind" in self._neurons does not start with 0 for each ' \
-                                      '"layer".'
+                    raise ValueError('Brain: the "neuron_ind" in self._neurons does not start with 0 for each '
+                                     '"layer".')
                 ind = 0
 
             if curr_layer == 0:  # eye layer
-                if not (str(neuron['neuron']) == 'littlefish.brain.Eye object' or \
+                if not (str(neuron['neuron']) == 'littlefish.brain.Eye object' or
                         str(neuron['neuron']) == 'littlefish.brain.Eye2 object'):
-                    raise ValueError, 'Brain: non-eye object in eye layer.'
+                    raise ValueError('Brain: non-eye object in eye layer.')
             elif curr_layer == self.layer_num - 1:  # muscle layer
                 if not str(neuron['neuron']) == 'littlefish.brain.Muscle object':
-                    raise ValueError, 'Brain: non-muscle object in muscle layer.'
+                    raise ValueError('Brain: non-muscle object in muscle layer.')
             else:  # hidden layer
                 if not str(neuron['neuron']) == 'littlefish.brain.Neuron object':
-                    raise ValueError, 'Brain: non-neuron object in hidden layer.'
+                    raise ValueError('Brain: non-neuron object in hidden layer.')
 
         if verbose:
             print('Brain: the "layer" of self._neurons is in a non-descending order. PASS')
@@ -1098,7 +1098,7 @@ class Brain(object):
         conn_keys.sort()
 
         if not conn_keys == matching_keys:
-            raise ValueError, 'Brain: invalid keys in self._connections.'
+            raise ValueError('Brain: invalid keys in self._connections.')
         else:
             if verbose:
                 print('Brain: valid keys in self._connections. PASS')
@@ -1112,9 +1112,9 @@ class Brain(object):
             pre_neuron_ind = self.get_neuron_inds_in_layer(pre_layer)
             post_neuron_ind = self.get_neuron_inds_in_layer(post_layer)
             if not np.array_equal(pre_neuron_ind, curr_conn_df.columns.tolist()):
-                raise ValueError, 'Brain: connections dataframe ' + key + ' does not have valid column name.'
+                raise ValueError('Brain: connections dataframe ' + key + ' does not have valid column name.')
             if not np.array_equal(post_neuron_ind, curr_conn_df.index.tolist()):
-                raise ValueError, 'Brain: connections dataframe ' + key + ' does not have valid index name.'
+                raise ValueError('Brain: connections dataframe ' + key + ' does not have valid index name.')
 
         if verbose:
             print('Brain: dataframes in self._connections have valid column and index names. PASS')
@@ -1125,6 +1125,7 @@ class Brain(object):
         :param body_position: tuple of two ints, (row, col), current position of body center of the fish
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
+        :param fish_map:
         :return: movement attemps: tuple of 2 ints, represting the movement attempt, be careful, this may not
                                    represent the actual movement, it will be evaluated by the fish object (fish class)
                                    containing this brain to see if the movement is possible. if the fish is hitting
@@ -1132,23 +1133,23 @@ class Brain(object):
                                    None: no movement has been attempted,
         """
         if len(body_position) != 2:
-            raise ValueError, 'body_position should contain two elements.'
+            raise ValueError('body_position should contain two elements.')
 
         if (not isinstance(body_position[0], int)) or (not isinstance(body_position[1], int)):
-            raise ValueError, 'body_position should contain two integers.'
+            raise ValueError('body_position should contain two integers.')
 
         if len(terrain_map.shape) != 2:
-            raise ValueError, 'terrain_map should be a 2-d array.'
+            raise ValueError('terrain_map should be a 2-d array.')
 
-        if not np.issubdtype(terrain_map.dtype, np.integer):
-            raise ValueError, 'dtype of terrain_map should be integer.'
+        if not np.issubdtype(terrain_map.dtype, np.int):
+            raise ValueError('dtype of terrain_map should be integer.')
 
         if np.max(terrain_map) > 1 or np.min(terrain_map) < 0:
-            raise ValueError, 'terrain_map should only contain 0s and 1s.'
+            raise ValueError('terrain_map should only contain 0s and 1s.')
 
         if body_position[0] < 1 or body_position[0] > terrain_map.shape[0] - 2 or \
-            body_position[1] < 1 or body_position[1] > terrain_map.shape[1] - 2:
-            raise ValueError, 'body_position out of the range.'
+                body_position[1] < 1 or body_position[1] > terrain_map.shape[1] - 2:
+            raise ValueError('body_position out of the range.')
 
         if not self.has_psp_waveforms():
             self.generate_empty_psp_waveforms()
@@ -1174,8 +1175,8 @@ class Brain(object):
                     else:
                         is_fire = False
                 else:
-                    raise ValueError, 'Brain: the input_type of eye should be one of the following:' \
-                                      '"terrain", "food" or "fish".'
+                    raise ValueError('Brain: the input_type of eye should be one of the following:'
+                                     '"terrain", "food" or "fish".')
 
                 if is_fire:  # the current eye fires
                     # print('eye spike')
@@ -1190,14 +1191,15 @@ class Brain(object):
 
             elif neuron['layer'] == self.layer_num - 1:  # muscle layer
                 curr_muscle = neuron['neuron']
-                curr_movement_attempt = curr_muscle.act(t_point=t_point, probability_input=self._psp_waveforms[i][t_point])
+                curr_movement_attempt = curr_muscle.act(t_point=t_point,
+                                                        probability_input=self._psp_waveforms[i][t_point])
                 if curr_movement_attempt:
                     # print('muscle spike')
                     movement_attempt[0] += curr_movement_attempt[0]
                     movement_attempt[1] += curr_movement_attempt[1]
 
             else:
-                raise ValueError, 'Brain: neuron at index' + str(i) + ' has invalid layer location.'
+                raise ValueError('Brain: neuron at index' + str(i) + ' has invalid layer location.')
 
         return movement_attempt
 
@@ -1210,11 +1212,11 @@ class Brain(object):
         """
 
         if not self.has_psp_waveforms:
-            raise ValueError, 'Brain: cannot find self._psp_waveforms, please generate them first.'
+            raise ValueError('Brain: cannot find self._psp_waveforms, please generate them first.')
 
         neuron_layer = int(round(self._neurons.loc[presynaptic_neuron_ind, 'layer']))
 
-        if neuron_layer >= 0 and neuron_layer < self.layer_num - 1:  # eye layer or hidden layer
+        if 0 <= neuron_layer < self.layer_num - 1:  # eye layer or hidden layer
             curr_conn_df = self._connections['L' + util.int2str(neuron_layer, 3) +
                                              '_L' + util.int2str(neuron_layer + 1, 3)]
             postsynaptic_neuron_inds = self.get_postsynaptic_neuron_inds(neuron_ind=presynaptic_neuron_ind)
@@ -1222,18 +1224,18 @@ class Brain(object):
             for postsynaptic_neuron_ind in postsynaptic_neuron_inds:
                 curr_connection = curr_conn_df.loc[postsynaptic_neuron_ind, presynaptic_neuron_ind]
                 curr_connection.act(t_point=t_point, postsynaptic_input=self._psp_waveforms[postsynaptic_neuron_ind])
-        elif neuron_layer == self.layer_num -1:  # muscle layer
+        elif neuron_layer == self.layer_num - 1:  # muscle layer
             print('Brain: a firing of a muscle has no effect on brain itself. Please use Muscle.act() method to '
                   'generate movement attempt.')
         else:
-            raise ValueError, 'Brain: neuron at index' + str(presynaptic_neuron_ind) + ' has invalid layer location.'
+            raise ValueError('Brain: neuron at index' + str(presynaptic_neuron_ind) + ' has invalid layer location.')
 
     def get_all_presynaptic_neuron_indices(self):
         """
         get indices of all presynaptic neurons
         """
         layer_num = int(max(self._neurons['layer'])) + 1
-        ind = self._neurons[self._neurons['layer'] < layer_num -1].index
+        ind = self._neurons[self._neurons['layer'] < layer_num - 1].index
         return ind.sort_values()
 
     def get_all_postsynaptic_neuron_indices(self):
@@ -1274,7 +1276,7 @@ class Brain(object):
         """
 
         if not self.has_action_histories():
-            raise LookupError, 'Brain: No action history found. Cannot plot.'
+            raise LookupError('Brain: No action history found. Cannot plot.')
 
         self.check_integrity_neurons()
 
@@ -1371,7 +1373,7 @@ class Brain(object):
 
         connection_group = h5_group.create_group('connections')
         for pre_layer in range(self.layer_num-1):
-            post_layer =  pre_layer + 1
+            post_layer = pre_layer + 1
             curr_connection_matrices = self.get_connection_matrices(pre_layer=pre_layer, post_layer=post_layer)
 
             curr_layer_group = connection_group.create_group('L' + util.int2str(pre_layer, 3) +
@@ -1424,11 +1426,10 @@ class Brain(object):
             elif curr_neuron_group.attrs['neuron_type'] == 'muscle':
                 curr_neuron = Muscle.from_h5_group(curr_neuron_group)
             else:
-                raise LookupError, 'Brain: fail to load neuron. "neuron_type" attribute should be one of the ' \
-                                   'following: "eye2", "neuron" or "muscle".'
+                raise LookupError('Brain: fail to load neuron. "neuron_type" attribute should be one of the '
+                                  'following: "eye2", "neuron" or "muscle".')
 
             neurons.loc[curr_ind] = [curr_layer, curr_neuron_ind, curr_neuron]
-
 
         connections = {}
 
@@ -1454,9 +1455,9 @@ class Brain(object):
                                                          decay_time=curr_decay_times[i, j])
             connections.update({connections_name: curr_conn_df})
 
-        brain = Brain(neurons=neurons, connections=connections)
+        loaded_brain = Brain(neurons=neurons, connections=connections)
 
-        return brain
+        return loaded_brain
 
 
 if __name__ == '__main__':
