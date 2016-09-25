@@ -5,6 +5,8 @@
 import brain as brain
 import numpy as np
 import pandas as pd
+import h5py
+import os
 
 SIMULATION_LENGTH = 100000
 
@@ -43,8 +45,9 @@ class Fish(object):
     self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
     """
 
-    def __init__(self, input_brain=None, max_health=FISH_MAX_HEALTH, health_decay_rate=FISH_HEALTH_DECAY_RATE,
-                 land_penalty_rate=FISH_LAND_PENALTY_RATE, food_rate=FISH_FOOD_RATE):
+    def __init__(self, name=None, mother_name=None, input_brain=None, max_health=FISH_MAX_HEALTH,
+                 health_decay_rate=FISH_HEALTH_DECAY_RATE, land_penalty_rate=FISH_LAND_PENALTY_RATE,
+                 food_rate=FISH_FOOD_RATE):
 
         """
 
@@ -57,6 +60,16 @@ class Fish(object):
                           health point / pixel. the food after taken will disappear, so no health gaining is a
                           transient event
         """
+
+        if name is None:
+            self._name = ''
+        else:
+            self._name = name
+
+        if mother_name is None:
+            self._mother_name = ''
+        else:
+            self._mother_name = mother_name
 
         self._max_health = float(max_health)
         self._health_decay_rate = float(health_decay_rate)
@@ -72,8 +85,7 @@ class Fish(object):
         self._simulation_status = 0
         self._curr_position = None
         self._curr_health = None
-        self._end_time = None
-        self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column', 'health'])
+        self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'col', 'health'])
 
         print('\nFish: fish object generated successfully.')
 
@@ -82,6 +94,26 @@ class Fish(object):
 
     def get_curr_position(self):
         return self._curr_position
+
+    def set_curr_position(self, position):
+
+        if len(position) != 2:
+            raise ValueError('Fish: set body position failure. position does not have 2 elements.')
+
+        if not (isinstance(position[0], int) and isinstance(position[1], int)):
+            raise ValueError('Fish: set body position failure. position does not contain 2 integers.')
+
+        if self._simulation_status == 0:
+            self.clear_simulation()
+            self._curr_position = position
+            print('\nFish: self._curr_position set to ' + str(position) + ' before simulation.')
+        elif self._simulation_status == 1:
+            raise RuntimeError('Fish: set body position failure. Still in simulation.')
+        elif self._simulation_status == 2:
+            print('\nFish: attempt to reset body position ..., clearing all simulation data.')
+            self.clear_simulation()
+            self._curr_position = position
+            print('\nFish: self._curr_position set to ' + str(position))
 
     def get_curr_health(self):
         return self._curr_health
@@ -249,37 +281,65 @@ class Fish(object):
         elif self._simulation_status == 0:
             self._curr_position = None
             self._curr_health = None
-            self._end_time = None
+            self._curr_time = None
             self._clear_simulation_history()
-            self._brain._simulation_data()
+            self._brain.clear_simulation_data()
             self._simulation_status = 0
             print('Fish: simulation not started. All simulation data cleared. Simulation now can be initialized.')
 
         elif self._simulation_status == 2:
             self._curr_position = None
             self._curr_health = None
-            self._end_time = None
+            self._curr_time = None
             self._clear_simulation_history()
-            self._brain._simulation_data()
+            self._brain.clear_simulation_data()
             self._simulation_status = 0
             print('Fish: all simulation data cleared. Simulation now can be initialized.')
 
     def _clear_simulation_history(self):
         self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column, ''health'])
 
-    def save_simulation(self, save_path):
+    def to_h5_group(self, h5_group):
         if self._simulation_status == 1:
-            raise RuntimeError('Fish: Simulation save fail. Still in simulation.')
-        if self._simulation_status == 0:
-            raise RuntimeError('Fish: Simulation save fail. No simulation data found.')
-        if self._simulation_status == 2:
-            # todo: save simulation data
-            pass
+            raise RuntimeError('Fish: Simulation save failure. Still in simulation.')
+        elif self._simulation_status == 0 or self._simulation_status == 2:
+
+            h5_group.attrs['name'] = self._name
+            h5_group.attrs['mother_name'] = self._mother_name
+            h5_group.attrs['max_health'] = self._max_health
+            h5_group.attrs['health_decay_rate_per_tu'] = self._health_decay_rate
+            h5_group.attrs['land_penalty_rate_per_pixel_tu'] = self._land_penalty_rate
+            h5_group.attrs['food_rate_per_pixel'] = self._food_rate
+            brain_group = h5_group.create_group('brain')
+            self._brain.to_h5_group(brain_group)
+            simulation_status_dset = h5_group.create_dataset('simulation_status', data=self._simulation_status)
+            simulation_status_dset.attrs['simulation_status_code'] = '0: before simulation; 1: during simulation; ' \
+                                                                     '2: after simulation'
+            if self._curr_position is None:
+                h5_group.create_dataset('curr_position_row_col', data=np.nan)
+            else:
+                h5_group.create_dataset('curr_position_row_col', data=self._curr_position)
+
+            if self._curr_health is None:
+                h5_group.create_dataset('curr_health', data=np.nan)
+            else:
+                h5_group.create_dataset('curr_health', data=self._curr_health)
+
+            simulation_history_group = h5_group.create_group('simulation_history')
+            simulation_history_group.create_dataset('t_point_tu',
+                                                    data=np.array(self._simulation_history['t_point'], dtype=np.uint))
+            simulation_history_group.create_dataset('body_position',
+                                                    data=np.array(self._simulation_history.loc[:,['row', 'col']],
+                                                                  dtype=np.uint))
+            simulation_history_group.create_dataset('health',
+                                                    data=np.array(self._simulation_history['health'], dtype=np.float))
+        else:
+            raise RuntimeError('Fish: simulation save failure. Invalid self._simulation_status.')
 
     def stop_simulation(self, end_time):
         if self._simulation_status == 1:
             self._simulation_status = 2
-            self._end_time = end_time
+            self._curr_time = end_time
             print('Fish: Simulation stopped.')
         elif self._simulation_status == 0:
             raise RuntimeError('Fish: Stop simulation failure. Not in simulation.')
@@ -290,14 +350,25 @@ class Fish(object):
 if __name__ == '__main__':
 
     # =========================================================================================
-    starting_position = (10, 10)
-    terrain_map = np.zeros((20, 20), dtype=np.uint8)
+    # starting_position = (10, 10)
+    # terrain_map = np.zeros((20, 20), dtype=np.uint8)
+    #
+    # fish = Fish()
+    # fish.initialize_simulation(starting_position=starting_position, terrain_map=terrain_map)
+    # print(fish.get_curr_health())
+    # print(fish.get_curr_position())
+    # fish.act(0, terrain_map=terrain_map)
+    # =========================================================================================
+
+    # =========================================================================================
+    save_path = r"D:\little_fish_test\fish.hdf5"
+    if os.path.isfile(save_path):
+        os.remove(save_path)
+    fish_group = h5py.File(save_path).create_group('fish')
 
     fish = Fish()
-    fish.initialize_simulation(starting_position=starting_position, terrain_map=terrain_map)
-    print(fish.get_curr_health())
-    print(fish.get_curr_position())
-    fish.act(0, terrain_map=terrain_map)
+    fish.to_h5_group(fish_group)
+
     # =========================================================================================
 
     print('\nfor debug ...')
