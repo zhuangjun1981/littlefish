@@ -132,7 +132,7 @@ class Fish(object):
         if len(terrain_map.shape) != 2:
             raise ValueError('terrain_map should be a 2-d array.')
 
-        if not np.issubdtype(terrain_map.dtype, np.int):
+        if not np.issubdtype(terrain_map.dtype, np.integer):
             raise ValueError('dtype of terrain_map should be integer.')
 
         if np.max(terrain_map) > 1 or np.min(terrain_map) < 0:
@@ -148,7 +148,7 @@ class Fish(object):
 
         if self._simulation_status == 0:  # has not been simulated
 
-            self._curr_position = np.array(starting_position, dtype=np.int)
+            self._curr_position = np.array(starting_position, dtype=np.uint)
             self._curr_health = self._max_health
             self._simulation_history.append(pd.DataFrame([[0, self._curr_position[0], self._curr_position[1]]],
                                                          columns=['t_point', 'row', 'column']),

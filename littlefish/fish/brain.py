@@ -1141,7 +1141,7 @@ class Brain(object):
         if len(terrain_map.shape) != 2:
             raise ValueError('terrain_map should be a 2-d array.')
 
-        if not np.issubdtype(terrain_map.dtype, np.int):
+        if not np.issubdtype(terrain_map.dtype, np.integer):
             raise ValueError('dtype of terrain_map should be integer.')
 
         if np.max(terrain_map) > 1 or np.min(terrain_map) < 0:
@@ -1345,10 +1345,10 @@ class Brain(object):
         rows = self.get_neuron_inds_in_layer(post_layer)
         cols = self.get_neuron_inds_in_layer(pre_layer)
 
-        latencies = np.empty((len(rows), len(cols)), dtype=np.int)
+        latencies = np.empty((len(rows), len(cols)), dtype=np.uint)
         amplitudes = np.empty((len(rows), len(cols)), dtype=np.float)
-        rise_times = np.empty((len(rows), len(cols)), dtype=np.int)
-        decay_times = np.empty((len(rows), len(cols)), dtype=np.int)
+        rise_times = np.empty((len(rows), len(cols)), dtype=np.uint)
+        decay_times = np.empty((len(rows), len(cols)), dtype=np.uint)
 
         conn_df = self._connections['L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)]
 
