@@ -13,7 +13,7 @@ import h5py
 
 # consider one time unit is 0.1 milisecond, time unit should be small enough that no more than one action is possible
 # per time unit
-SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
+# SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
 
 # unnecessary global variable
 # EYE_GAIN = 0.005
@@ -818,7 +818,7 @@ class Brain(object):
         """
 
         if neurons is None:
-            self._generate_default_brain()
+            self._generate_default_neurons()
         else:
             self._neurons = neurons
 
@@ -834,7 +834,7 @@ class Brain(object):
     def __str__(self):
         return 'littlefish.brain.Brain object'
 
-    def _generate_default_brain(self):
+    def _generate_default_neurons(self):
         """
         generate and return a dataframe containing all neurons with default parameters
         """
@@ -867,8 +867,6 @@ class Brain(object):
         """
 
         connections = {}
-        # default_connection = Connection(latency=CONNECTION_LATENCY, amplitude=CONNECTION_AMPLITUDE,
-        #                                 rise_time=CONNECTION_RISE_TIME, decay_time=CONNECTION_DECAY_TIME)
 
         default_connection = Connection()
 
@@ -997,19 +995,15 @@ class Brain(object):
         else:
             return False
 
-    def generate_empty_psp_waveforms(self):
+    def generate_empty_psp_waveforms(self, simulation_length=int(1e5)):
+
         if self.has_psp_waveforms():
             raise ValueError('Brain: can not generate empty psp waveforms, psp waveforms already exist.')
 
-        self._psp_waveforms = {}
+        self._psp_waveforms = np.zeros((len(self._neurons), simulation_length), dtype=np.float32)
 
-        # waveform_count = 0
-        for i in range(len(self._neurons)):
-            if self._neurons.loc[i, 'layer'] > 0:
-                self._psp_waveforms.update({i: np.zeros(SIMULATION_LENGTH, dtype=np.float32)})
-
-        print('\nBrain: empty psp waveforms created. number of waveforms: ' + str(len(self._psp_waveforms)) +
-              '; length of waveforms: ' + str(SIMULATION_LENGTH) + ' time units.')
+        print('\nBrain: empty psp waveforms created. number of waveforms: ' + str(self._psp_waveforms.shape[0]) +
+              '; length of waveforms: ' + str(self._psp_waveforms.shape[1]) + ' time units.')
 
     def check_integrity(self):
         """
@@ -1026,11 +1020,9 @@ class Brain(object):
             print('Brain: self._psp_waveforms is None. Please use self.generate_empty_psp_waveforms() to generate psp '
                   'waveforms before simulation.')
         else:
-            psp_waveform_keys = self._psp_waveforms.keys()
-            psp_waveform_keys.sort()
-            if not np.array_equal(psp_waveform_keys, self.get_all_postsynaptic_neuron_indices()):
-                raise ValueError('Brain: the keys of self._psp_waveforms do not represent all postsynaptic '
-                                 'neurons in self._neurons.')
+            if self._psp_waveforms.shape[0] != len(self._neurons):
+                raise ValueError('Brain: the number of self._psp_waveforms do not match number of neurons in '
+                                 'self._neurons.')
             else:
                 print('Brain: the keys of self._psp_waveforms do represent all postsynaptic neurons in '
                       'self._neurons. PASS')
@@ -1180,7 +1172,7 @@ class Brain(object):
 
             elif neuron['layer'] < self.layer_num - 1:  # hidden layer
                 curr_neuron = neuron['neuron']
-                is_fire = curr_neuron.act(t_point=t_point, probability_input=self._psp_waveforms[i][t_point])
+                is_fire = curr_neuron.act(t_point=t_point, probability_input=self._psp_waveforms[i, t_point])
                 if is_fire:
                     # print('neuron spike')
                     self.neuron_fire(presynaptic_neuron_ind=i, t_point=t_point)
@@ -1188,7 +1180,7 @@ class Brain(object):
             elif neuron['layer'] == self.layer_num - 1:  # muscle layer
                 curr_muscle = neuron['neuron']
                 curr_movement_attempt = curr_muscle.act(t_point=t_point,
-                                                        probability_input=self._psp_waveforms[i][t_point])
+                                                        probability_input=self._psp_waveforms[i, t_point])
                 if curr_movement_attempt:
                     # print('muscle spike')
                     movement_attempt[0] += curr_movement_attempt[0]
@@ -1272,7 +1264,8 @@ class Brain(object):
         """
 
         if not self.has_action_histories():
-            raise LookupError('Brain: No action history found. Cannot plot.')
+            print('Brain: No action history found. Cannot plot. Do nothing.')
+            return
 
         self.check_integrity_neurons()
 
@@ -1281,7 +1274,7 @@ class Brain(object):
             plot_axis = f.add_subplot(111)
 
         if plot_length is None:
-            plot_length = SIMULATION_LENGTH
+            plot_length = self._psp_waveforms.shape[1]
 
         total_neuron_num = len(self._neurons)
         total_y = range(total_neuron_num)
