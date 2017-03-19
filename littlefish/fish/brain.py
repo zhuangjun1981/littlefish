@@ -15,26 +15,27 @@ import h5py
 # per time unit
 SIMULATION_LENGTH = int(1e5)  # number of time units in simulation
 
-EYE_GAIN = 0.005
-EYE_BASELINE_RATE = 0.
-EYE_REFRACTORY_PERIOD = 10
-EYE_BORDER_VALUE = 1
-EYE_INPUT_FILTER = np.array([0.2, 0.6, 0.2])
-EYE2_INPUT_FILTER = np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1])
-EYE_DIRECTIONS = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
-EYE_INPUT_TYPES = ['terrain', 'food', 'fish']
-
-NEURON_REFRACTORY_PERIOD = 10
-NEURON_BASELINE_RATE = 0.0001
-
-MUSCLE_DIRECTIONS = ['east', 'north', 'west', 'south']
-MUSCLE_REFRACTORY_PERIOD = 5000
-MUSCLE_BASELINE_RATE = 0.00001
-
-CONNECTION_LATENCY = 30
-CONNECTION_AMPLITUDE = 0.0001
-CONNECTION_RISE_TIME = 50
-CONNECTION_DECAY_TIME = 100
+# unnecessary global variable
+# EYE_GAIN = 0.005
+# EYE_BASELINE_RATE = 0.
+# EYE_REFRACTORY_PERIOD = 10
+# EYE_BORDER_VALUE = 1
+# EYE_INPUT_FILTER = np.array([0.2, 0.6, 0.2])
+# EYE2_INPUT_FILTER = np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1])
+# EYE_DIRECTIONS = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+# EYE_INPUT_TYPES = ['terrain', 'food', 'fish']
+#
+# NEURON_REFRACTORY_PERIOD = 10
+# NEURON_BASELINE_RATE = 0.0001
+#
+# MUSCLE_DIRECTIONS = ['east', 'north', 'west', 'south']
+# MUSCLE_REFRACTORY_PERIOD = 5000
+# MUSCLE_BASELINE_RATE = 0.00001
+#
+# CONNECTION_LATENCY = 30
+# CONNECTION_AMPLITUDE = 0.0001
+# CONNECTION_RISE_TIME = 50
+# CONNECTION_DECAY_TIME = 100
 
 
 class Neuron(object):
@@ -42,7 +43,7 @@ class Neuron(object):
     a very simple neuron class
     """
 
-    def __init__(self, baseline_rate=NEURON_BASELINE_RATE, refractory_period=NEURON_REFRACTORY_PERIOD):
+    def __init__(self, baseline_rate=0.0001, refractory_period=10):
         """
         action is the equivalent of action potential in biology, and consider one time unit is 0.1 milisecond
 
@@ -184,7 +185,7 @@ class Eye(Neuron):
                              "'northwest', 'northeast', 'southwest', 'southeast'].")
 
         if input_filter is None:
-            self._input_filter = EYE_INPUT_FILTER
+            self._input_filter = np.array([0.2, 0.6, 0.2])
         else:
             self._input_filter = input_filter.astype(np.float)
 
@@ -201,12 +202,12 @@ class Eye(Neuron):
             raise ValueError('Eye2: type should be one of the following: "terrain", "food", "fish".')
 
         if baseline_rate is None:
-            curr_baseline_rate = EYE_BASELINE_RATE
+            curr_baseline_rate = 0.
         else:
             curr_baseline_rate = float(baseline_rate)
 
         if refractory_period is None:
-            curr_refractory_period = EYE_REFRACTORY_PERIOD
+            curr_refractory_period = 10
         else:
             curr_refractory_period = int(refractory_period)
 
@@ -215,7 +216,7 @@ class Eye(Neuron):
     def __str__(self):
         return 'littlefish.brain.Eye object'
 
-    def _get_input_pixels(self, input_map, position, border_value=EYE_BORDER_VALUE):
+    def _get_input_pixels(self, input_map, position, border_value=1):
         """
         :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the
         input_map range will be returned as border_value
@@ -284,7 +285,7 @@ class Eye(Neuron):
 
         return np.array(input_pixels)
 
-    def _get_input(self, input_map, position, border_value=EYE_BORDER_VALUE):
+    def _get_input(self, input_map, position, border_value=1):
         """
         :return: calculate real time input from the visual field
         """
@@ -293,7 +294,7 @@ class Eye(Neuron):
 
         return probability_input
 
-    def act(self, t_point, input_map, position, border_value=EYE_BORDER_VALUE):
+    def act(self, t_point, input_map, position, border_value=1):
         """
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
@@ -303,7 +304,7 @@ class Eye(Neuron):
         :return: bool, True: fire; False: quite
         """
 
-        probability_input = self._get_input(input_map, position, border_value=EYE_BORDER_VALUE)
+        probability_input = self._get_input(input_map, position, border_value=border_value)
 
         if len(self._action_history) > 0 and t_point - self._action_history[-1] < self._refractory_period:
             return False
@@ -374,7 +375,7 @@ class Eye2(Neuron):
                              "'northwest', 'northeast', 'southwest', 'southeast'].")
 
         if input_filter is None:
-            self._input_filter = EYE2_INPUT_FILTER
+            self._input_filter = np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1])
         else:
             self._input_filter = input_filter.astype(np.float)
 
@@ -391,12 +392,12 @@ class Eye2(Neuron):
             raise ValueError('Eye2: type should be one of the following: "terrain", "food", "fish".')
 
         if baseline_rate is None:
-            curr_baseline_rate = EYE_BASELINE_RATE
+            curr_baseline_rate = 0.
         else:
             curr_baseline_rate = float(baseline_rate)
 
         if refractory_period is None:
-            curr_refractory_period = EYE_REFRACTORY_PERIOD
+            curr_refractory_period = 10
         else:
             curr_refractory_period = int(refractory_period)
 
@@ -405,7 +406,7 @@ class Eye2(Neuron):
     def __str__(self):
         return 'littlefish.brain.Eye2 object'
 
-    def _get_input_pixels(self, input_map, position, border_value=EYE_BORDER_VALUE):
+    def _get_input_pixels(self, input_map, position, border_value=1):
         """
         :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the
         input_map range will be returned as border_value
@@ -499,7 +500,7 @@ class Eye2(Neuron):
 
         return np.array(input_pixels)
 
-    def _get_input(self, input_map, position, border_value=EYE_BORDER_VALUE):
+    def _get_input(self, input_map, position, border_value=1):
         """
         :return: calculate real time input from the visual field
         """
@@ -542,7 +543,7 @@ class Eye2(Neuron):
     def get_input_type(self):
         return self._input_type
 
-    def act(self, t_point, position, input_map, border_value=EYE_BORDER_VALUE, probability_base=None):
+    def act(self, t_point, position, input_map, border_value=1, probability_base=None):
         """
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
@@ -604,7 +605,7 @@ class Muscle(Neuron):
     muscle class for determining the motion of the fish. Subclass of Neuron class
     """
 
-    def __init__(self, direction, baseline_rate=MUSCLE_BASELINE_RATE, refractory_period=MUSCLE_REFRACTORY_PERIOD):
+    def __init__(self, direction, baseline_rate=0.00001, refractory_period=5000):
 
         if direction in ['east', 'north', 'west', 'south']:
             self._direction = direction
@@ -681,8 +682,7 @@ class Connection(object):
     synaptic connection between two neurons
     """
 
-    def __init__(self, latency=CONNECTION_LATENCY, amplitude=CONNECTION_AMPLITUDE, rise_time=CONNECTION_RISE_TIME,
-                 decay_time=CONNECTION_DECAY_TIME):
+    def __init__(self, latency=30, amplitude=0.0001, rise_time=50, decay_time=100):
         """
 
         :param latency: int, temporal latency from presynaptic neuron action to the postsynaptic effect onset, number
@@ -818,7 +818,7 @@ class Brain(object):
         """
 
         if neurons is None:
-            self._generate_default_neurons()
+            self._generate_default_brain()
         else:
             self._neurons = neurons
 
@@ -834,7 +834,7 @@ class Brain(object):
     def __str__(self):
         return 'littlefish.brain.Brain object'
 
-    def _generate_default_neurons(self):
+    def _generate_default_brain(self):
         """
         generate and return a dataframe containing all neurons with default parameters
         """
@@ -843,20 +843,16 @@ class Brain(object):
         ind = 0
         for i in range(8):
             curr_dir, curr_type = self.get_eye_type(i)
-            neurons.loc[ind] = [0, i, Eye2(direction=curr_dir, input_filter=EYE2_INPUT_FILTER, gain=EYE_GAIN,
-                                           input_type=curr_type, baseline_rate=EYE_BASELINE_RATE,
-                                           refractory_period=EYE_REFRACTORY_PERIOD)]
+            neurons.loc[ind] = [0, i, Eye2(direction=curr_dir)]
             ind += 1
 
         for i in range(8):
-            neurons.loc[ind] = [1, i, Neuron(baseline_rate=NEURON_BASELINE_RATE,
-                                             refractory_period=NEURON_REFRACTORY_PERIOD)]
+            neurons.loc[ind] = [1, i, Neuron()]
             ind += 1
 
         for i in range(4):
             curr_dir = self.get_muscle_direction(i)
-            neurons.loc[ind] = [2, i, Muscle(direction=curr_dir, baseline_rate=MUSCLE_BASELINE_RATE,
-                                             refractory_period=MUSCLE_REFRACTORY_PERIOD)]
+            neurons.loc[ind] = [2, i, Muscle(direction=curr_dir)]
             ind += 1
 
         neurons['layer'] = neurons['layer'].astype(np.uint32)
@@ -933,7 +929,7 @@ class Brain(object):
             curr_dir, curr_type = self.get_eye_type(curr_row['neuron_ind'])
             return util.short('eye') + '_' + util.short(curr_type) + '_' + util.short(curr_dir)
         elif curr_layer == self.layer_num - 1:  # muscle layer
-            curr_dir = MUSCLE_DIRECTIONS[curr_row['neuron_ind'] % len(MUSCLE_DIRECTIONS)]
+            curr_dir = self.get_muscle_direction(curr_row['neuron_ind'])
             return util.short('muscle') + '_' + util.short(curr_dir)
         elif 0 < curr_layer < self.layer_num - 1:
             curr_layer_num = util.int2str(curr_layer, 3)
@@ -1393,8 +1389,9 @@ class Brain(object):
         given the neuron_ind in the eye layer return direction and input type of a specific eye
         :return: two strings, (direction, type)
         """
-        direction_num = len(EYE_DIRECTIONS)
-        return EYE_DIRECTIONS[ind % direction_num], EYE_INPUT_TYPES[ind // direction_num]
+        eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+        direction_num = len(eye_directions)
+        return eye_directions[ind % direction_num], eye_directions[ind // direction_num]
 
     @staticmethod
     def get_muscle_direction(ind):
@@ -1402,8 +1399,9 @@ class Brain(object):
         given the neuron_ind in the muscle layer return direction of a specific muscle
         :return: string, direction of the muscle
         """
-        direction_num = len(MUSCLE_DIRECTIONS)
-        return MUSCLE_DIRECTIONS[ind % direction_num]
+        muscle_directions = ['east', 'north', 'west', 'south']
+        direction_num = len(muscle_directions)
+        return muscle_directions[ind % direction_num]
 
     @staticmethod
     def from_h5_group(h5_group):
@@ -1590,8 +1588,8 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    test_file = h5py.File(r"F:\littlefish\test_folder\brain_test.hdf5")
-    brain = Brain.from_h5_group(test_file['brain'])
+    # test_file = h5py.File(r"F:\littlefish\test_folder\brain_test.hdf5")
+    # brain = Brain.from_h5_group(test_file['brain'])
     # =========================================================================================
 
     # =========================================================================================

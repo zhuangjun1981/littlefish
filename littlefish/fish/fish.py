@@ -8,12 +8,12 @@ import pandas as pd
 import h5py
 import os
 
-SIMULATION_LENGTH = 100000
-
-FISH_MAX_HEALTH = 100.
-FISH_HEALTH_DECAY_RATE = 0.0001
-FISH_LAND_PENALTY_RATE = 0.005
-FISH_FOOD_RATE = 20.
+# unnecessary global varible
+# SIMULATION_LENGTH = 100000
+# FISH_MAX_HEALTH = 100.
+# FISH_HEALTH_DECAY_RATE = 0.0001
+# FISH_LAND_PENALTY_RATE = 0.005
+# FISH_FOOD_RATE = 20.
 
 
 class Fish(object):
@@ -45,9 +45,8 @@ class Fish(object):
     self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
     """
 
-    def __init__(self, name=None, mother_name=None, input_brain=None, max_health=FISH_MAX_HEALTH,
-                 health_decay_rate=FISH_HEALTH_DECAY_RATE, land_penalty_rate=FISH_LAND_PENALTY_RATE,
-                 food_rate=FISH_FOOD_RATE):
+    def __init__(self, name=None, mother_name=None, input_brain=None, max_health=100., health_decay_rate=0.0001,
+                 land_penalty_rate=0.005, food_rate=20.):
 
         """
 
@@ -193,11 +192,11 @@ class Fish(object):
 
             if self._simulation_status == 1:
                 # todo: add code for action here.
-                pass
+                raise NotImplementedError('Fish: cannot evaluate fish. This function needs to be implemented!')
             elif self._simulation_status == 0:
-                raise RuntimeError('Fish: cannot evaluate terrain. Simulation not started!')
+                raise RuntimeError('Fish: cannot evaluate fish. Simulation not started!')
             elif self._simulation_status == 2:
-                raise RuntimeError('Fish: cannot evaluate terrain. Simulation already stopped!')
+                raise RuntimeError('Fish: cannot evaluate fish. Simulation already stopped!')
             else:
                 raise RuntimeError('Fish: self._simulation_status should 0, 1 or 2.')
 
@@ -361,14 +360,13 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    save_path = r"D:\little_fish_test\fish.hdf5"
-    if os.path.isfile(save_path):
-        os.remove(save_path)
-    fish_group = h5py.File(save_path).create_group('fish')
-
-    fish = Fish()
-    fish.to_h5_group(fish_group)
-
+    # save_path = r"D:\little_fish_test\fish.hdf5"
+    # if os.path.isfile(save_path):
+    #     os.remove(save_path)
+    # fish_group = h5py.File(save_path).create_group('fish')
+    #
+    # fish = Fish()
+    # fish.to_h5_group(fish_group)
     # =========================================================================================
 
     print('\nfor debug ...')

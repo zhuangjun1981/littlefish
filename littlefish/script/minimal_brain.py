@@ -12,7 +12,7 @@ eye = brain.Eye2(direction='east', input_filter=np.array([0.15, 0.3, 0.15, 0.1, 
                  input_type='terrain', baseline_rate=0., refractory_period=10)
 hidden0 = brain.Neuron(baseline_rate=0.0005, refractory_period=10)
 hidden1 = brain.Neuron(baseline_rate=0.0005, refractory_period=10)
-muscle = brain.Muscle(direction='east', baseline_rate=0., refractory_period=5000)
+muscle = brain.Muscle(direction='east', baseline_rate=0.1, refractory_period=5000)
 
 neurons = pd.DataFrame([[0, 0, eye],
                         [1, 0, hidden0],
@@ -52,7 +52,7 @@ print('simulation time: ' + str(time.time() - t1) + ' seconds.')
 brain.plot_action_histories_scatter(plot_length=SIMULATION_LENGTH, ms=10, mec='none')
 plt.show()
 
-dfile_path = r"F:\littlefish\test_folder\minimum_brain.hdf5"
+dfile_path = r"D:\littlefish\test_folder\minimum_brain.hdf5"
 dfile = h5py.File(dfile_path)
 group = dfile.create_group('brain')
 brain.to_h5_group(group)
