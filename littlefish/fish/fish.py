@@ -98,7 +98,7 @@ class Fish(object):
             self._brain.generate_empty_psp_waveforms()
             print('Fish: Simulation initialized successfully.')
 
-    def act(self, t_point, body_position, terrain_map, food_map=None, fish_map=None):
+    def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_map=None, fish_map=None):
 
         if not self.has_history():
             raise RuntimeError('Fish: action failure. Fish does not have history.')
@@ -107,8 +107,9 @@ class Fish(object):
         food_taken_positions = self._eval_food(food_map=food_map)
         self._eval_fish(fish_map=fish_map)
 
-        movement_attempt = self._brain.act(t_point, body_position=body_position, terrain_map=terrain_map,
-                                           food_map=food_map, fish_map=fish_map)
+        movement_attempt = self._brain.act(t_point=t_point, action_histories=action_histories,
+                                           psp_waveforms=psp_waveforms, body_position=body_position,
+                                           terrain_map=terrain_map, food_map=food_map, fish_map=fish_map)
 
         # update health
         self._curr_health += (- self._health_decay_rate)

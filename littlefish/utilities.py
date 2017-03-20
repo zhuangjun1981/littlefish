@@ -217,6 +217,53 @@ def plot_mask(mask, plot_axis=None, color='#ff0000', closing_iteration=None, **k
     return currfig
 
 
+def check_monotonicity(arr, direction='increasing'):
+    """
+    check monotonicity of a 1-d array, usually a time series
+    :param arr: input array, should be 1 dimensional
+    :param direction: 'increasing', 'decreasing', 'non-increasing', 'non-decreasing'
+    :return: True or False
+    """
+
+    if len(arr.shape) != 1:
+        raise ValueError('Input array should be one dimensional!')
+
+    if arr.shape[0] < 2:
+        raise ValueError('Input array should have at least two elements!')
+
+    diff = np.diff(arr)
+    min_diff = np.min(diff)
+    max_diff = np.max(diff)
+
+    if direction == 'increasing':
+        if min_diff > 0:
+            return True
+        else:
+            return False
+
+    elif direction == 'decreasing':
+        if max_diff < 0:
+            return True
+        else:
+            return False
+
+    elif direction == 'non-increasing':
+        if max_diff <= 0:
+            return True
+        else:
+            return False
+
+    elif direction == 'non-decreasing':
+        if min_diff >= 0:
+            return True
+        else:
+            return False
+
+    else:
+        raise LookupError('direction should one of the following: "increasing", "decreasing", '
+                          '"non-increasing", "non-decreasing"!')
+
+
 if __name__ == '__main__':
 
     #==================================================
