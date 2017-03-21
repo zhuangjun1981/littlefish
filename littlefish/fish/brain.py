@@ -66,22 +66,6 @@ class Neuron(object):
     def get_refractory_period(self):
         return self._refractory_period
 
-    # def get_action_history(self):
-    #     """
-    #     :return: action_history, list of ints, timing of all actions as indices in time axis of time unit
-    #     """
-    #     return self._action_history
-    #
-    # def set_action_history(self, action_history):
-    #
-    #     if self._action_history:
-    #         print("Brain: overwriting a neuron's action history.")
-    #
-    #     self._action_history = action_history
-    #
-    # def reset_action_history(self):
-    #     self._action_history = []
-
     def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
         """
         evaluate if the neuron will fire at given time point
@@ -117,8 +101,10 @@ class Neuron(object):
 
     def to_h5_group(self, h5_group):
 
-        h5_group.attrs['baseline_rate_action_per_tu'] = self._baseline_rate
-        h5_group.attrs['refractory_period_tu'] = self._refractory_period
+        br_dset = h5_group.create_dataset('baseline_rate', data=self._baseline_rate)
+        br_dset.attrs['unit'] = 'action_per_time_unit'
+        rp_dset = h5_group.create_dataset('refractory_period', data=self._refractory_period)
+        rp_dset.attrs['unit'] = 'time_unit'
         h5_group.attrs['neuron_type'] = 'neuron'
 
     @staticmethod
@@ -127,8 +113,7 @@ class Neuron(object):
         if h5_group.attrs['neuron_type'] != 'neuron':
             raise ValueError('Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".')
 
-        neuron = Neuron(baseline_rate=h5_group.attrs['baseline_rate_action_per_tu'],
-                        refractory_period=h5_group.attrs['refractory_period_tu'])
+        neuron = Neuron(baseline_rate=h5_group['baseline_rate'], refractory_period=h5_group['refractory_period'])
         return neuron
 
 
@@ -563,13 +548,15 @@ class Eye2(Neuron):
 
     def to_h5_group(self, h5_group):
 
-        h5_group.attrs['baseline_rate_action_per_tu'] = self._baseline_rate
-        h5_group.attrs['refractory_period_tu'] = self._refractory_period
+        br_dset = h5_group.create_dataset('baseline_rate', data=self._baseline_rate)
+        br_dset.attrs['unit'] = 'action_per_time_unit'
+        rp_dset = h5_group.create_dataset('refractory_period', data=self._refractory_period)
+        rp_dset.attrs['unit'] = 'time_unit'
+        h5_group.create_dataset('direction', data=self._direction)
+        h5_group.create_dataset('input_filter', data=self._input_filter)
+        h5_group.create_dataset('gain', data=self._gain)
+        h5_group.create_dataset('input_type', data=self._input_type)
         h5_group.attrs['neuron_type'] = 'eye2'
-        h5_group.attrs['direction'] = self._direction
-        h5_group.attrs['input_filter'] = self._input_filter
-        h5_group.attrs['gain'] = self._gain
-        h5_group.attrs['input_type'] = self._input_type
 
     @staticmethod
     def from_h5_group(h5_group):
@@ -577,12 +564,9 @@ class Eye2(Neuron):
         if h5_group.attrs['neuron_type'] != 'eye2':
             raise ValueError('Eye2: loading from h5 file failed. "neuron_type" attribute should be "eye2".')
 
-        eye2 = Eye2(direction=h5_group.attrs['direction'],
-                    input_filter=h5_group.attrs['input_filter'],
-                    gain=h5_group.attrs['gain'],
-                    input_type=h5_group.attrs['input_type'],
-                    baseline_rate=h5_group.attrs['baseline_rate_action_per_tu'],
-                    refractory_period=h5_group.attrs['refractory_period_tu'])
+        eye2 = Eye2(direction=h5_group['direction'], input_filter=h5_group['input_filter'], gain=h5_group['gain'],
+                    input_type=h5_group['input_type'], baseline_rate=h5_group['baseline_rate'],
+                    refractory_period=h5_group['refractory_period'])
         return eye2
 
 
@@ -637,10 +621,12 @@ class Muscle(Neuron):
 
     def to_h5_group(self, h5_group):
 
-        h5_group.attrs['baseline_rate_action_per_tu'] = self._baseline_rate
-        h5_group.attrs['refractory_period_tu'] = self._refractory_period
+        br_dset = h5_group.create_dataset('baseline_rate', data=self._baseline_rate)
+        br_dset.attrs['unit'] = 'action_per_time_unit'
+        rp_dset = h5_group.create_dataset('refractory_period', data=self._refractory_period)
+        rp_dset.attrs['unit'] = 'time_unit'
+        h5_group.create_dataset('direction', data=self._direction)
         h5_group.attrs['neuron_type'] = 'muscle'
-        h5_group.attrs['direction'] = self._direction
 
     @staticmethod
     def from_h5_group(h5_group):
@@ -648,9 +634,8 @@ class Muscle(Neuron):
         if h5_group.attrs['neuron_type'] != 'muscle':
             raise ValueError('Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".')
 
-        muscle = Muscle(direction=h5_group.attrs['direction'],
-                        baseline_rate=h5_group.attrs['baseline_rate_action_per_tu'],
-                        refractory_period=h5_group.attrs['refractory_period_tu'])
+        muscle = Muscle(direction=h5_group['direction'], baseline_rate=h5_group['baseline_rate'],
+                        refractory_period=h5_group['refractory_period'])
         return muscle
 
 

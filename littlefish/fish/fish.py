@@ -181,13 +181,13 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    # save_path = r"D:\little_fish_test\fish.hdf5"
-    # if os.path.isfile(save_path):
-    #     os.remove(save_path)
-    # fish_group = h5py.File(save_path).create_group('fish')
-    #
-    # fish = Fish()
-    # fish.to_h5_group(fish_group)
+    save_path = r"G:\little_fish_test\fish.hdf5"
+    if os.path.isfile(save_path):
+        os.remove(save_path)
+    fish_group = h5py.File(save_path).create_group('fish')
+
+    fish = Fish()
+    fish.to_h5_group(fish_group)
     # =========================================================================================
 
     print('\nfor debug ...')
