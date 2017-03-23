@@ -3,12 +3,44 @@ import pandas as pd
 
 
 class Simulation(object):
+    """
+    Simulation class takes fish(s) and terrain to run the simulation of a fish's activity during its life
+    """
 
-    def __init(self):
-        # self._simulation_status = 0
+    def __init__(self, terrain, fish_list):
+        """
+        designed for only run once after creation
+
+        :param terrain: terrain object, current terrain.terrain_2d.BinaryTerrain object
+        :param fish_list: list of fish object (fish.fish.Fish class)
+        :return: None
+        """
+
+        # simulation status: 0: not started yet; 1: during simulation; 2: after simulation
+        self._simulation_status = 0
+        self._terrain = terrain
+        self._fish_list = fish_list
+
+
+    def initiate_simulation(self):
+        """
+        initiate simulation, check simulation status, creating simulation history variables
+        """
+
+        # todo: unfinished, finish this method
+
+        if self._simulation_status == 0:
+
+            self._psp_waveforms_all_fish = {}
+            self._action_histories_all_fish = {}
+
+        elif self._simulation_status == 1:
+            raise RuntimeError("Simulation: Can not initiate simulation. Already in simulation.")
+        elif self._simulation_status == 2:
+            raise RuntimeError("Simulation: Can not initiate simulation. Already stopped.")
+
         # self._curr_position = None
         # self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'col', 'health'])
-        pass
 
     # def get_simulation_status(self):
     #     return self._simulation_status

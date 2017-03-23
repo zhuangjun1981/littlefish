@@ -1033,7 +1033,8 @@ class Brain(object):
         if verbose:
             print('Brain: dataframes in self._connections have valid column and index names. PASS')
 
-    def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_map=None, fish_map=None):
+    def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_positions=None,
+            fish_positions=None):
         """
         :param t_point: int, current time stamp of time unit axis
         :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
@@ -1051,25 +1052,7 @@ class Brain(object):
                                    None: no movement has been attempted,
         """
 
-        # unnecessary checks
-        # if len(body_position) != 2:
-        #     raise ValueError('body_position should contain two elements.')
-        #
-        # if (not isinstance(body_position[0], int)) or (not isinstance(body_position[1], int)):
-        #     raise ValueError('body_position should contain two integers.')
-        #
-        # if len(terrain_map.shape) != 2:
-        #     raise ValueError('terrain_map should be a 2-d array.')
-        #
-        # if not np.issubdtype(terrain_map.dtype, np.integer):
-        #     raise ValueError('dtype of terrain_map should be integer.')
-        #
-        # if np.max(terrain_map) > 1 or np.min(terrain_map) < 0:
-        #     raise ValueError('terrain_map should only contain 0s and 1s.')
-        #
-        # if body_position[0] < 1 or body_position[0] > terrain_map.shape[0] - 2 or \
-        #         body_position[1] < 1 or body_position[1] > terrain_map.shape[1] - 2:
-        #     raise ValueError('body_position out of the range.')
+        # todo: this method is broken, finishe this method
 
         movement_attempt = np.array([0, 0], dtype=np.uint8)
 
