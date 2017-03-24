@@ -284,7 +284,7 @@ class Eye(Neuron):
 
         return probability_input
 
-    def act(self, t_point,  input_map, position, action_history=[], border_value=1, probability_base=None):
+    def act(self, t_point, input_map, position, action_history=[], border_value=1, probability_base=None):
         """
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
@@ -743,19 +743,21 @@ class Connection(object):
         else:
             print('Brain.Connection: no parameter has been changed. Do nothing.')
 
-    def act(self, t_point, postsynaptic_input):
+    def act(self, t_point, postsynaptic_index, psp_waveforms):
         """
         if the presynaptic neuron fires at the 'time_point', a psp wave form will be generated and add to the
-        input array of the postsynaptic neuron
+        input waveform of postsynaptic neuron defined by postsynaptic_index
         :param t_point: int, current time point as the index of time unit axis
-        :param postsynaptic_input: 1-d array of floats
+        :param postsynaptic_index: non-negative int, the index of postsynaptic neuron
+        :param psp_waveforms: 2-d array, float 32, the psp waveforms of all neurons in the brain, neuron id x t-point,
+                              the generated psp will be added to the postsynaptic_index th line of the array
         :return:
         """
         psp_end = t_point + len(self._psp)
-        if psp_end <= len(postsynaptic_input):
-            postsynaptic_input[t_point: psp_end] += self._psp
+        if psp_end <= psp_waveforms.shape[1]:
+            psp_waveforms[postsynaptic_index, t_point: psp_end] += self._psp
         else:
-            postsynaptic_input[t_point:] += self._psp[:len(postsynaptic_input) - t_point]
+            psp_waveforms[postsynaptic_index, t_point:] += self._psp[:psp_waveforms.shape[1] - t_point]
 
 
 class Brain(object):
@@ -1033,8 +1035,8 @@ class Brain(object):
         if verbose:
             print('Brain: dataframes in self._connections have valid column and index names. PASS')
 
-    def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_positions=None,
-            fish_positions=None):
+    def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_map=None,
+            fish_map=None):
         """
         :param t_point: int, current time stamp of time unit axis
         :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
@@ -1045,14 +1047,12 @@ class Brain(object):
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
         :param fish_map:
-        :return: movement attemps: tuple of 2 ints, represting the movement attempt, be careful, this may not
+        :return: movement attemps: 2-d array, np.uint8, (row, col), representing the movement attempt, be careful, this may not
                                    represent the actual movement, it will be evaluated by the fish object (fish class)
                                    containing this brain to see if the movement is possible. if the fish is hitting
                                    the edge the world map, then the it will not move out of the map
                                    None: no movement has been attempted,
         """
-
-        # todo: this method is broken, finishe this method
 
         movement_attempt = np.array([0, 0], dtype=np.uint8)
 
@@ -1063,7 +1063,7 @@ class Brain(object):
                 curr_eye_pos = curr_eye.get_position(body_position=body_position)
 
                 if curr_eye.get_input_type() == 'terrain':
-                    is_fire = curr_eye.act(t_point=t_point, action_history=action_histories[i, 'action_history'],
+                    is_fire = curr_eye.act(t_point=t_point, action_history=action_histories.iloc[i, 0],
                                            position=curr_eye_pos, input_map=terrain_map)
                 elif curr_eye.get_input_type() == 'food':
                     if food_map is not None:
@@ -1087,20 +1087,20 @@ class Brain(object):
 
             elif neuron['layer'] < self.layer_num - 1:  # hidden layer
                 curr_neuron = neuron['neuron']
-                is_fire = curr_neuron.act(t_point=t_point, action_history=action_histories[i, 'action_history'],
+                is_fire = curr_neuron.act(t_point=t_point, action_history=action_histories.iloc[i, 0],
                                           probability_input=psp_waveforms[i, t_point])
                 if is_fire:
                     # print('neuron spike')
-                    self.neuron_fire(presynaptic_neuron_ind=i, t_point=t_point)
+                    self.neuron_fire(presynaptic_neuron_ind=i, t_point=t_point, psp_waveforms=psp_waveforms)
 
             elif neuron['layer'] == self.layer_num - 1:  # muscle layer
                 curr_muscle = neuron['neuron']
                 curr_movement_attempt = curr_muscle.act(t_point=t_point,
-                                                        action_history=action_histories[i, 'action_history'],
+                                                        action_history=action_histories.iloc[i, 0],
                                                         probability_input=psp_waveforms[i, t_point])
-                if curr_movement_attempt:
+                if curr_movement_attempt is not False:
                     # print('muscle spike')
-                    movement_attempt = movement_attempt + curr_movement_attempt[0]
+                    movement_attempt = movement_attempt + curr_movement_attempt
 
             else:
                 raise ValueError('Brain: neuron at index' + str(i) + ' has invalid layer location.')
@@ -1126,7 +1126,8 @@ class Brain(object):
 
             for postsynaptic_neuron_ind in postsynaptic_neuron_inds:
                 curr_connection = curr_conn_df.loc[postsynaptic_neuron_ind, presynaptic_neuron_ind]
-                curr_connection.act(t_point=t_point, postsynaptic_input=psp_waveforms[postsynaptic_neuron_ind])
+                curr_connection.act(t_point=t_point, postsynaptic_index=postsynaptic_neuron_ind,
+                                    psp_waveforms=psp_waveforms)
         elif neuron_layer == self.layer_num - 1:  # muscle layer
             print('Brain: a firing of a muscle has no effect on brain itself. Please use Muscle.act() method to '
                   'generate movement attempt.')
