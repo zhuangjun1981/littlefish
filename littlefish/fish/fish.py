@@ -90,6 +90,9 @@ class Fish(object):
     def get_name(self):
         return self._name
 
+    def get_max_health(self):
+        return self._max_health
+
     def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
             food_map=None, fish_map=None):
 

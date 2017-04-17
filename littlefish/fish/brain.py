@@ -1345,6 +1345,24 @@ class Brain(object):
 
         return loaded_brain
 
+    def generate_empty_action_histories(self):
+        '''
+        :return: a data frame with empty lists, each list is the action history of a particular neuron, in the same 
+        order as self._neurons data frame, columns = ['action_history']
+        '''
+        empty_action_histories = pd.DataFrame(index=self._neurons.index)
+        empty_action_histories['action_history'] = [[]] * len(empty_action_histories)
+        return empty_action_histories
+
+    def generate_empty_psp_waveforms(self, simulation_length):
+        '''
+        :param simulation_length: int, number of time points of the simulation
+        :return: 2d-array of zeros, float32, psp waveforms of all neurons in the brain, each row represents one
+                 neuron in the same order as self._neurons data frame, each column represents a time point
+        '''
+
+        return np.zeros((len(self._neurons), simulation_length), dtype=np.float32)
+
 
 if __name__ == '__main__':
 
@@ -1487,10 +1505,14 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    bb = Brain()
-    print(bb)
-    print(len(bb.get_connections()))
-    print(bb.get_connections()['L000_L001'])
+    # bb = Brain()
+    # print(bb)
+    # print(len(bb.get_connections()))
+    # print(bb.get_connections()['L000_L001'])
     # =========================================================================================
+
+    # =========================================================================================
+    mb = Brain()
+    eah = mb.generate_empty_action_histories()
 
     print('debug...')

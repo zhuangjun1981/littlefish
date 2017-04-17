@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 
 
 class Simulation(object):
@@ -22,25 +22,35 @@ class Simulation(object):
         self._fish_list = fish_list
 
 
-    def initiate_simulation(self):
+    def initiate_simulation(self, simulation_length):
         """
         initiate simulation, check simulation status, creating simulation history variables
+        
+        :param simulation_length: int, number of time points of the simulation
         """
 
-        # todo: unfinished, finish this method
+        # todo: untested, test this method
 
         if self._simulation_status == 0:
 
-            self._psp_waveforms_all_fish = {}
-            self._action_histories_all_fish = {}
+            self._simulation_histories = {}
+
+            for fish in self._fish_list:
+                simulation_history_curr_fish = {}
+                simulation_history_curr_fish.update({'action_histories': fish.generate_empty_action_histories()})
+                simulation_history_curr_fish.update({'psp_waveforms': fish.generate_empty_psp_waveforms()})
+
+                life_history = np.zeros((3, simulation_length), dtype=[('pos_row', np.uint16), ('pos_col', np.uint16),
+                                                                       ('health', np.float32)])
+                simulation_history_curr_fish.update({'life_history': life_history})
+                self._simulation_histories.update({fish.get_name(): simulation_history_curr_fish})
+
+            self._simulation_status = 1
 
         elif self._simulation_status == 1:
             raise RuntimeError("Simulation: Can not initiate simulation. Already in simulation.")
         elif self._simulation_status == 2:
             raise RuntimeError("Simulation: Can not initiate simulation. Already stopped.")
-
-        # self._curr_position = None
-        # self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'col', 'health'])
 
     # def get_simulation_status(self):
     #     return self._simulation_status
@@ -155,3 +165,12 @@ class Simulation(object):
     #         raise RuntimeError('Fish: Stop simulation failure. Not in simulation.')
     #     elif self._simulation_status == 2:
     #         print('Fish: No need to stop simulation. Already stopped.')
+
+if __name__ == '__main__':
+
+    # -------------------------------------------------------------------------
+
+
+    # -------------------------------------------------------------------------
+
+    print 'for debugging...'
