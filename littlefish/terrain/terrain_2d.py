@@ -20,7 +20,7 @@ class TerrainGenerator(object):
     terrain object, a square matrix containing altitude
     '''
 
-    def __init__(self,size=(256,256),sea_level=0.5):
+    def __init__(self,size=(256,256),sea_level=0.6):
         '''
         :param size: size of world_map (height, width)
         :param sea_level: a simple threshold
@@ -52,7 +52,7 @@ class TerrainGenerator(object):
 
         return float_map
 
-    def generate_binary_map(self, sigma=0., is_plot=False):
+    def generate_binary_map(self, sigma=0.5, is_plot=False):
         '''
         :param sigma: filter sigma to filter the world_map
         :param is_plot: if True, pop a plot of binary world_map
@@ -139,3 +139,10 @@ if __name__ == '__main__':
     util.plot_mask(fish_map, plot_axis=ax, color='#ff0000')
     plt.show()
     #=============================================================
+
+
+    # =============================================================
+
+    # =============================================================
+
+    print 'for debug'

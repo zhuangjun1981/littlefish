@@ -2,7 +2,7 @@
 #                         print_function, unicode_literals)
 # from builtins import *
 
-import brain as brain
+import brain as br
 import numpy as np
 import pandas as pd
 import h5py
@@ -13,8 +13,7 @@ import os
 # FISH_MAX_HEALTH = 100.
 # FISH_HEALTH_DECAY_RATE = 0.0001
 # FISH_LAND_PENALTY_RATE = 0.005
-# FISH_FOOD_RATE = 20.
-
+# FISH_FOOD_RATE = 20
 
 class Fish(object):
     """
@@ -60,7 +59,7 @@ class Fish(object):
         """
 
         if name is None:
-            self._name = ''
+            self._name = 'test_fish'
         else:
             self._name = name
 
@@ -75,7 +74,7 @@ class Fish(object):
         self._food_rate = food_rate
 
         if brain is None:
-            self._brain = brain.Brain()
+            self._brain = br.Brain()
         else:
             brain.check_integrity()
             self._brain = brain
@@ -192,13 +191,13 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    save_path = r"G:\little_fish_test\fish.hdf5"
-    if os.path.isfile(save_path):
-        os.remove(save_path)
-    fish_group = h5py.File(save_path).create_group('fish')
-
-    fish = Fish()
-    fish.to_h5_group(fish_group)
+    # save_path = r"G:\little_fish_test\fish.hdf5"
+    # if os.path.isfile(save_path):
+    #     os.remove(save_path)
+    # fish_group = h5py.File(save_path).create_group('fish')
+    #
+    # fish = Fish()
+    # fish.to_h5_group(fish_group)
     # =========================================================================================
 
     print('\nfor debug ...')

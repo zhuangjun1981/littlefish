@@ -1514,5 +1514,6 @@ if __name__ == '__main__':
     # =========================================================================================
     mb = Brain()
     eah = mb.generate_empty_action_histories()
+    print eah
 
     print('debug...')

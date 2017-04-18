@@ -37,11 +37,18 @@ class Simulation(object):
 
             for fish in self._fish_list:
                 simulation_history_curr_fish = {}
-                simulation_history_curr_fish.update({'action_histories': fish.generate_empty_action_histories()})
-                simulation_history_curr_fish.update({'psp_waveforms': fish.generate_empty_psp_waveforms()})
+                simulation_history_curr_fish.update({'action_histories': fish._brain.generate_empty_action_histories()})
+                simulation_history_curr_fish.update({'psp_waveforms': fish._brain.generate_empty_psp_waveforms(simulation_length)})
 
-                life_history = np.zeros((3, simulation_length), dtype=[('pos_row', np.uint16), ('pos_col', np.uint16),
-                                                                       ('health', np.float32)])
+                life_history = pd.DataFrame(np.zeros((simulation_length,), dtype=[('pos_row', np.uint16),
+                                                                                  ('pos_col', np.uint16),
+                                                                                  ('health', np.float32)]))
+
+                start_position = self._terrain.generate_fish_starting_position()
+                life_history.loc[0, 'pos_row'] = start_position[0]
+                life_history.loc[0, 'pos_col'] = start_position[1]
+                life_history.loc[0, 'health'] = fish._max_health
+
                 simulation_history_curr_fish.update({'life_history': life_history})
                 self._simulation_histories.update({fish.get_name(): simulation_history_curr_fish})
 
@@ -169,7 +176,16 @@ class Simulation(object):
 if __name__ == '__main__':
 
     # -------------------------------------------------------------------------
+    import littlefish.terrain.terrain_2d as tr
+    import littlefish.fish.fish as fi
+    tg = tr.TerrainGenerator()
+    terrain_map = tg.generate_binary_map()
+    terrain = tr.BinaryTerrain(terrain_map)
+    fish = fi.Fish()
+    sim = Simulation(terrain, [fish])
+    sim.initiate_simulation(10)
 
+    print sim._simulation_histories
 
     # -------------------------------------------------------------------------
 
