@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Simulation(object):
@@ -7,42 +8,48 @@ class Simulation(object):
     Simulation class takes fish(s) and terrain to run the simulation of a fish's activity during its life
     """
 
-    def __init__(self, terrain, fish_list):
+    def __init__(self, terrain, fish_list, simulation_length=1000):
         """
-        designed for only run once after creation
+        designed to run only once after creation
 
         :param terrain: terrain object, current terrain.terrain_2d.BinaryTerrain object
         :param fish_list: list of fish object (fish.fish.Fish class)
+        :param simulation_length: positive integer, number of time points of the simulation 
         :return: None
         """
 
-        # simulation status: 0: not started yet; 1: during simulation; 2: after simulation
+        # simulation status: 0: not initialized yet;
+        #                    1: started initialization
+        #                    2: initialization finished
+        #                    3: started simulation
+        #                    4: after simulation
         self._simulation_status = 0
         self._terrain = terrain
         self._fish_list = fish_list
+        self._simulation_length = simulation_length
 
 
-    def initiate_simulation(self, simulation_length):
+    def initiate_simulation(self):
         """
         initiate simulation, check simulation status, creating simulation history variables
         
         :param simulation_length: int, number of time points of the simulation
         """
 
-        # todo: untested, test this method
-
         if self._simulation_status == 0:
+
+            self._simulation_status = 1
 
             self._simulation_histories = {}
 
             for fish in self._fish_list:
                 simulation_history_curr_fish = {}
                 simulation_history_curr_fish.update({'action_histories': fish._brain.generate_empty_action_histories()})
-                simulation_history_curr_fish.update({'psp_waveforms': fish._brain.generate_empty_psp_waveforms(simulation_length)})
+                simulation_history_curr_fish.update({'psp_waveforms': fish._brain.generate_empty_psp_waveforms(self._simulation_length)})
 
-                life_history = pd.DataFrame(np.zeros((simulation_length,), dtype=[('pos_row', np.uint16),
-                                                                                  ('pos_col', np.uint16),
-                                                                                  ('health', np.float32)]))
+                life_history = pd.DataFrame(np.zeros((self._simulation_length,), dtype=[('pos_row', np.uint16),
+                                                                                        ('pos_col', np.uint16),
+                                                                                        ('health', np.float32)]))
 
                 start_position = self._terrain.generate_fish_starting_position()
                 life_history.loc[0, 'pos_row'] = start_position[0]
@@ -50,84 +57,72 @@ class Simulation(object):
                 life_history.loc[0, 'health'] = fish._max_health
 
                 simulation_history_curr_fish.update({'life_history': life_history})
-                self._simulation_histories.update({fish.get_name(): simulation_history_curr_fish})
+                self._simulation_histories.update({fish.name: simulation_history_curr_fish})
 
-            self._simulation_status = 1
+            self._simulation_status = 2
 
-        elif self._simulation_status == 1:
-            raise RuntimeError("Simulation: Can not initiate simulation. Already in simulation.")
-        elif self._simulation_status == 2:
-            raise RuntimeError("Simulation: Can not initiate simulation. Already stopped.")
+        else:
+            raise RuntimeError("Simulation: Cannot initiate simulation. Already initialized.")
 
-    # def get_simulation_status(self):
-    #     return self._simulation_status
+    def get_simulation_status(self):
+        return self._simulation_status
 
-    # def get_curr_position(self):
-    #     return self._curr_position
+    @property
+    def terrain_shape(self):
+        return self._terrain.get_terrain_shape()
 
-    # def set_curr_position(self, position):
-    #
-    #     if len(position) != 2:
-    #         raise ValueError('Fish: set body position failure. position does not have 2 elements.')
-    #
-    #     if not (isinstance(position[0], int) and isinstance(position[1], int)):
-    #         raise ValueError('Fish: set body position failure. position does not contain 2 integers.')
-    #
-    #     if self._simulation_status == 0:
-    #         self.clear_history()
-    #         self._curr_position = position
-    #         print('\nFish: self._curr_position set to ' + str(position) + ' before simulation.')
-    #     elif self._simulation_status == 1:
-    #         raise RuntimeError('Fish: set body position failure. Still in simulation.')
-    #     elif self._simulation_status == 2:
-    #         print('\nFish: attempt to reset body position ..., clearing all simulation data.')
-    #         self.clear_history()
-    #         self._curr_position = position
-    #         print('\nFish: self._curr_position set to ' + str(position))
+    @property
+    def simulation_length(self):
+        return self._simulation_length
 
-    # def initialize_simulation(self, starting_position, terrain_map):
-    #     """
-    #     create all psp waveforms as internal attributes
-    #     turn self._simulation_status to be 1
-    #     """
-    #     if len(starting_position) != 2:
-    #         raise ValueError('starting_position should contain two elements.')
-    #
-    #     if (not isinstance(starting_position[0], int)) or (not isinstance(starting_position[1], int)):
-    #         raise ValueError('starting_position should contain two integers.')
-    #
-    #     if len(terrain_map.shape) != 2:
-    #         raise ValueError('terrain_map should be a 2-d array.')
-    #
-    #     if not np.issubdtype(terrain_map.dtype, np.integer):
-    #         raise ValueError('dtype of terrain_map should be integer.')
-    #
-    #     if np.max(terrain_map) > 1 or np.min(terrain_map) < 0:
-    #         raise ValueError('terrain_map should only contain 0s and 1s.')
-    #
-    #     if starting_position[0] < 1 or starting_position[0] > terrain_map.shape[0] - 2 or \
-    #             starting_position[1] < 1 or starting_position[1] > terrain_map.shape[1] - 2:
-    #         raise ValueError('starting_position out of the range.')
-    #
-    #     if np.sum(terrain_map[starting_position[0] - 1: starting_position[0] + 2,
-    #               starting_position[1] - 1: starting_position[1] + 2, ]) > 0:
-    #         raise ValueError('the body of fish at starting_position covers land.')
-    #
-    #     if self._simulation_status == 0:  # has not been simulated
-    #
-    #         self._curr_position = np.array(starting_position, dtype=np.uint)
-    #         self._curr_health = self._max_health
-    #         self._simulation_history.append(pd.DataFrame([[0, self._curr_position[0], self._curr_position[1]]],
-    #                                                      columns=['t_point', 'row', 'column']),
-    #                                         ignore_index=True)
-    #         self._simulation_status = 1
-    #         print('Fish: Simulation initialized successfully.')
-    #         return True
-    #     elif self._simulation_status == 1:
-    #         raise RuntimeError('Fish: Simulation initialization failure. Already in simulation.')
-    #     elif self._simulation_status == 2:
-    #         raise RuntimeError('Fish: Simulation initialization failure. Already after simulation. '
-    #                            'Please clear simulation data first.')
+    def generating_fish_map(self, time_point, is_plot=False):
+        """
+        generating fish map containing all fishes according to self._fish_list at time_point
+        
+        :param time_point: non-negative int, time_point in the simulation
+        :param is_plot: bool
+        
+        return: fish_map, 2d array, uint16, 
+        """
+
+        if self._simulation_status in [2, 3, 4]:
+            fish_map = np.zeros(self.terrain_shape, dtype=np.uint16)
+            for fish_name, fish_history in self._simulation_histories.items():
+                curr_health = fish_history['life_history'].loc[time_point, 'health']
+                if curr_health > 0:
+                    curr_row, curr_col = tuple(fish_history['life_history'].loc[time_point, ['pos_row', 'pos_col']])
+                    curr_row = int(curr_row); curr_col = int(curr_col)
+                    if (curr_row - 1 < 0) or (curr_row + 2 > self.terrain_shape[0]) or \
+                        (curr_col - 1 < 0) or (curr_col + 2 > self.terrain_shape[1]):
+                        print('Simulation: cannot plot fish {}. Position out of terrain boundary'.format(fish_name))
+                        return None
+                    fish_map[curr_row-1: curr_row+2, curr_col-1: curr_col+2] += 1
+
+            if is_plot:
+                f = plt.figure(figsize=(8, 7))
+                ax = f.add_subplot(111)
+                fig = ax.imshow(fish_map, cmap='magma', interpolation='nearest')
+                f.colorbar(fig)
+                ax.set_title('fish map at time: {}'.format(time_point))
+                plt.show()
+
+            return fish_map
+        else:
+            raise RuntimeError("Simulation: Cannot generate fish_map. Simulation not initialized properly.")
+
+    def run(self):
+
+        if self._simulation_status == 2:
+
+            self._simulation_status = 3
+
+            # todo: finish this simulation
+
+            self._simulation_status = 4
+
+        else:
+            raise RuntimeError("Simulation: Cannot run simulation. Simulation not initialized properly.")
+
 
     # def act()
     #
@@ -163,15 +158,6 @@ class Simulation(object):
     # def _clear_simulation_history(self):
     #     self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column, ''health'])
 
-    # def stop_simulation(self, end_time):
-    #     if self._simulation_status == 1:
-    #         self._simulation_status = 2
-    #         self._curr_time = end_time
-    #         print('Fish: Simulation stopped.')
-    #     elif self._simulation_status == 0:
-    #         raise RuntimeError('Fish: Stop simulation failure. Not in simulation.')
-    #     elif self._simulation_status == 2:
-    #         print('Fish: No need to stop simulation. Already stopped.')
 
 if __name__ == '__main__':
 
@@ -183,10 +169,12 @@ if __name__ == '__main__':
     terrain = tr.BinaryTerrain(terrain_map)
     fish = fi.Fish()
     sim = Simulation(terrain, [fish])
-    sim.initiate_simulation(10)
+    sim.initiate_simulation()
 
-    print sim._simulation_histories
-
+    # print(sim._simulation_histories)
+    sim.generating_fish_map(time_point=0, is_plot=True)
     # -------------------------------------------------------------------------
+
+
 
     print 'for debugging...'

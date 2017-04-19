@@ -89,6 +89,10 @@ class Fish(object):
     def get_name(self):
         return self._name
 
+    @property
+    def name(self):
+        return self.get_name()
+
     def get_max_health(self):
         return self._max_health
 
