@@ -11,8 +11,6 @@ import scipy.ndimage as ni
 import random
 
 
-
-
 plt.ioff()
 
 class TerrainGenerator(object):
@@ -90,34 +88,41 @@ class BinaryTerrain(object):
         else:
             raise ValueError('BinaryTerrain: input array should be binary 2d numpy array, with dtype np.int.')
 
-        self._curr_food_positions = []
-        self._food_position_history = []
-
     def get_terrain_shape(self):
         return self._terrain_map.shape
 
     def get_terrain_map(self):
         return self._terrain_map
 
-    def generate_fish_starting_position(self):
+    def generate_fish_starting_position(self, fish_num=1):
         """
-        :return: a possible position for a 3x3 fish, where its body will not cover 1s in self._terrain_map
+        return randomized fish starting position. Note: this only generate the non-overlapping center positions, for 
+        3x3 fish, there are still chances that fish will have overlapping body pixels.
+        
+        :param fish_num: positive integer, number of fish positions to return
+        :return: list of tuple, each tuple contains 2 positive integers (row, col) of a random position for a 3x3 fish, 
+                 where its body will not cover 1s in self._terrain_map
         """
         dilated_terrain = ni.binary_dilation(self._terrain_map, structure=[[1,1,1], [1,1,1], [1,1,1]])
-        possible_positions = zip(*np.where(dilated_terrain == 0))
-        return list(random.choice(possible_positions))
+        possible_positions = np.array(zip(*np.where(dilated_terrain == 0)))
+        fish_positions = possible_positions[np.random.choice(range(len(possible_positions)), fish_num)]
+        return [tuple(p) for p in fish_positions]
 
-    def generate_next_food_position(self):
+    def update_food_map(self, food_num, food_map):
+        """
+        update the input food_map and food_pos_array, to generate new food map and food_pos_array so that the terrain
+        contains food_num of food pixels (each food only occupies one pixel). If the number of food is less than
+        food_num, new food will be added, if the number of food is more than food_num, extra food will be removed.
+        
+        :param food_map: 2-d binary array, 0: non-food, 1: food
+        :return: food_map: updated food map
+                 food_pos_array: 2d array containing non=negative integers with shape: food_num x 2 (columns: row, col)
+        """
         # todo: finish this method
+
+        # return food_map, food_pos_array
         pass
 
-    def generate_curr_food_map(self):
-        # tood: finish this method
-        pass
-
-    def _update_food_positions(self):
-        # todo: finish this method
-        pass
 
     def plot_terrain(self, plot_axis=None):
         # todo: finish this method
@@ -130,9 +135,12 @@ if __name__ == '__main__':
     terrain_generator = TerrainGenerator(sea_level=0.6)
     terrain_map = terrain_generator.generate_binary_map(sigma=5., is_plot=True)
     binary_terrain = BinaryTerrain(terrain_map)
-    fish_pos = binary_terrain.generate_fish_starting_position()
+    fish_poss = binary_terrain.generate_fish_starting_position(5)
     fish_map = np.zeros(binary_terrain.get_terrain_shape(), dtype=np.uint8)
-    fish_map[fish_pos[0] - 1: fish_pos[0] + 2, fish_pos[1] - 1: fish_pos[1] + 2] = 1
+
+    for fish_pos in fish_poss:
+        fish_map[fish_pos[0] - 1: fish_pos[0] + 2, fish_pos[1] - 1: fish_pos[1] + 2] = 1
+
     f = plt.figure(figsize=(10, 10))
     ax = f.add_subplot(111)
     ax.imshow(binary_terrain.get_terrain_map(), cmap='gray', vmin=0, vmax=1, interpolation='nearest')
