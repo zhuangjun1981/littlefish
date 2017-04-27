@@ -105,7 +105,8 @@ class BinaryTerrain(object):
         """
         dilated_terrain = ni.binary_dilation(self._terrain_map, structure=[[1,1,1], [1,1,1], [1,1,1]])
         possible_positions = np.array(zip(*np.where(dilated_terrain == 0)))
-        fish_positions = possible_positions[np.random.choice(range(len(possible_positions)), fish_num)]
+        fish_positions = possible_positions[np.random.choice(range(len(possible_positions)), size=fish_num,
+                                                             replace=False)]
         return [tuple(p) for p in fish_positions]
 
     def update_food_map(self, food_num, food_map):
@@ -115,49 +116,47 @@ class BinaryTerrain(object):
         food_num, new food will be added, if the number of food is more than food_num, extra food will be removed.
         
         :param food_map: 2-d binary array, 0: non-food, 1: food
+        :param food_num: positive integer, number of food pixels after update
         :return: food_map: updated food map
-                 food_pos_array: 2d array containing non=negative integers with shape: food_num x 2 (columns: row, col)
+                 food_pos_list: list of food pixel coordinates, each coordinate is a list of 2 non-negative integers
+                            [row, col]
         """
 
-        # todo: this method did not pass test, check it again
+        curr_food_pos_list = np.where(food_map == 1)
+        curr_food_pos_list = zip(*curr_food_pos_list)
 
-        curr_food_pos_array = np.where(food_map == 1)
-        curr_food_pos_array = np.array(zip(*curr_food_pos_array))
+        if len(curr_food_pos_list) == food_num:  # current number of food equal food_num
+            food_pos_list = curr_food_pos_list
 
-        if len(curr_food_pos_array) == food_num:  # current number of food equal food_num
-            food_pos_array = curr_food_pos_array
-
-        elif len(curr_food_pos_array) > food_num:  # curren number of food more than food_num
+        elif len(curr_food_pos_list) > food_num:  # curren number of food more than food_num
 
             # get food positions to retain
-            food_retain_index = np.random.choice(range(len(curr_food_pos_array)), food_num)
-            food_pos_array = curr_food_pos_array[food_retain_index]
+            food_retain_index = np.random.choice(range(len(curr_food_pos_list)), size=food_num,
+                                                 replace=False)
+            food_pos_list = [curr_food_pos_list[ind] for ind in food_retain_index]
 
-            #  get food positions to remove
-            food_remove_index = np.array(list(set(range(len(curr_food_pos_array))) - set(food_retain_index)))
-            food_remove_array = curr_food_pos_array[food_remove_index]
+            # get food positions to remove
+            food_remove_index = np.array(list(set(range(len(curr_food_pos_list))) - set(food_retain_index)))
+            food_remove_list = [curr_food_pos_list[ind] for ind in food_remove_index]
 
             # update food_map
-            food_map[tuple(food_remove_array[:, 0]), tuple(food_remove_array[:, 1])] = 0
+            food_map[[pos[0] for pos in food_remove_list], [pos[1] for pos in food_remove_list]] = 0
 
-        elif len(curr_food_pos_array) < food_num:  # current number of food less than food_num
+        elif len(curr_food_pos_list) < food_num:  # current number of food less than food_num
 
             # get positions to add food
-            possible_positions = np.array(zip(*np.where(np.logical_or(self._terrain_map, food_map) == 0)))
-            food_add_index = np.random.choice(range(len(possible_positions)), food_num - len(curr_food_pos_array))
-            food_add_array = possible_positions[food_add_index]
+            possible_positions = zip(*np.where(np.logical_or(self._terrain_map, food_map) == 0))
+            food_add_index = np.random.choice(range(len(possible_positions)), size=food_num - len(curr_food_pos_list),
+                                              replace=False)
+            food_add_list = [possible_positions[ind] for ind in food_add_index]
 
             # update food_pos_array
-            if len(curr_food_pos_array) == 0:
-                food_pos_array = food_add_array
-            else:
-                food_pos_array = np.vstack((curr_food_pos_array, food_add_array))
+            food_pos_list = curr_food_pos_list + food_add_list
 
             # update food_map
-            food_map[tuple(food_add_array[:, 0]), tuple(food_add_array[:, 1])] = 1
+            food_map[[pos[0] for pos in food_add_list], [pos[1] for pos in food_add_list]] = 1
 
-
-        return food_map, food_pos_array
+        return food_pos_list
 
 
     def plot_terrain(self, plot_axis=None):
@@ -190,7 +189,7 @@ if __name__ == '__main__':
     terrain_map = np.zeros((5, 5), dtype=np.uint8)
     terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1
     terrain = BinaryTerrain(terrain_map)
-    food_map, food_pos_array = terrain.update_food_map(food_num=5, food_map=food_map)
+    food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
     f = plt.figure(figsize=(10, 4))
     ax1 = f.add_subplot(121)
     ax1.imshow(terrain_map, interpolation='nearest')
@@ -199,11 +198,12 @@ if __name__ == '__main__':
     ax2.imshow(food_map, interpolation='nearest')
     ax2.set_title('food map')
     plt.show()
+    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
     assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
     assert (np.sum(food_map.flat) == 5)
     assert (food_pos_array.shape == (5, 2))
 
-    food_map, food_pos_array = terrain.update_food_map(food_num=3, food_map=food_map)
+    food_pos_list = terrain.update_food_map(food_num=3, food_map=food_map)
     f = plt.figure(figsize=(10, 4))
     ax1 = f.add_subplot(121)
     ax1.imshow(terrain_map, interpolation='nearest')
@@ -212,11 +212,12 @@ if __name__ == '__main__':
     ax2.imshow(food_map, interpolation='nearest')
     ax2.set_title('food map')
     plt.show()
+    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
     assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
     assert (np.sum(food_map.flat) == 3)
     assert (food_pos_array.shape == (3, 2))
 
-    food_map, food_pos_array = terrain.update_food_map(food_num=5, food_map=food_map)
+    food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
     f = plt.figure(figsize=(10, 4))
     ax1 = f.add_subplot(121)
     ax1.imshow(terrain_map, interpolation='nearest')
@@ -225,11 +226,13 @@ if __name__ == '__main__':
     ax2.imshow(food_map, interpolation='nearest')
     ax2.set_title('food map')
     plt.show()
+    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
     assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
     assert (np.sum(food_map.flat) == 5)
     assert (food_pos_array.shape == (5, 2))
 
-    food_map, food_pos_array = terrain.update_food_map(food_num=5, food_map=food_map)
+    food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
+    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
     assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
     assert (np.sum(food_map.flat) == 5)
     assert (food_pos_array.shape == (5, 2))
