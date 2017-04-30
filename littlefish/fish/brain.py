@@ -1046,7 +1046,7 @@ class Brain(object):
         :param body_position: tuple of two ints, (row, col), current position of body center of the fish
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
-        :param fish_map:
+        :param fish_map: not fully implemented right now.
         :return: movement attemps: 2-d array, np.uint8, (row, col), representing the movement attempt, be careful, this may not
                                    represent the actual movement, it will be evaluated by the fish object (fish class)
                                    containing this brain to see if the movement is possible. if the fish is hitting

@@ -98,33 +98,58 @@ class Fish(object):
 
     def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
             food_map=None, fish_map=None):
+        """
+        simulate the fish's action at a given time point
+        
+        :param t_point: non-negative int, time point
+        :param curr_position: list or tuple of two non-negative integers, coordinates of fish center position, 
+                              [row, col]
+        :param curr_health: positive float, health point at the beginning of t_point
+        :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
+                                 same order as self._neurons data frame, columns = ['action_history'], used by 
+                                 self._brain.act()
+        :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
+                              neuron in the same order as self._neurons data frame, each column represents a time point,
+                              used by self._brain.act()
+        :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
+        :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
+        :param fish_map: not fully implemented right now.
+        :return updated_health: float, health point at the end of t_point
+                movement_attempt: list of two integers, the attempt the fish is trying to move [row_shift, col_shift].
+                                  None if updated_health is below 0 (fish is dead).
+        """
+
+        updated_health = curr_health
+
+        # evaluate food
+        if food_map is not None:
+            body_food_overlap = self._eval_food(food_map=food_map, curr_position=curr_position)
+            updated_health = self._eat_food(body_food_overlap=body_food_overlap, curr_health=updated_health)
+
+            # update food map
+            food_map[curr_position[0] - 1: curr_position[0] + 2, curr_position[1] - 1: curr_position[1] + 2] = 0
 
         # evaluate the extend of how much of the fish is on the land
         body_land_overlap = self._eval_terrain(terrain_map=terrain_map, curr_position=curr_position)
 
         # update current health with land penalty
-        curr_health = curr_health - body_land_overlap * self._land_penalty_rate
-
-        # evaluate
-        if food_map is not None:
-            body_food_overlap = self._eval_food(food_map=food_map, curr_position=curr_position)
-            curr_health = self._eat_food(body_food_overlap=body_food_overlap, curr_health=curr_health)
-
-            # update food map
-            food_map[curr_position[0] - 1: curr_position[0] + 2, curr_position[1] - 1: curr_position[1] + 2] = 0
+        updated_health = updated_health - body_land_overlap * self._land_penalty_rate
 
         if fish_map is not None:
             self._eval_fish(fish_map=fish_map)
 
-        movement_attempt = self._brain.act(t_point=t_point, action_histories=action_histories,
-                                           psp_waveforms=psp_waveforms, body_position=curr_position,
-                                           terrain_map=terrain_map, food_positions=food_map,
-                                           fish_positions=fish_map)
-
         # update health
-        curr_health = curr_health - self._health_decay_rate
+        updated_health = updated_health - self._health_decay_rate
 
-        return movement_attempt
+        if updated_health > 0:  # still alive
+            movement_attempt = self._brain.act(t_point=t_point, action_histories=action_histories,
+                                               psp_waveforms=psp_waveforms, body_position=curr_position,
+                                               terrain_map=terrain_map, food_map=food_map,
+                                               fish_map=fish_map)
+        else:
+            movement_attempt = None
+
+        return updated_health, movement_attempt
 
     def _eval_terrain(self, terrain_map, curr_position):
         """

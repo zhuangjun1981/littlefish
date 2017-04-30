@@ -15,7 +15,7 @@ class Simulation(object):
         :param terrain: terrain object, current terrain.terrain_2d.BinaryTerrain object
         :param fish_list: list of fish object (fish.fish.Fish class)
         :param simulation_length: positive integer, number of time points of the simulation 
-        :param food_num: non-negative integer, number of food pixels in food map
+        :param food_num: positive integer, number of food pixels in food map
         :return: None
         """
 
@@ -28,7 +28,11 @@ class Simulation(object):
         self._terrain = terrain
         self._fish_list = fish_list
         self._simulation_length = simulation_length
-        self._food_num = food_num
+
+        if food_num < 1 or not isinstance(food_num, int):
+            raise ValueError("Simulation: food_num should be a positive integer.")
+        else:
+            self._food_num = food_num
 
     def initiate_simulation(self):
         """
@@ -45,12 +49,8 @@ class Simulation(object):
 
             #  generate food map, food position history and initial food positions
             self._food_map = np.zeros(self._terrain.get_terrain_shape(), dtype=np.uint8)
-            self._food_map, food_pos_array = self._terrain.update_food_map(food_num=self._food_num,
-                                                                           food_map=self._food_map)
-            food_pos_history = pd.DataFrame([[np.empty((self._food_num, 2))]] * self._simulation_length,
-                                            columns=['food_pos'])
-            # food_pos_array = np.arange(10).reshape((5, 2))
-            food_pos_history.loc[0, 'food_pos'] = food_pos_array
+            food_pos_history = pd.DataFrame(columns=['food_pos'])
+            food_pos_history['food_pos'] = [[]] * self._simulation_length
             self._simulation_histories.update({'food_pos_history': food_pos_history})
 
             #  generate non-overlapping positions for all fish
@@ -94,6 +94,10 @@ class Simulation(object):
     @property
     def fish_names(self):
         return [f.get_name() for f in self._fish_list]
+
+    @property
+    def food_num(self):
+        return self._food_num
 
     def generating_fish_map(self, time_point, is_plot=False):
         """
@@ -184,26 +188,64 @@ class Simulation(object):
 
             self._simulation_status = 3
 
-            # todo: finish this simulation
-
             alive_fish_list = list(self._fish_list)
 
             curr_t = 0
 
             while len(alive_fish_list) > 0 and curr_t < self.simulation_length:
 
+                curr_food_pos_list = self._terrain.update_food_map(self.food_num, self._food_map)
+                self._simulation_histories['food_pos_history'].loc[curr_t, 'food_pos'] = curr_food_pos_list
+
+                dead_fish_list = []
+
                 for curr_fish in alive_fish_list:
 
                     curr_fish_history = self._simulation_histories[curr_fish.name]
-                    curr_position = [curr_fish_history['life_history'].loc[curr_t, 'pos_row'],
-                                     curr_fish_history['life_history'].loc[curr_t, 'pos_col']]
-                    curr_health = self._simulation_histories[curr_fish.name]['life_history'].loc[curr_t, 'health']
+                    curr_position = [int(curr_fish_history['life_history'].loc[curr_t, 'pos_row']),
+                                     int(curr_fish_history['life_history'].loc[curr_t, 'pos_col'])]
+                    curr_health = curr_fish_history['life_history'].loc[curr_t, 'health']
 
-                    curr_fish.act(t_point=curr_t, curr_position=curr_position, curr_health=curr_health,
-                                  action_histories=curr_fish_history['action_histories'],
-                                  psp_waveforms=curr_fish_history['psp_waveforms'],
-                                  terrain_map=self._terrain._terrain_map,
-                                  food_map=None, fish_map=None)
+                    updated_health, movement_attempt = curr_fish.act(t_point=curr_t,
+                                                                     curr_position=curr_position,
+                                                                     curr_health=curr_health,
+                                                                     action_histories=curr_fish_history['action_histories'],
+                                                                     psp_waveforms=curr_fish_history['psp_waveforms'],
+                                                                     terrain_map=self._terrain._terrain_map,
+                                                                     food_map=self._food_map, fish_map=None)
+
+                    if curr_t < self.simulation_length - 1:  # if not at the end of simulation
+
+                        # update fish's health at curr_t + 1
+                        curr_fish_history['life_history'].loc[curr_t + 1, 'health'] = updated_health
+
+                        if updated_health > 0:  # if not dead
+
+                            # update fish's body center postion at curr_t + 1
+                            new_pos_row = curr_position[0] + movement_attempt[0]
+                            if new_pos_row < 1:
+                                new_pos_row = 1
+                            if new_pos_row > self.terrain_shape[0] - 2:
+                                new_pos_row = self.terrain_shape[0] - 2
+
+                            new_pos_col = curr_position[0] + movement_attempt[0]
+                            if new_pos_col < 1:
+                                new_pos_col = 1
+                            if new_pos_col > self.terrain_shape[1] - 2:
+                                new_pos_col = self.terrain_shape[1] - 2
+                            curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos_row
+                            curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos_col
+
+                            print("time point:{}. health:{}. position: [{},{}]".format(curr_t + 1, updated_health,
+                                                                                     new_pos_row, new_pos_col))
+
+                        else:  # if dead
+                            dead_fish_list.append(curr_fish)
+                    else:
+                        pass
+
+                for dead_fish in dead_fish_list:
+                    alive_fish_list.remove(dead_fish)
 
                 curr_t += 1
 
@@ -267,11 +309,11 @@ if __name__ == '__main__':
     sim = Simulation(terrain, [fish])
     sim.initiate_simulation()
 
-    print(sim._simulation_histories)
+    # print(sim._simulation_histories)
     # sim.generating_fish_map(time_point=0, is_plot=True)
     # sim.get_fish_health_status(0, verbose=True)
     # print(sim.is_all_fish_dead(0))
-    # sim.run()
+    sim.run()
     # -------------------------------------------------------------------------
 
 
