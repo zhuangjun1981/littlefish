@@ -604,7 +604,7 @@ class Muscle(Neuron):
     muscle class for determining the motion of the fish. Subclass of Neuron class
     """
 
-    def __init__(self, direction, baseline_rate=0.00001, refractory_period=5000):
+    def __init__(self, direction, baseline_rate=0.0001, refractory_period=5000):
 
         if direction in ['east', 'north', 'west', 'south']:
             self._direction = direction

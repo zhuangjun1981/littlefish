@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import littlefish.utilities as util
 
 
 class Simulation(object):
@@ -29,7 +30,7 @@ class Simulation(object):
         self._fish_list = fish_list
         self._simulation_length = simulation_length
 
-        if food_num < 1 or not isinstance(food_num, int):
+        if food_num < 1 or not util.is_integer(food_num):
             raise ValueError("Simulation: food_num should be a positive integer.")
         else:
             self._food_num = food_num
@@ -49,8 +50,8 @@ class Simulation(object):
 
             #  generate food map, food position history and initial food positions
             self._food_map = np.zeros(self._terrain.get_terrain_shape(), dtype=np.uint8)
-            food_pos_history = pd.DataFrame(columns=['food_pos'])
-            food_pos_history['food_pos'] = [[]] * self._simulation_length
+            food_pos_history = pd.Series([[] for i in range(self.simulation_length)])
+            food_pos_history = pd.DataFrame(food_pos_history, columns=['food_pos'])
             self._simulation_histories.update({'food_pos_history': food_pos_history})
 
             #  generate non-overlapping positions for all fish
@@ -64,7 +65,7 @@ class Simulation(object):
 
                 life_history = pd.DataFrame(np.zeros((self._simulation_length,), dtype=[('pos_row', np.uint16),
                                                                                         ('pos_col', np.uint16),
-                                                                                        ('health', np.float32)]))
+                                                                                        ('health', np.float64)]))
 
                 start_position = fish_start_positions[i]
                 life_history.loc[0, 'pos_row'] = start_position[0]
@@ -182,7 +183,7 @@ class Simulation(object):
             raise RuntimeError("Simulation: Try to get fish health status at an unsimulated time point.")
         return self._simulation_histories[fish_n]['life_history'].loc[t_point, 'health'] <= 0.
 
-    def run(self):
+    def run(self, verbose=1):
 
         if self._simulation_status == 2:
 
@@ -197,7 +198,7 @@ class Simulation(object):
                 curr_food_pos_list = self._terrain.update_food_map(self.food_num, self._food_map)
                 self._simulation_histories['food_pos_history'].loc[curr_t, 'food_pos'] = curr_food_pos_list
 
-                dead_fish_list = []
+                dead_fish_list = []  # list of fish is going to die at curr_t
 
                 for curr_fish in alive_fish_list:
 
@@ -221,23 +222,35 @@ class Simulation(object):
 
                         if updated_health > 0:  # if not dead
 
-                            # update fish's body center postion at curr_t + 1
-                            new_pos_row = curr_position[0] + movement_attempt[0]
-                            if new_pos_row < 1:
-                                new_pos_row = 1
-                            if new_pos_row > self.terrain_shape[0] - 2:
-                                new_pos_row = self.terrain_shape[0] - 2
+                            # no movement attempt
+                            if np.array_equal(movement_attempt, np.array([0, 0], np.uint8)):
+                                new_pos_row = curr_position[0]
+                                new_pos_col = curr_position[1]
+                            else:
 
-                            new_pos_col = curr_position[0] + movement_attempt[0]
-                            if new_pos_col < 1:
-                                new_pos_col = 1
-                            if new_pos_col > self.terrain_shape[1] - 2:
-                                new_pos_col = self.terrain_shape[1] - 2
+                                if verbose > 0:
+                                    print('time point:{}. health:{}. try to move: {}'.format(curr_t, curr_health,
+                                                                                             movement_attempt))
+
+                                # update fish's body center postion at curr_t + 1
+                                new_pos_row = curr_position[0] + movement_attempt[0]
+                                if new_pos_row < 1:
+                                    new_pos_row = 1
+                                if new_pos_row > self.terrain_shape[0] - 2:
+                                    new_pos_row = self.terrain_shape[0] - 2
+
+                                new_pos_col = curr_position[1] + movement_attempt[1]
+                                if new_pos_col < 1:
+                                    new_pos_col = 1
+                                if new_pos_col > self.terrain_shape[1] - 2:
+                                    new_pos_col = self.terrain_shape[1] - 2
+
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos_row
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos_col
 
-                            print("time point:{}. health:{}. position: [{},{}]".format(curr_t + 1, updated_health,
-                                                                                     new_pos_row, new_pos_col))
+                            if verbose > 1:
+                                print("time point:{}. health:{}. position: [{},{}]".format(curr_t + 1, updated_health,
+                                                                                           new_pos_row, new_pos_col))
 
                         else:  # if dead
                             dead_fish_list.append(curr_fish)
@@ -303,10 +316,10 @@ if __name__ == '__main__':
     import littlefish.terrain.terrain_2d as tr
     import littlefish.fish.fish as fi
     tg = tr.TerrainGenerator()
-    terrain_map = tg.generate_binary_map()
+    terrain_map = tg.generate_binary_map(sigma=3., is_plot=True)
     terrain = tr.BinaryTerrain(terrain_map)
     fish = fi.Fish()
-    sim = Simulation(terrain, [fish])
+    sim = Simulation(terrain, [fish], simulation_length=500)
     sim.initiate_simulation()
 
     # print(sim._simulation_histories)
@@ -315,7 +328,5 @@ if __name__ == '__main__':
     # print(sim.is_all_fish_dead(0))
     sim.run()
     # -------------------------------------------------------------------------
-
-
 
     print 'for debugging...'

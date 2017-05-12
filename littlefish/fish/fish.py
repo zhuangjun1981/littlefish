@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import h5py
 import os
+import matplotlib.pyplot as plt
 
 # unnecessary global varible
 # SIMULATION_LENGTH = 100000
@@ -119,7 +120,7 @@ class Fish(object):
                                   None if updated_health is below 0 (fish is dead).
         """
 
-        updated_health = curr_health
+        updated_health = float(curr_health)
 
         # evaluate food
         if food_map is not None:
@@ -133,10 +134,13 @@ class Fish(object):
         body_land_overlap = self._eval_terrain(terrain_map=terrain_map, curr_position=curr_position)
 
         # update current health with land penalty
-        updated_health = updated_health - body_land_overlap * self._land_penalty_rate
+        updated_health -= body_land_overlap * self._land_penalty_rate
 
-        if fish_map is not None:
-            self._eval_fish(fish_map=fish_map)
+
+        # ----------------- not implemented --------------------------
+        # if fish_map is not None:
+        #     self._eval_fish(fish_map=fish_map)
+        # ----------------- not implemented --------------------------
 
         # update health
         updated_health = updated_health - self._health_decay_rate
@@ -163,7 +167,6 @@ class Fish(object):
             curr_body = terrain_map[curr_position[0] - 1: curr_position[0] + 2,
                                     curr_position[1] - 1: curr_position[1] + 2]
             body_land_overlap = np.sum(curr_body.flat)
-
         return body_land_overlap
 
     def _eval_food(self, food_map, curr_position):
@@ -185,10 +188,14 @@ class Fish(object):
         """
         count the number of food to be taken, add relevant HP to curr_health, but not exceed the maximum health
         """
-        curr_health += self._food_rate * body_food_overlap
-        if curr_health > self._max_health:
-            curr_health = self._max_health
-        return curr_health
+
+        if body_food_overlap == 0:
+            return curr_health
+        else:
+            updated_health = curr_health + self._food_rate * body_food_overlap
+            if updated_health > self._max_health:
+                updated_health = self._max_health
+            return updated_health
 
     def _eval_fish(self, fish_map):
         # todo: finish this method

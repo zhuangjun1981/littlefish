@@ -56,7 +56,7 @@ class TerrainGenerator(object):
         :param is_plot: if True, pop a plot of binary world_map
         :return: a binary world_map with defined size, 0 means under water. 1 means above water
         '''
-        float_map = self.generate_float_map(sigma)
+        float_map = self.generate_float_map(sigma=sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)
         binary_map[float_map > self._sea_level] = 1
         # print(binary_map.dtype)
