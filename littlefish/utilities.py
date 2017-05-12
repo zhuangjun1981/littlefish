@@ -3,9 +3,13 @@
 # from builtins import *
 
 import numpy as np
+import numbers
 import matplotlib.pyplot as plt
 import scipy.ndimage as ni
 
+
+def is_integer(var):
+    return isinstance(var, numbers.Integral)
 
 def array_nor(arr):
     arr = arr.astype(np.float32)

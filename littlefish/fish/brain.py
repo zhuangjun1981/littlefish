@@ -37,6 +37,35 @@ import h5py
 # CONNECTION_RISE_TIME = 50
 # CONNECTION_DECAY_TIME = 100
 
+def generate_minimal_brain():
+    """
+    :return: a Brain object with one eye, two neuron in hidden layer and one muscle 
+    """
+
+    eye = Eye2(direction='east', input_filter=np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1]), gain=0.05,
+                     input_type='terrain', baseline_rate=0., refractory_period=10)
+    hidden0 = Neuron(baseline_rate=0.0005, refractory_period=10)
+    hidden1 = Neuron(baseline_rate=0.0005, refractory_period=10)
+    muscle = Muscle(direction='east', baseline_rate=0.1, refractory_period=5000)
+
+    neurons = pd.DataFrame([[0, 0, eye],
+                            [1, 0, hidden0],
+                            [1, 1, hidden1],
+                            [2, 0, muscle]], columns=['layer', 'neuron_ind', 'neuron'])
+
+    connection_eye_hidden0 = Connection(latency=30, amplitude=0.01, rise_time=50, decay_time=100)
+    connection_eye_hidden1 = Connection(latency=30, amplitude=0.0001, rise_time=50, decay_time=100)
+    connection_hidden0_muscle = Connection(latency=30, amplitude=0.0001, rise_time=50, decay_time=100)
+    connection_hidden1_muscle = Connection(latency=30, amplitude=0.01, rise_time=50, decay_time=100)
+
+    conn_0_1 = pd.DataFrame([[connection_eye_hidden0], [connection_eye_hidden1]], columns=[0], index=[1, 2])
+    conn_1_2 = pd.DataFrame([[connection_hidden0_muscle, connection_hidden1_muscle]], columns=[1, 2], index=[3])
+
+    connections = {'L000_L001': conn_0_1,
+                   'L001_L002': conn_1_2}
+
+    return Brain(neurons=neurons, connections=connections)
+
 
 class Neuron(object):
     """
@@ -400,7 +429,7 @@ class Eye2(Neuron):
         if len(position) != 2:
             raise ValueError('Eye2: position should have 2 elements.')
 
-        if isinstance(position[0], int) and isinstance(position[1], int):
+        if util.is_integer(position[0]) and util.is_integer(position[1]):
             self._position = position
         else:
             raise ValueError('Eye2: Elements in position should both be integers.')
@@ -502,7 +531,7 @@ class Eye2(Neuron):
         if len(body_position) != 2:
             raise ValueError('Eye2: body_position should contain two elements.')
 
-        if (not isinstance(body_position[0], int)) or (not isinstance(body_position[1], int)):
+        if (not util.is_integer(body_position[0])) or (not util.is_integer(body_position[1])):
             raise ValueError('Eye2: body_position should contain two integers.')
 
         if self._direction == 'east':
@@ -1350,8 +1379,13 @@ class Brain(object):
         :return: a data frame with empty lists, each list is the action history of a particular neuron, in the same 
         order as self._neurons data frame, columns = ['action_history']
         '''
-        empty_action_histories = pd.DataFrame(index=self._neurons.index)
-        empty_action_histories['action_history'] = [[]] * len(empty_action_histories)
+
+        # the following code is very bad, it synchronize all the lists in the data frame
+        # empty_action_histories = pd.DataFrame(index=self._neurons.index)
+        # empty_action_histories['action_history'] = [[]] * len(empty_action_histories)
+
+        empty_action_histories = pd.Series([[] for i in range(len(self._neurons))])
+        empty_action_histories = pd.DataFrame(empty_action_histories, columns=['action_history'])
         return empty_action_histories
 
     def generate_empty_psp_waveforms(self, simulation_length):
@@ -1512,8 +1546,13 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    mb = Brain()
-    eah = mb.generate_empty_action_histories()
-    print eah
+    # mb = Brain()
+    # eah = mb.generate_empty_action_histories()
+    # print eah
+
+    # =========================================================================================
+    min_brain = generate_minimal_brain()
+    print min_brain._neurons
+    # =========================================================================================
 
     print('debug...')

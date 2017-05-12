@@ -148,63 +148,29 @@ class TestFishBrain(unittest.TestCase):
         simulation_length = int(1e2)
         random.seed(111)
 
-        eye = brain.Eye2(direction='east', input_filter=np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1]), gain=0.05,
-                         input_type='terrain', baseline_rate=0., refractory_period=10)
-        hidden0 = brain.Neuron(baseline_rate=0.0005, refractory_period=10)
-        hidden1 = brain.Neuron(baseline_rate=0.0005, refractory_period=10)
-        muscle = brain.Muscle(direction='east', baseline_rate=0.1, refractory_period=5000)
-
-        neurons = pd.DataFrame([[0, 0, eye],
-                                [1, 0, hidden0],
-                                [1, 1, hidden1],
-                                [2, 0, muscle]], columns=['layer', 'neuron_ind', 'neuron'])
-
-        connection_eye_hidden0 = brain.Connection(latency=30, amplitude=0.01, rise_time=50, decay_time=100)
-        connection_eye_hidden1 = brain.Connection(latency=30, amplitude=0.0001, rise_time=50, decay_time=100)
-        connection_hidden0_muscle = brain.Connection(latency=30, amplitude=0.0001, rise_time=50, decay_time=100)
-        connection_hidden1_muscle = brain.Connection(latency=30, amplitude=0.01, rise_time=50, decay_time=100)
-
-        conn_0_1 = pd.DataFrame([[connection_eye_hidden0], [connection_eye_hidden1]], columns=[0], index=[1, 2])
-        conn_1_2 = pd.DataFrame([[connection_hidden0_muscle, connection_hidden1_muscle]], columns=[1, 2], index=[3])
-
-        connections = {'L000_L001': conn_0_1,
-                       'L001_L002': conn_1_2}
-
-        minimum_brain = brain.Brain(neurons=neurons, connections=connections)
+        minimum_brain = brain.generate_minimal_brain()
         terrain_map = np.zeros((10, 10), dtype=np.uint8)
         terrain_map[2:4, 4:6] = 1
 
-        action_histories = pd.Series([[] for i in range(len(neurons))])
-        action_histories = pd.DataFrame(action_histories, columns=['action_history'])
-        psp_waveforms = np.zeros((len(neurons), simulation_length), dtype=np.float32)
-        body_position = np.array([3, 2], dtype=np.uint32)
+        action_histories = minimum_brain.generate_empty_action_histories()
+        psp_waveforms = minimum_brain.generate_empty_psp_waveforms(simulation_length=simulation_length)
+        body_position = np.array([3, 2], dtype=np.uint8)
 
-        curr_percentage = -1
-
-        t1 = time.time()
         for i in range(simulation_length):
 
-            # # print simulation progress
-            # if i // (simulation_length / 10) > curr_percentage:
-            #     curr_percentage += 1
-            #     print('simulation progress: ' + util.int2str(curr_percentage * 10, 2) + '%')
-
-            movement = minimum_brain.act(t_point=i, body_position=(3, 2), action_histories=action_histories,
+            movement = minimum_brain.act(t_point=i, body_position=body_position, action_histories=action_histories,
                                          psp_waveforms=psp_waveforms, terrain_map=terrain_map)
             if not np.array_equal(movement, [0, 0]):
-                # print(i, movement)
                 body_position = body_position + movement
-
-        # print('simulation time: ' + str(time.time() - t1) + ' seconds.')
-        #
-        # print(action_histories)
-        #
-        # plt.imshow(psp_waveforms, interpolation='none')
-        # plt.axes().set_aspect(100)
-        # plt.colorbar()
-        # plt.show()
-        assert(action_histories.iloc[0, 0] == [53, 93])
+        assert(action_histories.iloc[0, 0] == [53])
         assert(action_histories.iloc[3, 0] == [6])
+
+    def test_brain_generate_empty_action_histories(self):
+        db = brain.Brain()
+        eah = db.generate_empty_action_histories()
+        eah.loc[3, 'action_history'].append(10)
+        assert(len(eah.loc[4, 'action_history']) == 0)
+        assert(len(eah.loc[3, 'action_history']) == 1)
 
 
 if __name__ == '__main__':

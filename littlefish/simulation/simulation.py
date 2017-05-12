@@ -8,7 +8,7 @@ class Simulation(object):
     Simulation class takes fish(s) and terrain to run the simulation of a fish's activity during its life
     """
 
-    def __init__(self, terrain, fish_list, simulation_length=1000, food_num=5):
+    def __init__(self, terrain, fish_list, simulation_length=100, food_num=5):
         """
         designed to run only once after creation
 
