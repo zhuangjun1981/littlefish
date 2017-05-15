@@ -229,8 +229,10 @@ class Simulation(object):
                             else:
 
                                 if verbose > 0:
-                                    print('time point:{}. health:{}. try to move: {}'.format(curr_t, curr_health,
-                                                                                             movement_attempt))
+                                    print('fish:{}; time point:{}; health:{}; try to move:{}'.format(curr_fish.name,
+                                                                                                     curr_t,
+                                                                                                     curr_health,
+                                                                                                     movement_attempt))
 
                                 # update fish's body center postion at curr_t + 1
                                 new_pos_row = curr_position[0] + movement_attempt[0]
@@ -249,8 +251,11 @@ class Simulation(object):
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos_col
 
                             if verbose > 1:
-                                print("time point:{}. health:{}. position: [{},{}]".format(curr_t + 1, updated_health,
-                                                                                           new_pos_row, new_pos_col))
+                                print("fish:{}; time point:{}; health:{}; position:[{},{}]".format(curr_fish.name,
+                                                                                                   curr_t + 1,
+                                                                                                   updated_health,
+                                                                                                   new_pos_row,
+                                                                                                   new_pos_col))
 
                         else:  # if dead
                             dead_fish_list.append(curr_fish)

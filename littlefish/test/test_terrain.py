@@ -3,16 +3,13 @@
 # from builtins import *
 
 import os
-import sys
-package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(package_path)
-import terrain.terrain_2d as ter
+import littlefish.terrain.terrain_2d as tr
 import numpy as np
 import unittest
 import matplotlib.pyplot as plt
 
 
-class TestUtilities(unittest.TestCase):
+class TestTerrain(unittest.TestCase):
 
     def setup(self):
         pass
@@ -21,7 +18,7 @@ class TestUtilities(unittest.TestCase):
         food_map = np.zeros((5, 5), dtype=np.uint8)
         terrain_map = np.zeros((5, 5), dtype=np.uint8)
         terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1
-        terrain = ter.BinaryTerrain(terrain_map)
+        terrain = tr.BinaryTerrain(terrain_map)
         food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
         # f = plt.figure(figsize=(10, 4))
         # ax1 = f.add_subplot(121)
@@ -70,8 +67,19 @@ class TestUtilities(unittest.TestCase):
         assert (np.sum(food_map.flat) == 5)
         assert (food_pos_array.shape == (5, 2))
 
+    def test_generate_fish_starting_position(self):
+
+        ter = tr.BinaryTerrain(np.array([[0, 0, 0, 1, 0],
+                                [0, 0, 0, 0, 0],
+                                [0, 0, 0, 0, 1],
+                                [0, 0, 1, 0, 0],
+                                [0, 1, 0, 1, 0]], dtype=np.uint8))
+        pos = ter.generate_fish_starting_position(2)
+        assert (pos[0] == (1, 1))
+        assert (pos[1] == (1, 1))
 
 
 if __name__ == '__main__':
-    tu = TestUtilities()
+    tu = TestTerrain()
     tu.test_update_food_map()
+    tu.test_generate_fish_starting_position()

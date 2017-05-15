@@ -67,6 +67,13 @@ def generate_minimal_brain():
     return Brain(neurons=neurons, connections=connections)
 
 
+def generate_default_terrain_food_brain():
+    """
+    
+    :return: 
+    """
+
+
 class Neuron(object):
     """
     a very simple neuron class
@@ -810,12 +817,18 @@ class Brain(object):
         :param connections: dict
         """
         if neurons is None:
-            self._generate_default_neurons()
+            self._neurons = self._generate_default_neurons()
+            print('\nBrain: a dataframe with 28 default neurons and 3 layers (eye, hidden, muscle) has been generated.')
         else:
             self._neurons = neurons
 
+
         if connections is None:
-            self._generate_default_connections()
+            self._connections = self._generate_default_connections()
+            conn_num = [conn.size for conn in self._connections.values()]
+            conn_num = sum(conn_num)
+            print('\nBrain: a dataframe of default ' + str(conn_num) +
+                  ' connections among self._neurons has been generated')
         else:
             self._connections = connections
 
@@ -831,7 +844,7 @@ class Brain(object):
         neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
 
         ind = 0
-        for i in range(8):
+        for i in range(16):
             curr_dir, curr_type = self.get_eye_type(i)
             neurons.loc[ind] = [0, i, Eye2(direction=curr_dir)]
             ind += 1
@@ -848,8 +861,7 @@ class Brain(object):
         neurons['layer'] = neurons['layer'].astype(np.uint32)
         neurons['neuron_ind'] = neurons['neuron_ind'].astype(np.uint32)
 
-        self._neurons = neurons
-        print('\nBrain: a dataframe with 20 default neurons and 3 layers (eye, hidden, muscle) has been generated.')
+        return neurons
 
     def _generate_default_connections(self):
         """
@@ -860,8 +872,6 @@ class Brain(object):
 
         default_connection = Connection()
 
-        connection_num = 0
-
         for pre_layer in range(self.layer_num - 1):
             post_layer = pre_layer + 1
             post_neuron_inds = self.get_neuron_inds_in_layer(post_layer)
@@ -870,12 +880,8 @@ class Brain(object):
             curr_df = pd.DataFrame([[default_connection] * len(pre_neuron_inds)] * len(post_neuron_inds),
                                    columns=pre_neuron_inds, index=post_neuron_inds)
             connections.update({curr_name: curr_df})
-            connection_num += curr_df.size
 
-        self._connections = connections
-
-        print('\nBrain: a dataframe of default ' + str(connection_num) +
-              ' connections among self._neurons has been generated')
+        return connections
 
     def get_neurons(self):
         return self._neurons
@@ -1309,8 +1315,10 @@ class Brain(object):
         :return: two strings, (direction, type)
         """
         eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+        eye_types = ['terrain', 'food', 'fish']
         direction_num = len(eye_directions)
-        return eye_directions[ind % direction_num], eye_directions[ind // direction_num]
+        type_num = len(eye_types)
+        return eye_directions[ind % direction_num], eye_types[(ind // direction_num) % type_num]
 
     @staticmethod
     def get_muscle_direction(ind):

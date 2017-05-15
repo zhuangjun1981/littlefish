@@ -4,10 +4,8 @@
 
 import os
 import sys
-package_path, _ = os.path.split(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(package_path)
 import numpy as np
-import utilities as util
+import littlefish.utilities as util
 import unittest
 
 

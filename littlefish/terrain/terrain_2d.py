@@ -96,17 +96,21 @@ class BinaryTerrain(object):
 
     def generate_fish_starting_position(self, fish_num=1):
         """
-        return randomized fish starting position. Note: this only generate the non-overlapping center positions, for 
-        3x3 fish, there are still chances that fish will have overlapping body pixels.
+        return randomized fish starting position. Note: fishes can be completely or partially overlapping
         
         :param fish_num: positive integer, number of fish positions to return
         :return: list of tuple, each tuple contains 2 positive integers (row, col) of a random position for a 3x3 fish, 
                  where its body will not cover 1s in self._terrain_map
         """
-        dilated_terrain = ni.binary_dilation(self._terrain_map, structure=[[1,1,1], [1,1,1], [1,1,1]])
-        possible_positions = np.array(zip(*np.where(dilated_terrain == 0)))
+        position_maps = np.array(self._terrain_map)
+        position_maps = ni.binary_dilation(position_maps, structure=[[1,1,1], [1,1,1], [1,1,1]])
+        position_maps[:, 0] = 1
+        position_maps[:, -1] = 1
+        position_maps[0, :] = 1
+        position_maps[-1, :] = 1
+        possible_positions = np.array(zip(*np.where(position_maps == 0)))
         fish_positions = possible_positions[np.random.choice(range(len(possible_positions)), size=fish_num,
-                                                             replace=False)]
+                                                             replace=True)]
         return [tuple(p) for p in fish_positions]
 
     def update_food_map(self, food_num, food_map):
