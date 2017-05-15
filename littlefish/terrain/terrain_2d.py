@@ -160,6 +160,9 @@ class BinaryTerrain(object):
             # update food_map
             food_map[[pos[0] for pos in food_add_list], [pos[1] for pos in food_add_list]] = 1
 
+        else:
+            raise ValueError("Terrain: cannot update food map. Do not understand current food position list.")
+
         return food_pos_list
 
 
@@ -189,57 +192,57 @@ if __name__ == '__main__':
 
 
     # =============================================================
-    food_map = np.zeros((5, 5), dtype=np.uint8)
-    terrain_map = np.zeros((5, 5), dtype=np.uint8)
-    terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1
-    terrain = BinaryTerrain(terrain_map)
-    food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
-    f = plt.figure(figsize=(10, 4))
-    ax1 = f.add_subplot(121)
-    ax1.imshow(terrain_map, interpolation='nearest')
-    ax1.set_title('terrain map')
-    ax2 = f.add_subplot(122)
-    ax2.imshow(food_map, interpolation='nearest')
-    ax2.set_title('food map')
-    plt.show()
-    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-    assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-    assert (np.sum(food_map.flat) == 5)
-    assert (food_pos_array.shape == (5, 2))
-
-    food_pos_list = terrain.update_food_map(food_num=3, food_map=food_map)
-    f = plt.figure(figsize=(10, 4))
-    ax1 = f.add_subplot(121)
-    ax1.imshow(terrain_map, interpolation='nearest')
-    ax1.set_title('terrain map')
-    ax2 = f.add_subplot(122)
-    ax2.imshow(food_map, interpolation='nearest')
-    ax2.set_title('food map')
-    plt.show()
-    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-    assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-    assert (np.sum(food_map.flat) == 3)
-    assert (food_pos_array.shape == (3, 2))
-
-    food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
-    f = plt.figure(figsize=(10, 4))
-    ax1 = f.add_subplot(121)
-    ax1.imshow(terrain_map, interpolation='nearest')
-    ax1.set_title('terrain map')
-    ax2 = f.add_subplot(122)
-    ax2.imshow(food_map, interpolation='nearest')
-    ax2.set_title('food map')
-    plt.show()
-    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-    assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-    assert (np.sum(food_map.flat) == 5)
-    assert (food_pos_array.shape == (5, 2))
-
-    food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
-    food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-    assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-    assert (np.sum(food_map.flat) == 5)
-    assert (food_pos_array.shape == (5, 2))
+    # food_map = np.zeros((5, 5), dtype=np.uint8)
+    # terrain_map = np.zeros((5, 5), dtype=np.uint8)
+    # terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1
+    # terrain = BinaryTerrain(terrain_map)
+    # food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
+    # f = plt.figure(figsize=(10, 4))
+    # ax1 = f.add_subplot(121)
+    # ax1.imshow(terrain_map, interpolation='nearest')
+    # ax1.set_title('terrain map')
+    # ax2 = f.add_subplot(122)
+    # ax2.imshow(food_map, interpolation='nearest')
+    # ax2.set_title('food map')
+    # plt.show()
+    # food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
+    # assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
+    # assert (np.sum(food_map.flat) == 5)
+    # assert (food_pos_array.shape == (5, 2))
+    #
+    # food_pos_list = terrain.update_food_map(food_num=3, food_map=food_map)
+    # f = plt.figure(figsize=(10, 4))
+    # ax1 = f.add_subplot(121)
+    # ax1.imshow(terrain_map, interpolation='nearest')
+    # ax1.set_title('terrain map')
+    # ax2 = f.add_subplot(122)
+    # ax2.imshow(food_map, interpolation='nearest')
+    # ax2.set_title('food map')
+    # plt.show()
+    # food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
+    # assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
+    # assert (np.sum(food_map.flat) == 3)
+    # assert (food_pos_array.shape == (3, 2))
+    #
+    # food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
+    # f = plt.figure(figsize=(10, 4))
+    # ax1 = f.add_subplot(121)
+    # ax1.imshow(terrain_map, interpolation='nearest')
+    # ax1.set_title('terrain map')
+    # ax2 = f.add_subplot(122)
+    # ax2.imshow(food_map, interpolation='nearest')
+    # ax2.set_title('food map')
+    # plt.show()
+    # food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
+    # assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
+    # assert (np.sum(food_map.flat) == 5)
+    # assert (food_pos_array.shape == (5, 2))
+    #
+    # food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
+    # food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
+    # assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
+    # assert (np.sum(food_map.flat) == 5)
+    # assert (food_pos_array.shape == (5, 2))
     # =============================================================
 
     print 'for debug'
