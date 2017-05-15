@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -193,7 +194,16 @@ class Simulation(object):
 
             curr_t = 0
 
+            curr_progress = -1  # percentage finished, for printing the simulation progress
+            t0 = time.time()
+
             while len(alive_fish_list) > 0 and curr_t < self.simulation_length:
+
+                if verbose > 0:
+                    if curr_t // (self.simulation_length // 10) > curr_progress:
+                        print('{:09.2f} second: {:2d} %'.format(time.time() - t0,
+                                                                (curr_t // (self.simulation_length // 10)) * 10))
+                        curr_progress = curr_t // (self.simulation_length // 10)
 
                 curr_food_pos_list = self._terrain.update_food_map(self.food_num, self._food_map)
                 self._simulation_histories['food_pos_history'].loc[curr_t, 'food_pos'] = curr_food_pos_list
@@ -320,18 +330,21 @@ if __name__ == '__main__':
     # -------------------------------------------------------------------------
     import littlefish.terrain.terrain_2d as tr
     import littlefish.fish.fish as fi
+    import random
+    random.seed(50)
+    np.random.seed(50)
     tg = tr.TerrainGenerator()
     terrain_map = tg.generate_binary_map(sigma=3., is_plot=True)
     terrain = tr.BinaryTerrain(terrain_map)
     fish = fi.Fish()
-    sim = Simulation(terrain, [fish], simulation_length=500)
+    sim = Simulation(terrain=terrain, fish_list=[fish],
+                     simulation_length=5000, food_num=5)
     sim.initiate_simulation()
-
     # print(sim._simulation_histories)
     # sim.generating_fish_map(time_point=0, is_plot=True)
     # sim.get_fish_health_status(0, verbose=True)
     # print(sim.is_all_fish_dead(0))
-    sim.run()
+    sim.run(verbose=1)
     # -------------------------------------------------------------------------
 
     print 'for debugging...'
