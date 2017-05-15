@@ -233,7 +233,7 @@ class Simulation(object):
                         if updated_health > 0:  # if not dead
 
                             # no movement attempt
-                            if np.array_equal(movement_attempt, np.array([0, 0], np.uint8)):
+                            if np.array_equal(movement_attempt, np.array([0, 0], np.int8)):
                                 new_pos_row = curr_position[0]
                                 new_pos_col = curr_position[1]
                             else:

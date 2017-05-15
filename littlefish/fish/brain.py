@@ -642,13 +642,13 @@ class Muscle(Neuron):
 
         if is_act:
             if self._direction == 'east':
-                return np.array([0, 1], dtype=np.uint8)
+                return np.array([0, 1], dtype=np.int8)
             elif self._direction == 'north':
-                return np.array([-1, 0], dtype=np.uint8)
+                return np.array([-1, 0], dtype=np.int8)
             elif self._direction == 'west':
-                return np.array([0, -1], dtype=np.uint8)
+                return np.array([0, -1], dtype=np.int8)
             elif self._direction == 'south':
-                return np.array([1, 0], dtype=np.uint8)
+                return np.array([1, 0], dtype=np.int8)
             else:
                 raise ValueError("self.direction should be one of the following: "
                                  "['east', 'north', 'west', 'south'].")
