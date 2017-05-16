@@ -122,8 +122,8 @@ class BinaryTerrain(object):
         :param food_map: 2-d binary array, 0: non-food, 1: food
         :param food_num: positive integer, number of food pixels after update
         :return: food_map: updated food map
-                 food_pos_list: list of food pixel coordinates, each coordinate is a list of 2 non-negative integers
-                            [row, col]
+                 food_positions: 2d array, food_num x 2, dtype: uint16, array of food pixel coordinates, 
+                                each row is a food position, columns: [row, col]
         """
 
         curr_food_pos_list = np.where(food_map == 1)
@@ -163,8 +163,8 @@ class BinaryTerrain(object):
         else:
             raise ValueError("Terrain: cannot update food map. Do not understand current food position list.")
 
-        return food_pos_list
-
+        food_positions = np.array([np.array(pos, np.uint16) for pos in food_pos_list])
+        return food_positions
 
     def plot_terrain(self, plot_axis=None):
         # todo: finish this method

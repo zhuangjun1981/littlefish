@@ -54,9 +54,12 @@ class Simulation(object):
 
             #  generate food map, food position history and initial food positions
             self._food_map = np.zeros(self._terrain.get_terrain_shape(), dtype=np.uint8)
-            food_pos_history = pd.Series([[] for i in range(self.simulation_length)])
-            food_pos_history = pd.DataFrame(food_pos_history, columns=['food_pos'])
-            self._simulation_histories.update({'food_pos_history': food_pos_history})
+            # food_pos_history = pd.Series([[] for i in range(self.simulation_length)])
+            # food_pos_history = pd.DataFrame(food_pos_history, columns=['food_pos'])
+            # food_pos_history, simulation_length x food_num x 2, (row, col)
+            self._simulation_histories.update({'food_pos_history':
+                                                   np.zeros((self._simulation_length, self._food_num, 2),
+                                                            dtype=np.uint16)})
 
             #  generate non-overlapping positions for all fish
             fish_start_positions = self._terrain.generate_fish_starting_position(len(self._fish_list))
@@ -208,8 +211,9 @@ class Simulation(object):
                                                                 (curr_t // (self.simulation_length // 10)) * 10))
                         curr_progress = curr_t // (self.simulation_length // 10)
 
-                curr_food_pos_list = self._terrain.update_food_map(self.food_num, self._food_map)
-                self._simulation_histories['food_pos_history'].loc[curr_t, 'food_pos'] = curr_food_pos_list
+                curr_food_positions = self._terrain.update_food_map(self.food_num, self._food_map)
+                # self._simulation_histories['food_pos_history'].loc[curr_t, 'food_pos'] = curr_food_pos_list
+                self._simulation_histories['food_pos_history'][curr_t] = curr_food_positions
 
                 dead_fish_list = []  # list of fish is going to die at curr_t
 
@@ -355,10 +359,12 @@ class Simulation(object):
                 curr_fish_his_group = curr_fish_grp.create_group('sim_history')
 
 
-            food_pos_history = np.array(self._simulation_histories['food_pos_history'].loc[:, 'food_pos'])
+            # food_pos_history = np.array(self._simulation_histories['food_pos_history'].loc[:, 'food_pos'])
+            # food_pos_dset = log_f.create_dataset('food_pos_history',
+            #                                      data=np.array([np.array(fph[0]) for fph in food_pos_history]))
             food_pos_dset = log_f.create_dataset('food_pos_history',
-                                                 data=np.array([np.array(fph[0]) for fph in food_pos_history]))
-            food_pos_dset.attrs['data_format'] = '[row, col]'
+                                                 data=self._simulation_histories['food_pos_history'])
+            food_pos_dset.attrs['data_format'] = '3d array, len(t_points) x food_num x 2, [row, col]'
 
             # todo: finish this
 
