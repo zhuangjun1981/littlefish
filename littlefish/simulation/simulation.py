@@ -1,4 +1,7 @@
+import os
 import time
+import datetime
+import h5py
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -269,6 +272,8 @@ class Simulation(object):
 
                         else:  # if dead
                             dead_fish_list.append(curr_fish)
+                            self._simulation_histories[curr_fish.name]['life_history'] = \
+                                self._simulation_histories[curr_fish.name]['life_history'][0: curr_t + 1]
                     else:
                         pass
 
@@ -278,11 +283,14 @@ class Simulation(object):
                 curr_t += 1
 
             else:
-                if len(alive_fish_list) == 0:
-                    print("Simulation: End of Simulation. All fish are dead. "
-                          "Last simulated time point: {}".format(curr_t))
                 if curr_t == self.simulation_length:
                     print("Simulation: End of Simulation. Prespecified simulation length reached.")
+
+                elif len(alive_fish_list) == 0:
+                    self._simulation_histories['food_pos_history'] = \
+                        self._simulation_histories['food_pos_history'][0: curr_t + 1]
+                    print("Simulation: End of Simulation. All fish are dead. "
+                          "Last simulated time point: {}".format(curr_t))
 
             self._simulation_status = 4
 
@@ -323,6 +331,39 @@ class Simulation(object):
 
     # def _clear_simulation_history(self):
     #     self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column, ''health'])
+
+    def save_log(self, log_folder):
+        """
+        save simulation results into a hdf5 file
+        :param log_folder: directory path to save save_log
+        :return: None
+        """
+
+        if self._simulation_status == 4:
+            save_name = 'simulation_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S') + '.hdf5'
+            if not os.path.isdir(log_folder):
+                os.makedirs(log_folder)
+            log_f = h5py.File(os.path.join(log_folder, save_name))
+            log_f['terrain_map'] = self._terrain._terrain_map
+            fish_list_grp = log_f.create_group('fish_list')
+            for curr_fish in self._fish_list:
+                curr_fish_grp = fish_list_grp.create_group(curr_fish.name)
+                curr_fish_fish_grp = curr_fish_grp.create_group('fish')
+                curr_fish.to_h5_group(curr_fish_fish_grp)
+                curr_fish_fish_grp.attrs['description'] = 'Data of the little.fish.fish.Fish object. The object can ' \
+                                                          'be loaded by Fish.from_h5_group() method.'
+                curr_fish_his_group = curr_fish_grp.create_group('sim_history')
+
+
+            food_pos_history = np.array(self._simulation_histories['food_pos_history'].loc[:, 'food_pos'])
+            food_pos_dset = log_f.create_dataset('food_pos_history',
+                                                 data=np.array([np.array(fph[0]) for fph in food_pos_history]))
+            food_pos_dset.attrs['data_format'] = '[row, col]'
+
+            # todo: finish this
+
+        else:
+            raise RuntimeError("Simulation: Cannot save save_log. Simulation has not run yet.")
 
 
 if __name__ == '__main__':
