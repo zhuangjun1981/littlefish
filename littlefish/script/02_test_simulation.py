@@ -4,7 +4,7 @@ import littlefish.terrain.terrain_2d as tr
 import littlefish.fish.fish as fi
 import littlefish.simulation.simulation as si
 
-simulation_length = 1000  # 100000
+simulation_length = 10  # 100000
 
 random.seed(111)
 np.random.seed(50)
@@ -21,7 +21,7 @@ simulation = si.Simulation(terrain=terrain, fish_list=[fish],
                            simulation_length=simulation_length, food_num=2)
 simulation.initiate_simulation()
 simulation.run(verbose=1)
-# simulation.save_log(r'D:\little_fish')
-simulation.save_log(r'C:\little_fish_test')
+simulation.save_log(r'D:\little_fish')
+# simulation.save_log(r'C:\little_fish_test')
 
 print 'for debug ...'

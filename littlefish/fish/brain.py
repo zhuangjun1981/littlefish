@@ -1285,7 +1285,7 @@ class Brain(object):
 
         neuron_group = h5_group.create_group('neurons')
         for i, neuron_df in self._neurons.iterrows():
-            neuron_name = 'neuron_' + util.int2str(i, 5)
+            neuron_name = 'neuron_' + util.int2str(i, 4)
             curr_neuron_group = neuron_group.create_group(neuron_name)
             neuron_df['neuron'].to_h5_group(curr_neuron_group)
             curr_neuron_group.attrs['ind'] = i

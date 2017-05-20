@@ -205,7 +205,7 @@ class Simulation(object):
 
             while len(alive_fish_list) > 0 and curr_t < self.simulation_length:
 
-                if verbose > 0:
+                if (verbose > 0) and (self._simulation_length > 100):
                     if curr_t // (self.simulation_length // 10) > curr_progress:
                         print('{:09.2f} second: {:2d} %'.format(time.time() - t0,
                                                                 (curr_t // (self.simulation_length // 10)) * 10))
@@ -351,22 +351,43 @@ class Simulation(object):
             log_f['terrain_map'] = self._terrain._terrain_map
             fish_list_grp = log_f.create_group('fish_list')
             for curr_fish in self._fish_list:
+
                 curr_fish_grp = fish_list_grp.create_group(curr_fish.name)
+
+                # save data of current fish
                 curr_fish_fish_grp = curr_fish_grp.create_group('fish')
                 curr_fish.to_h5_group(curr_fish_fish_grp)
                 curr_fish_fish_grp.attrs['description'] = 'Data of the little.fish.fish.Fish object. The object can ' \
                                                           'be loaded by Fish.from_h5_group() method.'
-                curr_fish_his_group = curr_fish_grp.create_group('sim_history')
 
+                # create group to save simulation history of current fish
+                curr_fish_sim_grp = curr_fish_grp.create_group('sim_history')
+                curr_sim_history = self._simulation_histories[curr_fish.name]
 
-            # food_pos_history = np.array(self._simulation_histories['food_pos_history'].loc[:, 'food_pos'])
-            # food_pos_dset = log_f.create_dataset('food_pos_history',
-            #                                      data=np.array([np.array(fph[0]) for fph in food_pos_history]))
+                # save action histories of every neuron in current fish
+                curr_fish_ah_grp = curr_fish_sim_grp.create_group('action_histories')
+                curr_fish_ah = curr_sim_history['action_histories']
+                for neuron_ind, ah in curr_fish_ah.iterrows():
+                    curr_fish_ah_grp['neuron_' + util.int2str(neuron_ind, 4)] = ah.iloc[0]
+
+                #===================this can be comment out=================================
+                # save psp waveforms of all neurons in current fish
+                curr_fish_psp_wf_dset = curr_fish_sim_grp.create_dataset('psp_waveforms',
+                                                                         data=curr_sim_history['psp_waveforms'])
+                curr_fish_psp_wf_dset.attrs['data_format'] = 'neuron_ind x time_point'
+                # ===================this can be comment out=================================
+
+                # save life history of fish
+                curr_life_his = self._simulation_histories['test_fish']['life_history']
+                curr_pos_arr = np.array(curr_life_his.loc[:, ['pos_row', 'pos_col']])
+                curr_fish_pos_dset = curr_fish_sim_grp.create_dataset('position_history', data=curr_pos_arr)
+                curr_fish_pos_dset.attrs['data_format'] = 'time_point x center position [row, col]'
+                curr_health_arr = np.array(curr_life_his.loc[:, 'health'])
+                curr_fish_sim_grp['health'] = curr_health_arr
+
             food_pos_dset = log_f.create_dataset('food_pos_history',
                                                  data=self._simulation_histories['food_pos_history'])
-            food_pos_dset.attrs['data_format'] = '3d array, len(t_points) x food_num x 2, [row, col]'
-
-            # todo: finish this
+            food_pos_dset.attrs['data_format'] = 'time_points x food_num x food position [row, col]'
 
         else:
             raise RuntimeError("Simulation: Cannot save save_log. Simulation has not run yet.")
