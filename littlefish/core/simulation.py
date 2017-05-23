@@ -1,11 +1,12 @@
+import datetime
 import os
 import time
-import datetime
+
 import h5py
-import pandas as pd
-import numpy as np
+import littlefish.core.utilities as util
 import matplotlib.pyplot as plt
-import littlefish.utilities as util
+import numpy as np
+import pandas as pd
 
 
 class Simulation(object):
@@ -396,8 +397,8 @@ class Simulation(object):
 if __name__ == '__main__':
 
     # -------------------------------------------------------------------------
-    import littlefish.terrain.terrain_2d as tr
-    import littlefish.fish.fish as fi
+    import littlefish.core.terrain as tr
+    import littlefish.core.fish as fi
     import random
     random.seed(50)
     np.random.seed(50)

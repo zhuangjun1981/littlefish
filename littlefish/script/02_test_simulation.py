@@ -1,8 +1,9 @@
-import numpy as np
 import random
-import littlefish.terrain.terrain_2d as tr
-import littlefish.fish.fish as fi
-import littlefish.simulation.simulation as si
+
+import littlefish.core.fish as fi
+import littlefish.core.simulation as si
+import littlefish.core.terrain as tr
+import numpy as np
 
 simulation_length = 10  # 100000
 

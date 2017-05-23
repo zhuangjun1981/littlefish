@@ -3,13 +3,14 @@
 # from builtins import *
 
 import os
-import h5py
 import random
-import numpy as np
-import littlefish.terrain.terrain_2d as tr
-import littlefish.fish.fish as fi
-import littlefish.simulation.simulation as si
 import unittest
+
+import h5py
+import littlefish.core.fish as fi
+import littlefish.core.simulation as si
+import littlefish.core.terrain as tr
+import numpy as np
 
 curr_folder = os.path.dirname(os.path.realpath(__file__))
 os.chdir(curr_folder)

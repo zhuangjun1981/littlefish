@@ -4,12 +4,10 @@
 #                         print_function, unicode_literals)
 # from builtins import *
 
-import littlefish.utilities as util
-import numpy as np
+import littlefish.core.utilities as util
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy.ndimage as ni
-import random
-
 
 plt.ioff()
 

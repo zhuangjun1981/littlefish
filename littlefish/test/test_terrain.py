@@ -2,11 +2,10 @@
 #                         print_function, unicode_literals)
 # from builtins import *
 
-import os
-import littlefish.terrain.terrain_2d as tr
-import numpy as np
 import unittest
-import matplotlib.pyplot as plt
+
+import littlefish.core.terrain as tr
+import numpy as np
 
 
 class TestTerrain(unittest.TestCase):

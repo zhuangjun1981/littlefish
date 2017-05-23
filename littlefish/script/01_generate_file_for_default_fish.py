@@ -1,11 +1,10 @@
 import os
+
 import h5py
-from littlefish.fish import fish
+from littlefish.core import fish
+
 # from littlefish import utilities as util
 # import pandas as pd
-import numpy as np
-import time
-import matplotlib.pyplot as plt
 
 save_name = 'fish_default.hdf5'
 

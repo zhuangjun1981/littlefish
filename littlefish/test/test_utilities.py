@@ -2,11 +2,10 @@
 #                         print_function, unicode_literals)
 # from builtins import *
 
-import os
-import sys
-import numpy as np
-import littlefish.utilities as util
 import unittest
+
+import littlefish.core.utilities as util
+import numpy as np
 
 
 class TestUtilities(unittest.TestCase):
