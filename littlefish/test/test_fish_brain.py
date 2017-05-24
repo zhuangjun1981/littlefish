@@ -1,7 +1,6 @@
 import random
 import unittest
-
-import littlefish.core.fish
+import littlefish.core.fish as fi
 import littlefish.core.utilities as util
 import numpy as np
 
@@ -10,15 +9,23 @@ class TestFishBrain(unittest.TestCase):
 
     def setup(self):
         pass
+    
+    def test_neuron1(self):
+        total_t = 10
+        neuron = fi.Neuron(baseline_rate=0.5, refractory_period=1.2)
+        action_history = []
+        for t_point in range(total_t):
+            neuron.act(t_point=t_point, action_history=action_history, probability_input=0.5)
+        assert (action_history == [0, 2, 4, 6, 8])
 
     def test_connection_psp(self):
-        connection = littlefish.core.fish.Connection(amplitude=10, latency=5, rise_time=5, decay_time=10)
+        connection = fi.Connection(amplitude=10, latency=5, rise_time=5, decay_time=10)
         assert(np.array_equal(connection.get_psp(), np.array([0., 0., 0., 0., 0., 2., 4., 6., 8., 10., 9., 8.,
                                                               7., 6., 5., 4., 3., 2., 1., 0.])))
 
     def test_connection_act(self):
         simulation_length = 50
-        connection = littlefish.core.fish.Connection(amplitude=10, latency=5, rise_time=5, decay_time=10)
+        connection = fi.Connection(amplitude=10, latency=5, rise_time=5, decay_time=10)
         psp_waveforms = np.zeros((1, simulation_length))
         connection.act(t_point=2, postsynaptic_index=0, psp_waveforms=psp_waveforms)
         assert(np.array_equal(psp_waveforms[0],
@@ -51,64 +58,34 @@ class TestFishBrain(unittest.TestCase):
         world_map[2, 2] = 1
         world_map[2, 1] = 1
 
-        eye = littlefish.core.fish.Eye(direction='south')
+        eye = fi.Eye(direction='south')
         assert(np.array_equal(eye._get_input_pixels(position=(2, 3), input_map=world_map), [0, 1, 0]))
-        eye = littlefish.core.fish.Eye(direction='southeast')
+        eye = fi.Eye(direction='southeast')
         assert (np.array_equal(eye._get_input_pixels(position=(2, 3), input_map=world_map), [1, 0, 0]))
-        eye = littlefish.core.fish.Eye(direction='east')
+        eye = fi.Eye(direction='east')
         assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map), [0, 1, 0]))
-        eye = littlefish.core.fish.Eye(direction='northeast')
+        eye = fi.Eye(direction='northeast')
         assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map), [1, 0, 1]))
-        eye = littlefish.core.fish.Eye(direction='north')
+        eye = fi.Eye(direction='north')
         assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map), [0, 1, 1]))
-        eye = littlefish.core.fish.Eye(direction='northwest')
+        eye = fi.Eye(direction='northwest')
         assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map), [1, 1, 0]))
-        eye = littlefish.core.fish.Eye(direction='west')
+        eye = fi.Eye(direction='west')
         assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map), [1, 0, 0]))
-        eye = littlefish.core.fish.Eye(direction='southwest')
+        eye = fi.Eye(direction='southwest')
         assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map), [0, 0, 0]))
-        eye = littlefish.core.fish.Eye(direction='north')
+        eye = fi.Eye(direction='north')
         assert (np.array_equal(eye._get_input_pixels(position=(0, 0), input_map=world_map), [1, 1, 1]))
-        eye = littlefish.core.fish.Eye(direction='northeast')
+        eye = fi.Eye(direction='northeast')
         assert (np.array_equal(eye._get_input_pixels(position=(0, 0), input_map=world_map), [0, 1, 1]))
-        eye = littlefish.core.fish.Eye(direction='east')
+        eye = fi.Eye(direction='east')
         assert (np.array_equal(eye._get_input_pixels(position=(0, 0), input_map=world_map), [0, 0, 1]))
-
-    def test_eye2_get_input_pixels(self):
-        world_map = np.zeros((5, 5), dtype=np.uint8)
-        world_map[3, 3] = 1
-        world_map[2, 2] = 1
-        world_map[2, 1] = 1
-        world_map[1, 1] = 1
-
-        eye2 = littlefish.core.fish.Eye2(direction='south')
-        assert(np.array_equal(eye2._get_input_pixels(position=(2, 3), input_map=world_map), [0, 1, 0, 0, 0, 0]))
-        eye2 = littlefish.core.fish.Eye2(direction='southeast')
-        assert (np.array_equal(eye2._get_input_pixels(position=(2, 3), input_map=world_map), [1, 0, 0, 0, 1, 1]))
-        eye2 = littlefish.core.fish.Eye2(direction='east')
-        assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), input_map=world_map), [0, 1, 0, 0, 0, 0]))
-        eye2 = littlefish.core.fish.Eye2(direction='northeast')
-        assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), input_map=world_map), [1, 0, 1, 0, 0, 0]))
-        eye2 = littlefish.core.fish.Eye2(direction='north')
-        assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), input_map=world_map), [0, 1, 1, 0, 0, 1]))
-        eye2 = littlefish.core.fish.Eye2(direction='northwest')
-        assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), input_map=world_map), [1, 1, 0, 1, 0, 0]))
-        eye2 = littlefish.core.fish.Eye2(direction='west')
-        assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), input_map=world_map), [1, 0, 0, 0, 0, 0]))
-        eye2 = littlefish.core.fish.Eye2(direction='southwest')
-        assert (np.array_equal(eye2._get_input_pixels(position=(3, 2), input_map=world_map), [0, 0, 0, 0, 1, 1]))
-        eye2 = littlefish.core.fish.Eye2(direction='north')
-        assert (np.array_equal(eye2._get_input_pixels(position=(0, 0), input_map=world_map), [1, 1, 1, 1, 1, 1]))
-        eye2 = littlefish.core.fish.Eye2(direction='northeast')
-        assert (np.array_equal(eye2._get_input_pixels(position=(0, 0), input_map=world_map), [0, 1, 1, 1, 1, 1]))
-        eye2 = littlefish.core.fish.Eye2(direction='east')
-        assert (np.array_equal(eye2._get_input_pixels(position=(0, 0), input_map=world_map), [1, 0, 1, 0, 0, 1]))
 
     def test_neuron_connection(self):
         simulation_length = 5000
-        neuron_pre = littlefish.core.fish.Neuron(baseline_rate=0.005)
-        neuron_post = littlefish.core.fish.Neuron(baseline_rate=0.000)
-        connection = littlefish.core.fish.Connection(amplitude=1, latency=5, rise_time=1, decay_time=1)
+        neuron_pre = fi.Neuron(baseline_rate=0.005)
+        neuron_post = fi.Neuron(baseline_rate=0.000)
+        connection = fi.Connection(amplitude=1, latency=5, rise_time=1, decay_time=1)
 
         psp_waveforms = np.zeros((1, simulation_length))
         action_history_pre = []
@@ -126,7 +103,7 @@ class TestFishBrain(unittest.TestCase):
 
     def test_muscle_action(self):
         simulation_length = 20000
-        muscle = littlefish.core.fish.Muscle(direction='east', baseline_rate=0., refractory_period=5000)
+        muscle = fi.Muscle(direction='east', baseline_rate=0., refractory_period=5000)
         action_history_muscle = []
         movements = []
         for i in range(simulation_length):
@@ -139,7 +116,7 @@ class TestFishBrain(unittest.TestCase):
         assert(action_history_muscle == [0, 5000, 10000, 15000])
 
     def test_brain_default(self):
-        brain1 = littlefish.core.fish.Brain()
+        brain1 = fi.Brain()
         assert(len(brain1.get_neurons()) == 20)
         assert(len(brain1.get_connections()) == 2)
         assert(brain1.get_connections()['L000_L001'].shape[0] == 8)
@@ -152,7 +129,7 @@ class TestFishBrain(unittest.TestCase):
         simulation_length = int(1e2)
         random.seed(111)
 
-        minimum_brain = littlefish.core.fish.generate_minimal_brain()
+        minimum_brain = fi.generate_minimal_brain()
         terrain_map = np.zeros((10, 10), dtype=np.uint8)
         terrain_map[2:4, 4:6] = 1
 
@@ -170,41 +147,41 @@ class TestFishBrain(unittest.TestCase):
         assert(action_histories.iloc[3, 0] == [6])
 
     def test_brain_default(self):
-        default_brain = littlefish.core.fish.Brain()
+        default_brain = fi.Brain()
 
     def test_brain_generate_empty_action_histories(self):
-        db = littlefish.core.fish.Brain()
+        db = fi.Brain()
         eah = db.generate_empty_action_histories()
         eah.loc[3, 'action_history'].append(10)
         assert(len(eah.loc[4, 'action_history']) == 0)
         assert(len(eah.loc[3, 'action_history']) == 1)
 
     def test_brain_get_eye_type(self):
-        assert (littlefish.core.fish.Brain.get_eye_type(0) == ('east', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(1) == ('northeast', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(2) == ('north', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(3) == ('northwest', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(4) == ('west', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(5) == ('southwest', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(6) == ('south', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(7) == ('southeast', 'terrain'))
-        assert (littlefish.core.fish.Brain.get_eye_type(8) == ('east', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(9) == ('northeast', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(10) == ('north', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(11) == ('northwest', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(12) == ('west', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(13) == ('southwest', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(14) == ('south', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(15) == ('southeast', 'food'))
-        assert (littlefish.core.fish.Brain.get_eye_type(16) == ('east', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(17) == ('northeast', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(18) == ('north', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(19) == ('northwest', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(20) == ('west', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(21) == ('southwest', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(22) == ('south', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(23) == ('southeast', 'fish'))
-        assert (littlefish.core.fish.Brain.get_eye_type(24) == ('east', 'terrain'))
+        assert (fi.Brain.get_eye_type(0) == ('east', 'terrain'))
+        assert (fi.Brain.get_eye_type(1) == ('northeast', 'terrain'))
+        assert (fi.Brain.get_eye_type(2) == ('north', 'terrain'))
+        assert (fi.Brain.get_eye_type(3) == ('northwest', 'terrain'))
+        assert (fi.Brain.get_eye_type(4) == ('west', 'terrain'))
+        assert (fi.Brain.get_eye_type(5) == ('southwest', 'terrain'))
+        assert (fi.Brain.get_eye_type(6) == ('south', 'terrain'))
+        assert (fi.Brain.get_eye_type(7) == ('southeast', 'terrain'))
+        assert (fi.Brain.get_eye_type(8) == ('east', 'food'))
+        assert (fi.Brain.get_eye_type(9) == ('northeast', 'food'))
+        assert (fi.Brain.get_eye_type(10) == ('north', 'food'))
+        assert (fi.Brain.get_eye_type(11) == ('northwest', 'food'))
+        assert (fi.Brain.get_eye_type(12) == ('west', 'food'))
+        assert (fi.Brain.get_eye_type(13) == ('southwest', 'food'))
+        assert (fi.Brain.get_eye_type(14) == ('south', 'food'))
+        assert (fi.Brain.get_eye_type(15) == ('southeast', 'food'))
+        assert (fi.Brain.get_eye_type(16) == ('east', 'fish'))
+        assert (fi.Brain.get_eye_type(17) == ('northeast', 'fish'))
+        assert (fi.Brain.get_eye_type(18) == ('north', 'fish'))
+        assert (fi.Brain.get_eye_type(19) == ('northwest', 'fish'))
+        assert (fi.Brain.get_eye_type(20) == ('west', 'fish'))
+        assert (fi.Brain.get_eye_type(21) == ('southwest', 'fish'))
+        assert (fi.Brain.get_eye_type(22) == ('south', 'fish'))
+        assert (fi.Brain.get_eye_type(23) == ('southeast', 'fish'))
+        assert (fi.Brain.get_eye_type(24) == ('east', 'terrain'))
 
 
 

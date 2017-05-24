@@ -10,7 +10,7 @@ import os
 import matplotlib.pyplot as plt
 
 # unnecessary global varible
-
+# 
 # SIMULATION_LENGTH = 100000
 #
 # EYE_GAIN = 0.005
@@ -40,27 +40,27 @@ import matplotlib.pyplot as plt
 # FISH_FOOD_RATE = 20
 
 
-
 def generate_minimal_brain():
     """
     :return: a Brain object with one eye, two neuron in hidden layer and one muscle 
     """
 
-    eye = Eye2(direction='east', input_filter=np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1]), gain=0.05,
-                     input_type='terrain', baseline_rate=0., refractory_period=10)
-    hidden0 = Neuron(baseline_rate=0.0005, refractory_period=10)
-    hidden1 = Neuron(baseline_rate=0.0005, refractory_period=10)
-    muscle = Muscle(direction='east', baseline_rate=0.1, refractory_period=5000)
+    eye = Eye(direction='east', input_filter=None, gain=0.05, input_type='terrain', baseline_rate=0.,
+              refractory_period=1.2)
+
+    hidden0 = Neuron(baseline_rate=0.005, refractory_period=1.2)
+    hidden1 = Neuron(baseline_rate=0.005, refractory_period=1.2)
+    muscle = Muscle(direction='east', baseline_rate=0.1, refractory_period=500)
 
     neurons = pd.DataFrame([[0, 0, eye],
                             [1, 0, hidden0],
                             [1, 1, hidden1],
                             [2, 0, muscle]], columns=['layer', 'neuron_ind', 'neuron'])
 
-    connection_eye_hidden0 = Connection(latency=30, amplitude=0.01, rise_time=50, decay_time=100)
-    connection_eye_hidden1 = Connection(latency=30, amplitude=0.0001, rise_time=50, decay_time=100)
-    connection_hidden0_muscle = Connection(latency=30, amplitude=0.0001, rise_time=50, decay_time=100)
-    connection_hidden1_muscle = Connection(latency=30, amplitude=0.01, rise_time=50, decay_time=100)
+    connection_eye_hidden0 = Connection(latency=3, amplitude=0.01, rise_time=5, decay_time=10)
+    connection_eye_hidden1 = Connection(latency=3, amplitude=0.0001, rise_time=5, decay_time=10)
+    connection_hidden0_muscle = Connection(latency=3, amplitude=0.0001, rise_time=5, decay_time=10)
+    connection_hidden1_muscle = Connection(latency=3, amplitude=0.01, rise_time=5, decay_time=10)
 
     conn_0_1 = pd.DataFrame([[connection_eye_hidden0], [connection_eye_hidden1]], columns=[0], index=[1, 2])
     conn_1_2 = pd.DataFrame([[connection_hidden0_muscle, connection_hidden1_muscle]], columns=[1, 2], index=[3])
@@ -71,216 +71,12 @@ def generate_minimal_brain():
     return Brain(neurons=neurons, connections=connections)
 
 
-# def generate_default_terrain_food_brain():
-#     """
-#
-#     :return:
-#     """
-
-
-class Fish(object):
-    """
-    the main fish class
-
-    a 'fish' has a body occupies a 3x3 space.
-
-    a 'fish' has health point (goes down over time and increases after eating a food). fish moves around in a 2d
-    landscape (2-d binary map, 0 represents water, 1 represents land), when hits land, health point will go down
-    quickly.
-
-    the purpose of simulation is to train the fish use its eyes, brain and muscles to avoid land and look for food.
-
-    the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
-    millisecond.
-
-    self._brain: a brain.Brain object
-    self._max_health: float, maximum health point a fish can have
-    self._health_decay_rate: float, the constant rate of health reduction, health point / time unit
-    self._land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
-                             the terrain map, health point / (pixel * time unit)
-    self._food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
-                     health point / pixel. the food after taken will disappear, so no health gaining is a
-                     transient event
-    self._simulation_status: 0, has not simulated
-                             1, during simulation
-                             2, after simulation
-    self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
-    """
-
-    def __init__(self, name=None, mother_name=None, brain=None, max_health=100., health_decay_rate=0.0001,
-                 land_penalty_rate=0.005, food_rate=20.):
-
-        """
-        :param brain: a brain.Brain object
-        :param max_health: float, maximum health point a fish can have
-        :param health_decay_rate: float, the constant rate of health reduction, health point / time unit
-        :param land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
-                                  the terrain map, health point / (pixel * time unit)
-        :param food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
-                          health point / pixel. the food after taken will disappear, so no health gaining is a
-                          transient event
-        """
-
-        if name is None:
-            self._name = 'test_fish'
-        else:
-            self._name = name
-
-        if mother_name is None:
-            self._mother_name = ''
-        else:
-            self._mother_name = mother_name
-
-        self._max_health = float(max_health)
-        self._health_decay_rate = float(health_decay_rate)
-        self._land_penalty_rate = land_penalty_rate
-        self._food_rate = food_rate
-
-        if brain is None:
-            self._brain = Brain()
-        else:
-            brain.check_integrity()
-            self._brain = brain
-
-        # self._curr_health = None
-
-        print('\nFish: fish object generated successfully.')
-    #
-    # def get_curr_health(self):
-    #     return self._curr_health
-
-    def get_name(self):
-        return self._name
-
-    @property
-    def name(self):
-        return self.get_name()
-
-    def get_max_health(self):
-        return self._max_health
-
-    def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
-            food_map=None, fish_map=None):
-        """
-        simulate the fish's action at a given time point
-        
-        :param t_point: non-negative int, time point
-        :param curr_position: list or tuple of two non-negative integers, coordinates of fish center position, 
-                              [row, col]
-        :param curr_health: positive float, health point at the beginning of t_point
-        :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
-                                 same order as self._neurons data frame, columns = ['action_history'], used by 
-                                 self._brain.act()
-        :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
-                              neuron in the same order as self._neurons data frame, each column represents a time point,
-                              used by self._brain.act()
-        :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
-        :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
-        :param fish_map: not fully implemented right now.
-        :return updated_health: float, health point at the end of t_point
-                movement_attempt: list of two integers, the attempt the fish is trying to move [row_shift, col_shift].
-                                  None if updated_health is below 0 (fish is dead).
-        """
-
-        updated_health = float(curr_health)
-
-        # evaluate food
-        if food_map is not None:
-            body_food_overlap = self._eval_food(food_map=food_map, curr_position=curr_position)
-            updated_health = self._eat_food(body_food_overlap=body_food_overlap, curr_health=updated_health)
-
-            # update food map
-            food_map[curr_position[0] - 1: curr_position[0] + 2, curr_position[1] - 1: curr_position[1] + 2] = 0
-
-        # evaluate the extend of how much of the fish is on the land
-        body_land_overlap = self._eval_terrain(terrain_map=terrain_map, curr_position=curr_position)
-
-        # update current health with land penalty
-        updated_health -= body_land_overlap * self._land_penalty_rate
-
-
-        # ----------------- not implemented --------------------------
-        # if fish_map is not None:
-        #     self._eval_fish(fish_map=fish_map)
-        # ----------------- not implemented --------------------------
-
-        # update health
-        updated_health = updated_health - self._health_decay_rate
-
-        if updated_health > 0:  # still alive
-            movement_attempt = self._brain.act(t_point=t_point, action_histories=action_histories,
-                                               psp_waveforms=psp_waveforms, body_position=curr_position,
-                                               terrain_map=terrain_map, food_map=food_map,
-                                               fish_map=fish_map)
-        else:
-            movement_attempt = None
-
-        return updated_health, movement_attempt
-
-    def _eval_terrain(self, terrain_map, curr_position):
-        """
-        Evaluate the coverage of fish body on terrain map, return the sum of all terrain pixels that are covered by
-        the fish body
-        """
-
-        if terrain_map is None:
-            raise ValueError('Fish: _eval_terrain failure. terrain_map is None.')
-        else:
-            curr_body = terrain_map[curr_position[0] - 1: curr_position[0] + 2,
-                                    curr_position[1] - 1: curr_position[1] + 2]
-            body_land_overlap = np.sum(curr_body.flat)
-        return body_land_overlap
-
-    def _eval_food(self, food_map, curr_position):
-        """
-        find out how many foods are covered by the fish body
-
-        :param food_map: 2d array, binary map of current food
-        :param curr_position: tuple of two positive ints, (row, col) of current location of fish
-        :return: non-negative int, number of food taken
-        """
-
-        curr_body = food_map[curr_position[0] - 1: curr_position[0] + 2,
-                             curr_position[1] - 1: curr_position[1] + 2]
-        body_food_overlap = np.sum(curr_body.flat)
-
-        return body_food_overlap
-
-    def _eat_food(self, body_food_overlap, curr_health):
-        """
-        count the number of food to be taken, add relevant HP to curr_health, but not exceed the maximum health
-        """
-
-        if body_food_overlap == 0:
-            return curr_health
-        else:
-            updated_health = curr_health + self._food_rate * body_food_overlap
-            if updated_health > self._max_health:
-                updated_health = self._max_health
-            return updated_health
-
-    def _eval_fish(self, fish_map):
-        """currently not implemented"""
-        pass
-
-    def to_h5_group(self, h5_group):
-
-        h5_group.create_dataset('name', data=self._name)
-        h5_group.create_dataset('mother_name', data=self._mother_name)
-        h5_group.create_dataset('max_health', data=self._max_health)
-        h5_group.create_dataset('health_decay_rate_per_tu', data=self._health_decay_rate)
-        h5_group.create_dataset('land_penalty_rate_per_pixel_tu', data=self._land_penalty_rate)
-        h5_group.create_dataset('food_rate_per_pixel', data=self._food_rate)
-        brain_group = h5_group.create_group('brain')
-        self._brain.to_h5_group(brain_group)
-
-
 class Neuron(object):
     """
     a very simple neuron class
     """
 
-    def __init__(self, baseline_rate=0.0001, refractory_period=10):
+    def __init__(self, baseline_rate=0.001, refractory_period=1.2):
         """
         action is the equivalent of action potential in biology, and consider one time unit is 0.1 milisecond
 
@@ -290,9 +86,6 @@ class Neuron(object):
 
         self._baseline_rate = float(baseline_rate)
         self._refractory_period = float(refractory_period)
-
-        # action history has been moved to simulation
-        # self._action_history = []
 
     def __str__(self):
         return 'littlefish.brain.Neuron object'
@@ -318,13 +111,14 @@ class Neuron(object):
 
         if probability_base is None:
             probability_base = random.random()
+        else:
+            if probability_base < 0. or probability_base >= 1.:
+                raise ValueError('Neuron: probability_base should be no less than 0 and less than 1.')
 
-        if probability_base < 0. or probability_base >= 1.:
-            raise ValueError('Neuron: probability_base should be no less than 0 and less than 1.')
-
-        if len(action_history) >= 2:
-            if not util.check_monotonicity(np.array(action_history), direction='increasing'):
-                raise ValueError('Neuron: action history should be monotonically increasing.')
+        # this block of code is commented out to speed up simulation
+        # if len(action_history) >= 2:
+        #     if not util.check_monotonicity(np.array(action_history), direction='increasing'):
+        #         raise ValueError('Neuron: action history should be monotonically increasing.')
 
         if len(action_history) > 0 and t_point - action_history[-1] < self._refractory_period:
             return False
@@ -353,17 +147,16 @@ class Neuron(object):
         neuron = Neuron(baseline_rate=h5_group['baseline_rate'], refractory_period=h5_group['refractory_period'])
         return neuron
 
-
 class Eye(Neuron):
     """
-    Eye class to observe the environment, subclass of Neuron, has eye sight as 1 pixel
+    Eye class to observe the environment and the inside of fish body, subclass of Neuron, has eye sight as 2 pixels
     """
 
-    def __init__(self, direction, input_filter=None, gain=None, input_type=None, baseline_rate=None,
-                 refractory_period=None):
+    def __init__(self, direction, input_filter=None, gain=0.001, input_type='terrain', baseline_rate=0.,
+                 refractory_period=1.2):
         """
-        for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 8 pixels surrounding the
-        central pixel. Each pixel is an eye, receiving the input from the closest 3 pixels in the environment.
+        for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 4 pixels surrounding the
+        central pixel in 4 cardinal direction. Each eye receives the inputs from the given direction in the environment.
         for example:
 
         fish (1) in the environment(0):
@@ -375,395 +168,132 @@ class Eye(Neuron):
         0 0 0 0 0 0 0
         0 0 0 0 0 0 0
 
-        eye (2) in the northwest connor is:
+        eye (2) in the east direction is:
         0 0 0 0 0 0 0
         0 0 0 0 0 0 0
-        0 0 2 1 1 0 0
         0 0 1 1 1 0 0
+        0 0 1 1 2 0 0
         0 0 1 1 1 0 0
         0 0 0 0 0 0 0
         0 0 0 0 0 0 0
 
         it receive inputs from pixels labelled as 3 in the environment:
-        0 0 0 0 0 0 0
-        0 3 3 0 0 0 0
-        0 3 2 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 0 0 0 0 0
-        0 0 0 0 0 0 0
+        0 0 0 0 0 0 3
+        0 0 0 0 0 3 3
+        0 0 0 0 3 3 3
+        0 0 0 3 3 3 3
+        0 0 0 0 3 3 3
+        0 0 0 0 0 3 3
+        0 0 0 0 0 0 3
 
-        the inputs from the environment (1x3 array) will be filtered by a array with same size, to generate
+        the inputs from the environment (1x16 array) will be filtered by a array with same size, to generate
         a single value as the base of its input. this value will be multiplied by a float number gain to generate
-        final input probability
+        final input probability.
+        
+        self._get_input_pixels will pick pixels within the eye's receptive field in the following order:
+        0 0 0 0 0 0 10
+        0 0 0 0 0 5 11
+        0 0 0 0 2 6 12
+        0 0 0 1 3 7 13
+        0 0 0 0 4 8 14
+        0 0 0 0 0 9 15
+        0 0 0 0 0 0 16
 
-        :param direction: the aim of the eye, should be one of the following, 'north', 'south', 'east', 'west',
-                          'northwest', 'northeast', 'southwest', 'southeast'
+        :param direction: str, the aim of the eye, should be one of the following, 'east', 'north', 'west' and 'south'
+        :param input_filter: 1d array, shape: (16,), filter to transform input pixel values to a single number. 
+                             analog of linear receptive field of a retinal ganglion cell. default input_filter is 
+                             set as the following:
+                             
+                             input_filter[pixel_i] = exp(-1 * cartesian_distance(pixel_i, pixel_body_center)
+                             
         :param baseline_rate: float, probablity of a action per time unit.
         :param refractory_period: float, refractory_period in time unit
         :param input_type: str, type of the input the eye receives, should be one of 'terrain', 'food', 'fish',
                default: 'terrain'
         """
 
-        if direction in ['north', 'south', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']:
-            self._direction = direction
-        else:
-            raise ValueError("direction should be one of the following: ['north', 'south', 'east', 'west', "
-                             "'northwest', 'northeast', 'southwest', 'southeast'].")
+        self._direction = direction
+        self._rf_positions = self._get_rf_positions()
+        self._gain = float(gain)
 
         if input_filter is None:
-            self._input_filter = np.array([0.2, 0.6, 0.2])
+            self._input_filter = np.array([1, 0.243116734, 0.367879441, 0.243116734, 0.059105747, 0.106877926,
+                                           0.135335283, 0.106877926, 0.059105747, 0.014369596, 0.027172461, 0.04232922,
+                                           0.049787068, 0.04232922, 0.027172461, 0.014369596])
         else:
             self._input_filter = input_filter.astype(np.float)
 
-        if gain is None:
-            self._gain = 0.001
-        else:
-            self._gain = float(gain)
-
-        if input_type is None:
-            self._input_type = 'terrain'
-        elif input_type in ['terrain', 'food', 'fish']:
+        if input_type in ['terrain', 'food', 'fish']:
             self._input_type = input_type
         else:
-            raise ValueError('Eye2: type should be one of the following: "terrain", "food", "fish".')
+            raise ValueError('Eye: type should be one of the following: "terrain", "food", "fish".')
 
-        if baseline_rate is None:
-            curr_baseline_rate = 0.
-        else:
-            curr_baseline_rate = float(baseline_rate)
-
-        if refractory_period is None:
-            curr_refractory_period = 10
-        else:
-            curr_refractory_period = int(refractory_period)
+        curr_baseline_rate = float(baseline_rate)
+        curr_refractory_period = float(refractory_period)
 
         super(Eye, self).__init__(baseline_rate=curr_baseline_rate, refractory_period=curr_refractory_period)
 
     def __str__(self):
         return 'littlefish.brain.Eye object'
 
-    def _get_input_pixels(self, input_map, position, border_value=1):
-        """
-        :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the
-        input_map range will be returned as border_value
-        """
-
-        if len(position) != 2:
-            raise ValueError('position should have 2 elements.')
-
-        if isinstance(position[0], int) and isinstance(position[1], int):
-            self._position = position
-        else:
-            raise ValueError('Elements in position should both be integers.')
-
-        if len(input_map.shape) != 2:
-            raise ValueError('terrain_map should a 2-d array.')
-
-        if position[0] < 0 or position[0] >= input_map.shape[0] or \
-                position[1] < 0 or position[1] >= input_map.shape[1]:
-            raise ValueError('position out of range.')
-
-        if self._direction == 'east':
-            ind = [[position[0] + 1, position[1] + 1],
-                   [position[0],     position[1] + 1],
-                   [position[0] - 1, position[1] + 1]]
-        elif self._direction == 'northeast':
-            ind = [[position[0],     position[1] + 1],
-                   [position[0] - 1, position[1] + 1],
-                   [position[0] - 1, position[1]]]
-        elif self._direction == 'north':
-            ind = [[position[0] - 1, position[1] + 1],
-                   [position[0] - 1, position[1]],
-                   [position[0] - 1, position[1] - 1]]
-        elif self._direction == 'northwest':
-            ind = [[position[0] - 1, position[1]],
-                   [position[0] - 1, position[1] - 1],
-                   [position[0],     position[1] - 1]]
-        elif self._direction == 'west':
-            ind = [[position[0] - 1, position[1] - 1],
-                   [position[0],     position[1] - 1],
-                   [position[0] + 1, position[1] - 1]]
-        elif self._direction == 'southwest':
-            ind = [[position[0],     position[1] - 1],
-                   [position[0] + 1, position[1] - 1],
-                   [position[0] + 1, position[1]]]
-        elif self._direction == 'south':
-            ind = [[position[0] + 1, position[1] - 1],
-                   [position[0] + 1, position[1]],
-                   [position[0] + 1, position[1] + 1]]
-        elif self._direction == 'southeast':
-            ind = [[position[0] + 1, position[1]],
-                   [position[0] + 1, position[1] + 1],
-                   [position[0],     position[1] + 1]]
-        else:
-            raise ValueError("direction should be one of the following: ['north', 'south', 'east', 'west', "
-                             "'northwest', 'northeast', 'southwest', 'southeast'].")
-
-        # print(ind)
-
-        input_pixels = []
-
-        for cor in ind:
-            if cor[0] < 0 or cor[0] >= input_map.shape[0] or cor[1] < 0 or cor[1] >= input_map.shape[1]:
-                input_pixels.append(border_value)
-            else:
-                input_pixels.append(input_map[cor[0], cor[1]])
-
-        return np.array(input_pixels)
-
-    def _get_input(self, input_map, position, border_value=1):
-        """
-        :return: calculate real time input from the visual field
-        """
-        input_pixels = self._get_input_pixels(input_map, position, border_value=border_value)
-        probability_input = self._gain * np.sum(input_pixels * self._input_filter)
-
-        return probability_input
-
-    def act(self, t_point, input_map, position, action_history=[], border_value=1, probability_base=None):
-        """
-        evaluate if the eye neuron will fire at given time point
-        :param t_point: int, current time point as the index of time unit axis
-        :param position: tuple of two ints, (row, col),  position of the eye
-        :param input_map: binary 2-d map, for now it should only contain 0s and 1s
-        :param action_history: list of positive integers, list of time stamps of actions of this neuron,
-                               should be monotonically increasing
-        :param border_value: int, default 1, value for pixels outside the terrain_map
-        :return: bool, True: fire; False: quite
-        """
-
-        probability_input = self._get_input(input_map, position, border_value=border_value)
-
-        super(Eye, self).act(t_point=t_point, action_history=action_history, probability_input=probability_input,
-                             probability_base=probability_base)
-
-
-class Eye2(Neuron):
-    """
-    Eye class to observe the environment, subclass of Neuron, has eye sight as 2 pixels
-    """
-
-    def __init__(self, direction, input_filter=None, gain=None, input_type=None, baseline_rate=None,
-                 refractory_period=None):
-        """
-        for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 8 pixels surrounding the
-        central pixel. Each pixel is an eye, receiving the input from the closest 6 pixels in the environment.
-        for example:
-
-        fish (1) in the environment(0):
-        0 0 0 0 0 0 0
-        0 0 0 0 0 0 0
-        0 0 1 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 0 0 0 0 0
-        0 0 0 0 0 0 0
-
-        eye (2) in the northwest connor is:
-        0 0 0 0 0 0 0
-        0 0 0 0 0 0 0
-        0 0 2 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 0 0 0 0 0
-        0 0 0 0 0 0 0
-
-        it receive inputs from pixels labelled as 3 in the environment:
-        3 3 0 0 0 0 0
-        3 3 3 0 0 0 0
-        0 3 2 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 1 1 1 0 0
-        0 0 0 0 0 0 0
-        0 0 0 0 0 0 0
-
-        the inputs from the environment (1x3 array) will be filtered by a array with same size, to generate
-        a single value as the base of its input. this value will be multiplied by a float number gain to generate
-        final input probability
-
-        :param direction: the aim of the eye, should be one of the following, 'north', 'south', 'east', 'west',
-                          'northwest', 'northeast', 'southwest', 'southeast'
-        :param baseline_rate: float, probablity of a action per time unit.
-        :param refractory_period: float, refractory_period in time unit
-        :param input_type: str, type of the input the eye receives, should be one of 'terrain', 'food', 'fish',
-               default: 'terrain'
-        """
-
-        if direction in ['north', 'south', 'east', 'west', 'northwest', 'northeast', 'southwest', 'southeast']:
-            self._direction = direction
-        else:
-            raise ValueError("direction should be one of the following: ['north', 'south', 'east', 'west', "
-                             "'northwest', 'northeast', 'southwest', 'southeast'].")
-
-        if input_filter is None:
-            self._input_filter = np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1])
-        else:
-            self._input_filter = input_filter.astype(np.float)
-
-        if gain is None:
-            self._gain = 0.001
-        else:
-            self._gain = float(gain)
-
-        if input_type is None:
-            self._input_type = 'terrain'
-        elif input_type in ['terrain', 'food', 'fish']:
-            self._input_type = input_type
-        else:
-            raise ValueError('Eye2: type should be one of the following: "terrain", "food", "fish".')
-
-        if baseline_rate is None:
-            curr_baseline_rate = 0.
-        else:
-            curr_baseline_rate = float(baseline_rate)
-
-        if refractory_period is None:
-            curr_refractory_period = 10
-        else:
-            curr_refractory_period = int(refractory_period)
-
-        super(Eye2, self).__init__(baseline_rate=curr_baseline_rate, refractory_period=curr_refractory_period)
-
-    def __str__(self):
-        return 'littlefish.brain.Eye2 object'
-
-    def _get_input_pixels(self, input_map, position, border_value=1):
-        """
-        :return: the 1d array with the values of the 3 pixels the eye is suppose to look at. pixels out of the
-        input_map range will be returned as border_value
-        """
-
-        if len(position) != 2:
-            raise ValueError('Eye2: position should have 2 elements.')
-
-        if util.is_integer(position[0]) and util.is_integer(position[1]):
-            self._position = position
-        else:
-            raise ValueError('Eye2: Elements in position should both be integers.')
-
-        if len(input_map.shape) != 2:
-            raise ValueError('Eye2: terrain_map should a 2-d array.')
-
-        if position[0] < 0 or position[0] >= input_map.shape[0] or \
-                position[1] < 0 or position[1] >= input_map.shape[1]:
-            raise ValueError('Eye2: position out of range.')
-
-        if self._direction == 'east':
-            ind = [[position[0] + 1, position[1] + 1],
-                   [position[0], position[1] + 1],
-                   [position[0] - 1, position[1] + 1],
-                   [position[0] + 1, position[1] + 2],
-                   [position[0], position[1] + 2],
-                   [position[0] - 1, position[1] + 2]]
-        elif self._direction == 'northeast':
-            ind = [[position[0], position[1] + 1],
-                   [position[0] - 1, position[1] + 1],
-                   [position[0] - 1, position[1]],
-                   [position[0] - 1, position[1] + 2],
-                   [position[0] - 2, position[1] + 2],
-                   [position[0] - 2, position[1] + 1]]
-        elif self._direction == 'north':
-            ind = [[position[0] - 1, position[1] + 1],
-                   [position[0] - 1, position[1]],
-                   [position[0] - 1, position[1] - 1],
-                   [position[0] - 2, position[1] + 1],
-                   [position[0] - 2, position[1]],
-                   [position[0] - 2, position[1] - 1]]
-        elif self._direction == 'northwest':
-            ind = [[position[0] - 1, position[1]],
-                   [position[0] - 1, position[1] - 1],
-                   [position[0], position[1] - 1],
-                   [position[0] - 2, position[1] - 1],
-                   [position[0] - 2, position[1] - 2],
-                   [position[0] - 1, position[1] - 2]]
-        elif self._direction == 'west':
-            ind = [[position[0] - 1, position[1] - 1],
-                   [position[0], position[1] - 1],
-                   [position[0] + 1, position[1] - 1],
-                   [position[0] - 1, position[1] - 2],
-                   [position[0], position[1] - 2],
-                   [position[0] + 1, position[1] - 2]]
-        elif self._direction == 'southwest':
-            ind = [[position[0], position[1] - 1],
-                   [position[0] + 1, position[1] - 1],
-                   [position[0] + 1, position[1]],
-                   [position[0] + 1, position[1] - 2],
-                   [position[0] + 2, position[1] - 2],
-                   [position[0] + 2, position[1] - 2]]
-        elif self._direction == 'south':
-            ind = [[position[0] + 1, position[1] - 1],
-                   [position[0] + 1, position[1]],
-                   [position[0] + 1, position[1] + 1],
-                   [position[0] + 2, position[1] - 1],
-                   [position[0] + 2, position[1]],
-                   [position[0] + 2, position[1] + 1]]
-        elif self._direction == 'southeast':
-            ind = [[position[0] + 1, position[1]],
-                   [position[0] + 1, position[1] + 1],
-                   [position[0], position[1] + 1],
-                   [position[0] + 2, position[1] + 1],
-                   [position[0] + 2, position[1] + 2],
-                   [position[0] + 1, position[1] + 2]
-                   ]
-        else:
-            raise ValueError("Eye2: direction should be one of the following: ['north', 'south', 'east', 'west', "
-                             "'northwest', 'northeast', 'southwest', 'southeast'].")
-
-        # print(ind)
-
-        input_pixels = []
-
-        for cor in ind:
-            if cor[0] < 0 or cor[0] >= input_map.shape[0] or cor[1] < 0 or cor[1] >= input_map.shape[1]:
-                input_pixels.append(border_value)
-            else:
-                input_pixels.append(input_map[cor[0], cor[1]])
-
-        return np.array(input_pixels)
-
-    def _get_input(self, input_map, position, border_value=1):
-        """
-        :return: calculate real time input from the visual field
-        """
-        input_pixels = self._get_input_pixels(input_map, position, border_value=border_value)
-        probability_input = self._gain * np.sum(input_pixels * self._input_filter)
-
-        return probability_input
-
-    def get_position(self, body_position):
-        """
-        :param body_position: tuple of two ints, (row, col)
-        :return: eye position given body position accroding its direction
-        """
-        if len(body_position) != 2:
-            raise ValueError('Eye2: body_position should contain two elements.')
-
-        if (not util.is_integer(body_position[0])) or (not util.is_integer(body_position[1])):
-            raise ValueError('Eye2: body_position should contain two integers.')
-
-        if self._direction == 'east':
-            return body_position[0], body_position[1] + 1
-        elif self._direction == 'northeast':
-            return body_position[0] - 1, body_position[1] + 1
-        elif self._direction == 'north':
-            return body_position[0] - 1, body_position[1]
-        elif self._direction == 'northwest':
-            return body_position[0] - 1, body_position[1] - 1
-        elif self._direction == 'west':
-            return body_position[0], body_position[1] - 1
-        elif self._direction == 'southwest':
-            return body_position[0] + 1, body_position[1] - 1
-        elif self._direction == 'south':
-            return body_position[0] + 1, body_position[1]
-        elif self._direction == 'southeast':
-            return body_position[0] + 1, body_position[1] + 1
-        else:
-            raise ValueError("Eye2: direction should be one of the following: ['north', 'south', 'east', 'west', "
-                             "'northwest', 'northeast', 'southwest', 'southeast'].")
-
     def get_input_type(self):
         return self._input_type
+
+    def _get_rf_positions(self):
+        """
+        get pixel coordinate of receptive field
+        
+        :return rf_positions: 2d array, shape: (16, 2), dtype: int64. each row is a pixel in the receptive field,
+                              [row, col] relative to the position of the body center pixel
+        """
+
+        array1 = np.array([0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3], dtype=np.int64)
+        array2 = np.array([0, -1, 0, 1, -2, -1, 0, 1, 2, -3, -2, -1, 0, 1, 2, 3], dtype=np.int64)
+
+        if self._direction == 'east':
+            rf_pos = np.array([array2, array1]).transpose()
+        elif self._direction == 'north':
+            rf_pos = np.array([array1 * -1, array2]).transpose()
+        elif self._direction == 'west':
+            rf_pos = np.array([array2, array1 * -1]).transpose()
+        elif self._direction == 'south':
+            rf_pos = np.array([array1, array2]).transpose()
+        else:
+            raise ValueError("Eye: direction should be one of the following: ['east', 'north', 'west', 'south'].")
+
+        return rf_pos
+
+    def _get_input_pixels(self, input_map, body_position, border_value=1):
+        """
+        get a 1d array of all pixels within the eye's receptive field
+        
+        :param input_map: 2d array, the map the eye is looking
+        :param body_position: list of two non-negative integers, [row, col] location of body center pixel
+        :param border_value: float, values for pixels outside the border of input_map
+        :return: the 1d array with the values of the 16 pixels in the eye's receptive field. pixels out of the
+        input_map range will be returned as border_value
+        """
+
+        body_pos = np.array(body_position, dtype=np.int64)
+        input_pixels = np.zeros(16, dtype=np.float32)
+
+        for ind, curr_pos in enumerate(self._rf_positions):
+            curr_rf_pos = body_pos + curr_pos
+            try:
+                input_pixels[ind] = input_map[curr_rf_pos[0], curr_rf_pos[1]]
+            except IndexError:
+                input_pixels[ind] = border_value
+
+        return input_pixels
+
+    def _get_input(self, input_map, position, border_value=1):
+        """
+        :return: float, calculate real time input from the visual field
+        """
+        input_pixels = self._get_input_pixels(input_map, position, border_value=border_value)
+        probability_input = self._gain * np.sum(input_pixels * self._input_filter)
+
+        return probability_input
 
     def act(self, t_point, position, input_map, action_history=[], border_value=1, probability_base=None):
         """
@@ -780,8 +310,8 @@ class Eye2(Neuron):
 
         probability_input = self._get_input(input_map, position, border_value=border_value)
 
-        return super(Eye2, self).act(t_point, action_history=action_history, probability_input=probability_input,
-                                     probability_base=probability_base)
+        return super(Eye, self).act(t_point, action_history=action_history, probability_input=probability_input,
+                                    probability_base=probability_base)
 
     def to_h5_group(self, h5_group):
 
@@ -793,18 +323,22 @@ class Eye2(Neuron):
         h5_group.create_dataset('input_filter', data=self._input_filter)
         h5_group.create_dataset('gain', data=self._gain)
         h5_group.create_dataset('input_type', data=self._input_type)
-        h5_group.attrs['neuron_type'] = 'eye2'
+        rf_pos_dset = h5_group.create_dataset('rf_positions', self._rf_positions)
+        rf_pos_dset.attrs['data_format'] = '16 (pixel_num) x 2 ([row, col])'
+        rf_pos_dset.attrs['description'] = "coordinates of each pixel of this eye's receptive field relative to body " \
+                                           "center position"
+        h5_group.attrs['neuron_type'] = 'eye'
 
     @staticmethod
     def from_h5_group(h5_group):
 
-        if h5_group.attrs['neuron_type'] != 'eye2':
-            raise ValueError('Eye2: loading from h5 file failed. "neuron_type" attribute should be "eye2".')
+        if h5_group.attrs['neuron_type'] != 'eye':
+            raise ValueError('Eye: loading from h5 file failed. "neuron_type" attribute should be "eye".')
 
-        eye2 = Eye2(direction=h5_group['direction'], input_filter=h5_group['input_filter'], gain=h5_group['gain'],
-                    input_type=h5_group['input_type'], baseline_rate=h5_group['baseline_rate'],
-                    refractory_period=h5_group['refractory_period'])
-        return eye2
+        eye = Eye(direction=h5_group['direction'], input_filter=h5_group['input_filter'], gain=h5_group['gain'],
+                  input_type=h5_group['input_type'], baseline_rate=h5_group['baseline_rate'],
+                  refractory_period=h5_group['refractory_period'])
+        return eye
 
 
 class Muscle(Neuron):
@@ -881,7 +415,7 @@ class Connection(object):
     synaptic connection between two neurons
     """
 
-    def __init__(self, latency=30, amplitude=0.0001, rise_time=50, decay_time=100):
+    def __init__(self, latency=3, amplitude=0.0001, rise_time=5, decay_time=10):
         """
 
         :param latency: int, temporal latency from presynaptic neuron action to the postsynaptic effect onset, number
@@ -1013,24 +547,16 @@ class Brain(object):
 
     def __init__(self, neurons=None, connections=None):
         """
-
         :param neurons: pandas dataframe
         :param connections: dict
         """
-        if neurons is None:
-            self._neurons = self._generate_default_neurons()
-            print('\nBrain: a dataframe with 28 default neurons and 3 layers (eye, hidden, muscle) has been generated.')
+
+        if neurons is None and connections is None:
+            min_brain = generate_minimal_brain()
+            self._neurons = min_brain.get_neurons()
+            self._connections = min_brain.get_connections()
         else:
             self._neurons = neurons
-
-
-        if connections is None:
-            self._connections = self._generate_default_connections()
-            conn_num = [conn.size for conn in self._connections.values()]
-            conn_num = sum(conn_num)
-            print('\nBrain: a dataframe of default ' + str(conn_num) +
-                  ' connections among self._neurons has been generated')
-        else:
             self._connections = connections
 
         self.check_integrity()
@@ -1038,51 +564,51 @@ class Brain(object):
     def __str__(self):
         return 'littlefish.brain.Brain object'
 
-    def _generate_default_neurons(self):
-        """
-        generate and return a dataframe containing all neurons with default parameters
-        """
-        neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
-
-        ind = 0
-        for i in range(16):
-            curr_dir, curr_type = self.get_eye_type(i)
-            neurons.loc[ind] = [0, i, Eye2(direction=curr_dir)]
-            ind += 1
-
-        for i in range(8):
-            neurons.loc[ind] = [1, i, Neuron()]
-            ind += 1
-
-        for i in range(4):
-            curr_dir = self.get_muscle_direction(i)
-            neurons.loc[ind] = [2, i, Muscle(direction=curr_dir)]
-            ind += 1
-
-        neurons['layer'] = neurons['layer'].astype(np.uint32)
-        neurons['neuron_ind'] = neurons['neuron_ind'].astype(np.uint32)
-
-        return neurons
-
-    def _generate_default_connections(self):
-        """
-        generate all possible connections among self_neurons with default parameters
-        """
-
-        connections = {}
-
-        default_connection = Connection()
-
-        for pre_layer in range(self.layer_num - 1):
-            post_layer = pre_layer + 1
-            post_neuron_inds = self.get_neuron_inds_in_layer(post_layer)
-            pre_neuron_inds = self.get_neuron_inds_in_layer(pre_layer)
-            curr_name = 'L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)
-            curr_df = pd.DataFrame([[default_connection] * len(pre_neuron_inds)] * len(post_neuron_inds),
-                                   columns=pre_neuron_inds, index=post_neuron_inds)
-            connections.update({curr_name: curr_df})
-
-        return connections
+    # def _generate_default_neurons(self):
+    #     """
+    #     generate and return a dataframe containing all neurons with default parameters
+    #     """
+    #     neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+    #
+    #     ind = 0
+    #     for i in range(8):
+    #         curr_dir, curr_type = self.get_eye_type(i)
+    #         neurons.loc[ind] = [0, i, Eye(direction=curr_dir)]
+    #         ind += 1
+    #
+    #     for i in range(8):
+    #         neurons.loc[ind] = [1, i, Neuron()]
+    #         ind += 1
+    #
+    #     for i in range(4):
+    #         curr_dir = self.get_muscle_direction(i)
+    #         neurons.loc[ind] = [2, i, Muscle(direction=curr_dir)]
+    #         ind += 1
+    #
+    #     neurons['layer'] = neurons['layer'].astype(np.uint32)
+    #     neurons['neuron_ind'] = neurons['neuron_ind'].astype(np.uint32)
+    #
+    #     return neurons
+    #
+    # def _generate_default_connections(self):
+    #     """
+    #     generate all possible connections among self_neurons with default parameters
+    #     """
+    #
+    #     connections = {}
+    #
+    #     default_connection = Connection()
+    #
+    #     for pre_layer in range(self.layer_num - 1):
+    #         post_layer = pre_layer + 1
+    #         post_neuron_inds = self.get_neuron_inds_in_layer(post_layer)
+    #         pre_neuron_inds = self.get_neuron_inds_in_layer(pre_layer)
+    #         curr_name = 'L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)
+    #         curr_df = pd.DataFrame([[default_connection] * len(pre_neuron_inds)] * len(post_neuron_inds),
+    #                                columns=pre_neuron_inds, index=post_neuron_inds)
+    #         connections.update({curr_name: curr_df})
+    #
+    #     return connections
 
     def get_neurons(self):
         return self._neurons
@@ -1283,10 +809,10 @@ class Brain(object):
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
         :param fish_map: not fully implemented right now.
-        :return: movement attemps: 2-d array, np.uint8, (row, col), representing the movement attempt, be careful, this may not
-                                   represent the actual movement, it will be evaluated by the fish object (fish class)
-                                   containing this brain to see if the movement is possible. if the fish is hitting
-                                   the edge the world map, then the it will not move out of the map
+        :return: movement_attempt: 2-d array, np.uint8, (row, col), representing the movement attempt, be careful, this 
+                                   may not represent the actual movement, it will be evaluated by the fish object 
+                                   (fish class) containing this brain to see if the movement is possible. if the fish 
+                                   is hitting the edge the world map, then the it will not move out of the map
                                    None: no movement has been attempted,
         """
 
@@ -1385,62 +911,6 @@ class Brain(object):
         ind = self._neurons[self._neurons['layer'] > 0].index
         return ind.sort_values()
 
-    # def plot_action_histories_scatter(self, plot_length, plot_axis=None, is_separated=True, **kwargs):
-    #     """
-    #     plot action histories of all neurons as scatter plot, eye spikes: red, hidden layer spikes: green,
-    #     muscle spikes: blue
-    #     :param plot_length: int, total length of plot, number of time units
-    #     :param is_separated: bool, plot separation line or not
-    #     :param plot_axis: matplotlib.pyplot.axis object
-    #     :param kwargs: other inputs to matplotlib.pyplot.plot function
-    #     :return:
-    #     """
-    #
-    #     if not self.has_action_histories():
-    #         print('Brain: No action history found. Cannot plot. Do nothing.')
-    #         return
-    #
-    #     self.check_integrity_neurons()
-    #
-    #     if plot_axis is None:
-    #         f = plt.figure(figsize=(15, 10))
-    #         plot_axis = f.add_subplot(111)
-    #
-    #     if plot_length is None:
-    #         plot_length = self._psp_waveforms.shape[1]
-    #
-    #     total_neuron_num = len(self._neurons)
-    #     total_y = range(total_neuron_num)
-    #
-    #     if is_separated:
-    #         total_separation = [y + 0.5 for y in total_y]
-    #         for separation in total_separation:
-    #             plot_axis.plot([0, plot_length], [separation, separation], '--', color='#888888')
-    #
-    #     yticklaybels = []
-    #
-    #     for i, neuron_df in self._neurons.iterrows():
-    #         curr_layer_type = self.get_layer_type(int(neuron_df['layer']))
-    #         curr_action_history = neuron_df['neuron'].get_action_history()
-    #         curr_y = total_y[i]
-    #
-    #         if 'eye' in curr_layer_type:
-    #             util.plot_spike_ticks(curr_action_history, y=curr_y, plot_axis=plot_axis, color='r', **kwargs)
-    #         elif 'hidden' in curr_layer_type:
-    #             util.plot_spike_ticks(curr_action_history, y=curr_y, plot_axis=plot_axis, color='g', **kwargs)
-    #         elif 'muscle' in curr_layer_type:
-    #             util.plot_spike_ticks(curr_action_history, y=curr_y, plot_axis=plot_axis, color='b', **kwargs)
-    #
-    #         yticklaybels.append(self.get_neuron_type(i))
-    #
-    #     plot_axis.set_xlim([0, plot_length])
-    #     plot_axis.set_ylim([-0.5, total_neuron_num - 0.5])
-    #     plot_axis.invert_yaxis()
-    #     plot_axis.set_xlabel('time (time unit)')
-    #     plot_axis.set_ylabel('neuron index')
-    #     plot_axis.set_yticks(total_y)
-    #     plot_axis.set_yticklabels(yticklaybels, family='monospace')
-
     def get_connection_matrices(self, pre_layer, post_layer):
         """
         return several numpy arrays each represent one parameter of all connections between a presynaptic layer and
@@ -1515,7 +985,10 @@ class Brain(object):
         given the neuron_ind in the eye layer return direction and input type of a specific eye
         :return: two strings, (direction, type)
         """
-        eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+        # eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+
+        # eye directions have been changed from 8 to 4
+        eye_directions = ['east', 'north', 'west', 'south']
         eye_types = ['terrain', 'food', 'fish']
         direction_num = len(eye_directions)
         type_num = len(eye_types)
@@ -1584,10 +1057,10 @@ class Brain(object):
         return loaded_brain
 
     def generate_empty_action_histories(self):
-        '''
+        """
         :return: a data frame with empty lists, each list is the action history of a particular neuron, in the same 
         order as self._neurons data frame, columns = ['action_history']
-        '''
+        """
 
         # the following code is very bad, it synchronize all the lists in the data frame
         # empty_action_histories = pd.DataFrame(index=self._neurons.index)
@@ -1598,14 +1071,210 @@ class Brain(object):
         return empty_action_histories
 
     def generate_empty_psp_waveforms(self, simulation_length):
-        '''
+        """
         :param simulation_length: int, number of time points of the simulation
         :return: 2d-array of zeros, float32, psp waveforms of all neurons in the brain, each row represents one
                  neuron in the same order as self._neurons data frame, each column represents a time point
-        '''
+        """
 
         return np.zeros((len(self._neurons), simulation_length), dtype=np.float32)
 
+
+class Fish(object):
+    """
+    the main fish class
+
+    a 'fish' has a body occupies a 3x3 space.
+
+    a 'fish' has health point (goes down over time and increases after eating a food). fish moves around in a 2d
+    landscape (2-d binary map, 0 represents water, 1 represents land), when hits land, health point will go down
+    quickly.
+
+    the purpose of simulation is to train the fish use its eyes, brain and muscles to avoid land and look for food.
+
+    the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
+    millisecond.
+
+    self._brain: a brain.Brain object
+    self._max_health: float, maximum health point a fish can have
+    self._health_decay_rate: float, the constant rate of health reduction, health point / time unit
+    self._land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
+                             the terrain map, health point / (pixel * time unit)
+    self._food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+                     health point / pixel. the food after taken will disappear, so no health gaining is a
+                     transient event
+    self._simulation_status: 0, has not simulated
+                             1, during simulation
+                             2, after simulation
+    self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
+    """
+
+    def __init__(self, name=None, mother_name=None, brain=None, max_health=100., health_decay_rate=0.0001,
+                 land_penalty_rate=0.005, food_rate=20.):
+
+        """
+        :param brain: a brain.Brain object
+        :param max_health: float, maximum health point a fish can have
+        :param health_decay_rate: float, the constant rate of health reduction, health point / time unit
+        :param land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
+                                  the terrain map, health point / (pixel * time unit)
+        :param food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+                          health point / pixel. the food after taken will disappear, so no health gaining is a
+                          transient event
+        """
+
+        if name is None:
+            self._name = 'test_fish'
+        else:
+            self._name = name
+
+        if mother_name is None:
+            self._mother_name = ''
+        else:
+            self._mother_name = mother_name
+
+        self._max_health = float(max_health)
+        self._health_decay_rate = float(health_decay_rate)
+        self._land_penalty_rate = land_penalty_rate
+        self._food_rate = food_rate
+
+        if brain is None:
+            self._brain = Brain()
+        else:
+            brain.check_integrity()
+            self._brain = brain
+
+        # self._curr_health = None
+
+        print('\nFish: fish object generated successfully.')
+
+    def get_name(self):
+        return self._name
+
+    @property
+    def name(self):
+        return self.get_name()
+
+    def get_max_health(self):
+        return self._max_health
+
+    def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
+            food_map=None, fish_map=None):
+        """
+        simulate the fish's action at a given time point
+
+        :param t_point: non-negative int, time point
+        :param curr_position: list or tuple of two non-negative integers, coordinates of fish center position, 
+                              [row, col]
+        :param curr_health: positive float, health point at the beginning of t_point
+        :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
+                                 same order as self._neurons data frame, columns = ['action_history'], used by 
+                                 self._brain.act()
+        :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
+                              neuron in the same order as self._neurons data frame, each column represents a time point,
+                              used by self._brain.act()
+        :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
+        :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
+        :param fish_map: not fully implemented right now.
+        :return updated_health: float, health point at the end of t_point
+                movement_attempt: list of two integers, the attempt the fish is trying to move [row_shift, col_shift].
+                                  None if updated_health is below 0 (fish is dead).
+        """
+
+        updated_health = float(curr_health)
+
+        # evaluate food
+        if food_map is not None:
+            body_food_overlap = self._eval_food(food_map=food_map, curr_position=curr_position)
+            updated_health = self._eat_food(body_food_overlap=body_food_overlap, curr_health=updated_health)
+
+            # update food map
+            food_map[curr_position[0] - 1: curr_position[0] + 2, curr_position[1] - 1: curr_position[1] + 2] = 0
+
+        # evaluate the extend of how much of the fish is on the land
+        body_land_overlap = self._eval_terrain(terrain_map=terrain_map, curr_position=curr_position)
+
+        # update current health with land penalty
+        updated_health -= body_land_overlap * self._land_penalty_rate
+
+        # ----------------- not implemented --------------------------
+        # if fish_map is not None:
+        #     self._eval_fish(fish_map=fish_map)
+        # ----------------- not implemented --------------------------
+
+        # update health
+        updated_health = updated_health - self._health_decay_rate
+
+        if updated_health > 0:  # still alive
+            movement_attempt = self._brain.act(t_point=t_point, action_histories=action_histories,
+                                               psp_waveforms=psp_waveforms, body_position=curr_position,
+                                               terrain_map=terrain_map, food_map=food_map,
+                                               fish_map=fish_map)
+        else:
+            movement_attempt = None
+
+        return updated_health, movement_attempt
+
+    @staticmethod
+    def _eval_terrain(self, terrain_map, curr_position):
+        """
+        Evaluate the coverage of fish body on terrain map, return the sum of all terrain pixels that are covered by
+        the fish body
+        """
+
+        if terrain_map is None:
+            raise ValueError('Fish: _eval_terrain failure. terrain_map is None.')
+        else:
+            curr_body = terrain_map[curr_position[0] - 1: curr_position[0] + 2,
+                        curr_position[1] - 1: curr_position[1] + 2]
+            body_land_overlap = np.sum(curr_body.flat)
+        return body_land_overlap
+
+    @staticmethod
+    def _eval_food(self, food_map, curr_position):
+        """
+        find out how many foods are covered by the fish body
+
+        :param food_map: 2d array, binary map of current food
+        :param curr_position: tuple of two positive ints, (row, col) of current location of fish
+        :return: non-negative int, number of food taken
+        """
+
+        curr_body = food_map[curr_position[0] - 1: curr_position[0] + 2,
+                    curr_position[1] - 1: curr_position[1] + 2]
+        body_food_overlap = np.sum(curr_body.flat)
+
+        return body_food_overlap
+
+    @staticmethod
+    def _eval_fish(self, fish_map):
+        """currently not implemented"""
+        pass
+
+    def _eat_food(self, body_food_overlap, curr_health):
+        """
+        count the number of food to be taken, add relevant HP to curr_health, but not exceed the maximum health
+        """
+
+        if body_food_overlap == 0:
+            return curr_health
+        else:
+            updated_health = curr_health + self._food_rate * body_food_overlap
+            if updated_health > self._max_health:
+                updated_health = self._max_health
+            return updated_health
+
+    def to_h5_group(self, h5_group):
+
+        h5_group.create_dataset('name', data=self._name)
+        h5_group.create_dataset('mother_name', data=self._mother_name)
+        h5_group.create_dataset('max_health', data=self._max_health)
+        h5_group.create_dataset('health_decay_rate_per_tu', data=self._health_decay_rate)
+        h5_group.create_dataset('land_penalty_rate_per_pixel_tu', data=self._land_penalty_rate)
+        h5_group.create_dataset('food_rate_per_pixel', data=self._food_rate)
+        brain_group = h5_group.create_group('brain')
+        self._brain.to_h5_group(brain_group)
+        
 
 if __name__ == '__main__':
 
