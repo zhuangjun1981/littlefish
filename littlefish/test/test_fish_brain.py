@@ -58,25 +58,33 @@ class TestFishBrain(unittest.TestCase):
         world_map[2, 2] = 1
         world_map[2, 1] = 1
         world_map[5, 2] = 1
+        world_map[3, 4] = 1
         world_map[4, 3] = 1
         world_map[1, 5] = 1
         world_map[0, 3] = 1
         world_map[4:6, 5:8] = 1
 
-
         eye = fi.Eye(direction='south')
-        print eye._get_input_pixels(body_position=(3, 3))
-        assert(np.array_equal(eye._get_input_pixels(position=(2, 3), input_map=world_map, border_value=1), [0, 1, 0]))
+        assert(np.array_equal(eye._get_input_pixels(body_position=(3, 3), input_map=world_map, border_value=1),
+                              [1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]))
         eye = fi.Eye(direction='east')
-        assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map, border_value=1), [0, 1, 0]))
+        assert (np.array_equal(eye._get_input_pixels(body_position=(3, 3), input_map=world_map, border_value=1),
+                              [1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0]))
         eye = fi.Eye(direction='north')
-        assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map, border_value=1), [0, 1, 1]))
+        assert (np.array_equal(eye._get_input_pixels(body_position=(3, 3), input_map=world_map, border_value=1),
+                               [1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]))
         eye = fi.Eye(direction='west')
-        assert (np.array_equal(eye._get_input_pixels(position=(3, 2), input_map=world_map, border_value=1), [1, 0, 0]))
+        assert (np.array_equal(eye._get_input_pixels(body_position=(3, 3), input_map=world_map, border_value=1),
+                               [1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
         eye = fi.Eye(direction='north')
-        assert (np.array_equal(eye._get_input_pixels(position=(0, 0), input_map=world_map, border_value=1), [1, 1, 1]))
+        assert (np.array_equal(eye._get_input_pixels(body_position=(1, 1), input_map=world_map, border_value=1),
+                               [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]))
+        eye = fi.Eye(direction='south')
+        assert (np.array_equal(eye._get_input_pixels(body_position=(1, 1), input_map=world_map, border_value=1),
+                               [0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0]))
         eye = fi.Eye(direction='east')
-        assert (np.array_equal(eye._get_input_pixels(position=(0, 0), input_map=world_map, border_value=1), [0, 0, 1]))
+        assert (np.array_equal(eye._get_input_pixels(body_position=(1, 1), input_map=world_map, border_value=1),
+                               [0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0]))
 
     def test_neuron_connection(self):
         simulation_length = 5000
@@ -112,15 +120,6 @@ class TestFishBrain(unittest.TestCase):
         assert(all([np.array_equal(movements[i], target_movements[i]) for i in range(4)]))
         assert(action_history_muscle == [0, 5000, 10000, 15000])
 
-    # def test_brain_default(self):
-    #     brain1 = fi.Brain()
-    #     assert(len(brain1.get_neurons()) == 20)
-    #     assert(len(brain1.get_connections()) == 2)
-    #     assert(brain1.get_connections()['L000_L001'].shape[0] == 8)
-    #     assert(brain1.get_connections()['L000_L001'].shape[1] == 8)
-    #     assert(brain1.get_connections()['L001_L002'].shape[0] == 4)
-    #     assert(brain1.get_connections()['L001_L002'].shape[1] == 8)
-
     def test_brain_minimum_brain(self):
 
         simulation_length = int(1e2)
@@ -140,20 +139,17 @@ class TestFishBrain(unittest.TestCase):
                                          psp_waveforms=psp_waveforms, terrain_map=terrain_map)
             if not np.array_equal(movement, [0, 0]):
                 body_position = body_position + movement
-        assert(action_histories.iloc[0, 0] == [53])
+        assert(action_histories.iloc[0, 0] == [53, 75, 93])
         assert(action_histories.iloc[3, 0] == [6])
-
-    # def test_brain_default(self):
-    #     default_brain = fi.Brain()
 
     def test_brain_generate_empty_action_histories(self):
         db = fi.Brain()
         eah = db.generate_empty_action_histories()
         eah.loc[3, 'action_history'].append(10)
-        assert(len(eah.loc[4, 'action_history']) == 0)
+        assert(len(eah.loc[0, 'action_history']) == 0)
         assert(len(eah.loc[3, 'action_history']) == 1)
 
-    def test_brain_get_eye_type(self):
+    def test_get_eye_type(self):
         assert (fi.get_eye_type(0, 8) == ('east', 'terrain'))
         assert (fi.get_eye_type(1, 8) == ('northeast', 'terrain'))
         assert (fi.get_eye_type(2, 8) == ('north', 'terrain'))
@@ -179,18 +175,38 @@ class TestFishBrain(unittest.TestCase):
         assert (fi.get_eye_type(22, 8) == ('south', 'fish'))
         assert (fi.get_eye_type(23, 8) == ('southeast', 'fish'))
         assert (fi.get_eye_type(24, 8) == ('east', 'terrain'))
+        assert (fi.get_eye_type(0, 4) == ('east', 'terrain'))
+        assert (fi.get_eye_type(1, 4) == ('north', 'terrain'))
+        assert (fi.get_eye_type(2, 4) == ('west', 'terrain'))
+        assert (fi.get_eye_type(3, 4) == ('south', 'terrain'))
+        assert (fi.get_eye_type(4, 4) == ('east', 'food'))
+        assert (fi.get_eye_type(5, 4) == ('north', 'food'))
+        assert (fi.get_eye_type(6, 4) == ('west', 'food'))
+        assert (fi.get_eye_type(7, 4) == ('south', 'food'))
+        assert (fi.get_eye_type(8, 4) == ('east', 'fish'))
+        assert (fi.get_eye_type(9, 4) == ('north', 'fish'))
+        assert (fi.get_eye_type(10, 4) == ('west', 'fish'))
+        assert (fi.get_eye_type(11, 4) == ('south', 'fish'))
+        assert (fi.get_eye_type(12, 4) == ('east', 'terrain'))
 
-#
-# if __name__ == '__main__':
-#
-#     tfb = TestFishBrain()
-#
-#     tfb.test_neuron1()
-#     tfb.test_connection_psp()
-#     tfb.test_connection_act()
-#     tfb.test_eye_get_input_pixels()
-#     tfb.test_neuron_connection()
-#     tfb.test_muscle_action()
-#     tfb.test_brain_minimum_brain()
-#     tfb.test_brain_generate_empty_action_histories()
-#     # tfb.test_brain_get_eye_type()
+    def test_get_muscle_direction(self):
+        assert (fi.get_muscle_direction(0) == 'east')
+        assert (fi.get_muscle_direction(1) == 'north')
+        assert (fi.get_muscle_direction(2) == 'west')
+        assert (fi.get_muscle_direction(3) == 'south')
+        assert (fi.get_muscle_direction(4) == 'east')
+
+
+if __name__ == '__main__':
+
+    tfb = TestFishBrain()
+
+    tfb.test_neuron1()
+    tfb.test_connection_psp()
+    tfb.test_connection_act()
+    tfb.test_eye_get_input_pixels()
+    tfb.test_neuron_connection()
+    tfb.test_muscle_action()
+    tfb.test_brain_minimum_brain()
+    tfb.test_brain_generate_empty_action_histories()
+    tfb.test_get_eye_type()

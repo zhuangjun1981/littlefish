@@ -313,7 +313,10 @@ class Eye(Neuron):
         for ind, curr_pos in enumerate(self._rf_positions):
             curr_rf_pos = body_pos + curr_pos
             try:
-                input_pixels[ind] = input_map[curr_rf_pos[0], curr_rf_pos[1]]
+                if curr_rf_pos[0] < 0 or curr_rf_pos[1] < 0:
+                    input_pixels[ind] = border_value
+                else:
+                    input_pixels[ind] = input_map[curr_rf_pos[0], curr_rf_pos[1]]
             except IndexError:
                 input_pixels[ind] = border_value
 
@@ -328,11 +331,11 @@ class Eye(Neuron):
 
         return probability_input
 
-    def act(self, t_point, position, input_map, action_history=[], border_value=1, probability_base=None):
+    def act(self, t_point, body_position, input_map, action_history=[], border_value=1, probability_base=None):
         """
         evaluate if the eye neuron will fire at given time point
         :param t_point: int, current time point as the index of time unit axis
-        :param position: tuple of two ints, (row, col),  position of the eye
+        :param body_position: tuple of two ints, (row, col),  position of the body center pixel
         :param input_map: binary 2-d map, for now it should only contain 0s and 1s
         :param action_history: list of positive integers, list of time stamps of actions of this neuron,
                                should be monotonically increasing
@@ -341,7 +344,8 @@ class Eye(Neuron):
         :return: bool, True: fire; False: quite
         """
 
-        probability_input = self._get_input(input_map, position, border_value=border_value)
+        probability_input = self._get_input(input_map=input_map, body_position=body_position,
+                                            border_value=border_value)
 
         return super(Eye, self).act(t_point, action_history=action_history, probability_input=probability_input,
                                     probability_base=probability_base)
@@ -356,7 +360,7 @@ class Eye(Neuron):
         h5_group.create_dataset('input_filter', data=self._input_filter)
         h5_group.create_dataset('gain', data=self._gain)
         h5_group.create_dataset('input_type', data=self._input_type)
-        rf_pos_dset = h5_group.create_dataset('rf_positions', self._rf_positions)
+        rf_pos_dset = h5_group.create_dataset('rf_positions', data=self._rf_positions)
         rf_pos_dset.attrs['data_format'] = '16 (pixel_num) x 2 ([row, col])'
         rf_pos_dset.attrs['description'] = "coordinates of each pixel of this eye's receptive field relative to body " \
                                            "center position"
@@ -855,21 +859,20 @@ class Brain(object):
 
             if neuron['layer'] == 0:  # eye layer
                 curr_eye = neuron['neuron']
-                curr_eye_pos = curr_eye.get_position(body_position=body_position)
 
                 if curr_eye.get_input_type() == 'terrain':
                     is_fire = curr_eye.act(t_point=t_point, action_history=action_histories.iloc[i, 0],
-                                           position=curr_eye_pos, input_map=terrain_map)
+                                           body_position=body_position, input_map=terrain_map)
                 elif curr_eye.get_input_type() == 'food':
                     if food_map is not None:
                         is_fire = curr_eye.act(t_point=t_point, action_history=action_histories[i, 'action_history'],
-                                               position=curr_eye_pos, input_map=food_map)
+                                               body_position=curr_eye_pos, input_map=food_map)
                     else:
                         is_fire = False
                 elif curr_eye.get_input_type() == 'fish':
                     if fish_map is not None:
                         is_fire = curr_eye.act(t_point=t_point, action_history=action_histories[i, 'action_history'],
-                                               position=curr_eye_pos, input_map=fish_map)
+                                               body_position=curr_eye_pos, input_map=fish_map)
                     else:
                         is_fire = False
                 else:
@@ -1224,7 +1227,7 @@ class Fish(object):
         return updated_health, movement_attempt
 
     @staticmethod
-    def _eval_terrain(self, terrain_map, curr_position):
+    def _eval_terrain(terrain_map, curr_position):
         """
         Evaluate the coverage of fish body on terrain map, return the sum of all terrain pixels that are covered by
         the fish body
@@ -1239,7 +1242,7 @@ class Fish(object):
         return body_land_overlap
 
     @staticmethod
-    def _eval_food(self, food_map, curr_position):
+    def _eval_food(food_map, curr_position):
         """
         find out how many foods are covered by the fish body
 
