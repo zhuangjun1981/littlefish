@@ -71,6 +71,38 @@ def generate_minimal_brain():
     return Brain(neurons=neurons, connections=connections)
 
 
+def get_eye_type(ind, dir_num=4):
+    """
+    given the neuron_ind in the eye layer return direction and input type of a specific eye
+    :param ind: non-negative int, index of the eye in eye layer
+    :param dir_num: 4 or 8, if 4, eye directions iterate through 4 cardinal directions; if 8, eye directions will
+                    iterate through 8 directions
+    :return: two strings, (direction, type)
+    """
+
+    if dir_num == 8:
+        eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+    elif dir_num == 4:
+        eye_directions = ['east', 'north', 'west', 'south']
+    else:
+        raise ValueError('cannot understand dir_num, should be 4 or 8.')
+
+    eye_types = ['terrain', 'food', 'fish']
+    direction_num = len(eye_directions)
+    type_num = len(eye_types)
+    return eye_directions[ind % direction_num], eye_types[(ind // direction_num) % type_num]
+
+
+def get_muscle_direction(ind):
+    """
+    given the neuron_ind in the muscle layer return direction of a specific muscle
+    :return: string, direction of the muscle
+    """
+    muscle_directions = ['east', 'north', 'west', 'south']
+    direction_num = len(muscle_directions)
+    return muscle_directions[ind % direction_num]
+
+
 class Neuron(object):
     """
     a very simple neuron class
@@ -146,6 +178,7 @@ class Neuron(object):
 
         neuron = Neuron(baseline_rate=h5_group['baseline_rate'], refractory_period=h5_group['refractory_period'])
         return neuron
+
 
 class Eye(Neuron):
     """
@@ -286,11 +319,11 @@ class Eye(Neuron):
 
         return input_pixels
 
-    def _get_input(self, input_map, position, border_value=1):
+    def _get_input(self, input_map, body_position, border_value=1):
         """
         :return: float, calculate real time input from the visual field
         """
-        input_pixels = self._get_input_pixels(input_map, position, border_value=border_value)
+        input_pixels = self._get_input_pixels(input_map, body_position, border_value=border_value)
         probability_input = self._gain * np.sum(input_pixels * self._input_filter)
 
         return probability_input
@@ -647,10 +680,10 @@ class Brain(object):
         curr_row = self._neurons.loc[ind]
         curr_layer = curr_row['layer']
         if curr_layer == 0:  # eye layer
-            curr_dir, curr_type = self.get_eye_type(curr_row['neuron_ind'])
+            curr_dir, curr_type = get_eye_type(curr_row['neuron_ind'])
             return util.short('eye') + '_' + util.short(curr_type) + '_' + util.short(curr_dir)
         elif curr_layer == self.layer_num - 1:  # muscle layer
-            curr_dir = self.get_muscle_direction(curr_row['neuron_ind'])
+            curr_dir = get_muscle_direction(curr_row['neuron_ind'])
             return util.short('muscle') + '_' + util.short(curr_dir)
         elif 0 < curr_layer < self.layer_num - 1:
             curr_layer_num = util.int2str(curr_layer, 3)
@@ -978,31 +1011,6 @@ class Brain(object):
             curr_layer_group.create_dataset(name='amplitudes', data=curr_connection_matrices[3])
             curr_layer_group.create_dataset(name='rise_times_tu', data=curr_connection_matrices[4])
             curr_layer_group.create_dataset(name='decay_times_tu', data=curr_connection_matrices[5])
-
-    @staticmethod
-    def get_eye_type(ind):
-        """
-        given the neuron_ind in the eye layer return direction and input type of a specific eye
-        :return: two strings, (direction, type)
-        """
-        # eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
-
-        # eye directions have been changed from 8 to 4
-        eye_directions = ['east', 'north', 'west', 'south']
-        eye_types = ['terrain', 'food', 'fish']
-        direction_num = len(eye_directions)
-        type_num = len(eye_types)
-        return eye_directions[ind % direction_num], eye_types[(ind // direction_num) % type_num]
-
-    @staticmethod
-    def get_muscle_direction(ind):
-        """
-        given the neuron_ind in the muscle layer return direction of a specific muscle
-        :return: string, direction of the muscle
-        """
-        muscle_directions = ['east', 'north', 'west', 'south']
-        direction_num = len(muscle_directions)
-        return muscle_directions[ind % direction_num]
 
     @staticmethod
     def from_h5_group(h5_group):
