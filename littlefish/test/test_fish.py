@@ -5,7 +5,7 @@ import littlefish.core.utilities as util
 import numpy as np
 
 
-class TestFishBrain(unittest.TestCase):
+class TestFish(unittest.TestCase):
 
     def setup(self):
         pass
@@ -196,10 +196,13 @@ class TestFishBrain(unittest.TestCase):
         assert (fi.get_muscle_direction(3) == 'south')
         assert (fi.get_muscle_direction(4) == 'east')
 
+    def test_generate_standard_fish(self):
+        fi.generate_standard_fish()
+
 
 if __name__ == '__main__':
 
-    tfb = TestFishBrain()
+    tfb = TestFish()
 
     tfb.test_neuron1()
     tfb.test_connection_psp()

@@ -247,7 +247,7 @@ class Simulation(object):
                             else:
 
                                 if verbose > 0:
-                                    print('fish:{}; time point:{}; health:{}; try to move:{}'.format(curr_fish.name,
+                                    print('Fish:{}; time point:{}; health:{}; try to move:{}'.format(curr_fish.name,
                                                                                                      curr_t,
                                                                                                      curr_health,
                                                                                                      movement_attempt))
@@ -265,11 +265,26 @@ class Simulation(object):
                                 if new_pos_col > self.terrain_shape[1] - 2:
                                     new_pos_col = self.terrain_shape[1] - 2
 
+                                if verbose > 0:
+                                    if (new_pos_row != curr_position[0]) or (new_pos_col != curr_position[1]):
+                                        print('Fish:{}; move from old position: [row:{}, col:{}] to new position: '
+                                              '[row:{}, col:{}].'.format(curr_fish.name,
+                                                                         curr_position[0],
+                                                                         curr_position[1],
+                                                                         new_pos_row,
+                                                                         new_pos_col))
+                                    else:
+                                        print('Fish:{}; move attempt not successful. Stay at old position: '
+                                              '[row:{}, col:{}].'.format(curr_fish.name,
+                                                                         curr_position[0],
+                                                                         curr_position[1]))
+
+
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos_row
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos_col
 
                             if verbose > 1:
-                                print("fish:{}; time point:{}; health:{}; position:[{},{}]".format(curr_fish.name,
+                                print("Fish:{}; time point:{}; health:{}; position:[{},{}]".format(curr_fish.name,
                                                                                                    curr_t + 1,
                                                                                                    updated_health,
                                                                                                    new_pos_row,

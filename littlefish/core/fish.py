@@ -71,6 +71,82 @@ def generate_minimal_brain():
     return Brain(neurons=neurons, connections=connections)
 
 
+def generate_standard_fish():
+
+    # ================================== generate neurons =========================================
+    neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+
+    neuron_ind = 0
+    layer_ind = 0
+
+    # generate eyes
+    eye_num = 8
+    for eye_ind in range(eye_num):
+        curr_eye_dir, curr_eye_input_type = get_eye_type(eye_ind, dir_num=4)
+        # print curr_eye_dir, curr_eye_input_type
+        curr_eye = Eye(direction=curr_eye_dir, gain=0.005, input_type=curr_eye_input_type, baseline_rate=0.,
+                       refractory_period=1.2)
+        neurons.loc[neuron_ind, 'layer'] = 0
+        neurons.loc[neuron_ind, 'neuron_ind'] = eye_ind
+        neurons.loc[neuron_ind, 'neuron'] = curr_eye
+        neuron_ind += 1
+
+    # generate hidden layers
+    layer_ind += 1
+    hid_nums = [8]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
+    for hid_num in hid_nums:
+        for hid_ind in range(hid_num):
+            curr_neuron = Neuron(baseline_rate=0.005, refractory_period=1.2)
+            neurons.loc[neuron_ind, 'layer'] = layer_ind
+            neurons.loc[neuron_ind, 'neuron_ind'] = hid_ind
+            neurons.loc[neuron_ind, 'neuron'] = curr_neuron
+            neuron_ind += 1
+
+        layer_ind += 1
+
+    # generate muscles
+    mus_num = 4
+    for mus_ind in range(mus_num):
+        curr_mus_dir = get_muscle_direction(mus_ind)
+        curr_muscle = Muscle(direction=curr_mus_dir, baseline_rate=0.0001, refractory_period=50.)
+        neurons.loc[neuron_ind, 'layer'] = layer_ind
+        neurons.loc[neuron_ind, 'neuron_ind'] = mus_ind
+        neurons.loc[neuron_ind, 'neuron'] = curr_muscle
+        neuron_ind += 1
+    # ================================== generate neurons =========================================
+
+    # ================================== generate connections =========================================
+    connections = {}
+
+    default_connection = Connection(latency=3, amplitude=0.001, rise_time=2, decay_time=5)
+    layer_num = int(round(max(neurons['layer']))) + 1
+
+    for pre_layer in range(layer_num - 1):
+        post_layer = pre_layer + 1
+
+        post_neuron_inds = neurons[neurons['layer'] == post_layer].index.tolist()
+        post_neuron_inds.sort()
+
+        pre_neuron_inds = neurons[neurons['layer'] == pre_layer].index.tolist()
+        pre_neuron_inds.sort()
+
+        curr_name = 'L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)
+        # curr_df = pd.DataFrame([[default_connection] * len(pre_neuron_inds)] * len(post_neuron_inds),
+        #                        columns=pre_neuron_inds, index=post_neuron_inds)
+        curr_conn_df = pd.DataFrame(columns=pre_neuron_inds, index=post_neuron_inds)
+        curr_conn_df[:] = default_connection
+        connections.update({curr_name: curr_conn_df})
+
+    # print connections
+    # ================================== generate connections =========================================
+
+    # generate standard brain
+    standard_brain = Brain(neurons=neurons, connections=connections)
+
+    return Fish(mother_name=None, brain=standard_brain, max_health=100, health_decay_rate=0.001,
+                land_penalty_rate=0.01, food_rate=10.)
+
+
 def get_eye_type(ind, dir_num=4):
     """
     given the neuron_ind in the eye layer return direction and input type of a specific eye
@@ -588,6 +664,8 @@ class Brain(object):
         :param connections: dict
         """
 
+        print('\nBrain: Creating littlefish.core.fish.Brain object ...')
+
         if neurons is None and connections is None:
             min_brain = generate_minimal_brain()
             self._neurons = min_brain.get_neurons()
@@ -596,7 +674,9 @@ class Brain(object):
             self._neurons = neurons
             self._connections = connections
 
-        self.check_integrity()
+        self.check_integrity(verbose=True)
+
+        print('Brain: littlefish.core.fish.Brain created successfully.')
 
     def __str__(self):
         return 'littlefish.brain.Brain object'
@@ -743,18 +823,18 @@ class Brain(object):
         inds.sort()
         return inds
 
-    def check_integrity(self):
+    def check_integrity(self, verbose=True):
         """
         check integrity of object data structure
         """
 
-        print('\nBrain: checking integrity of attrbitue data structure ...')
+        print('Brain: checking integrity of attrbitue data structure ...')
 
-        self.check_integrity_neurons(verbose=True)
+        self.check_integrity_neurons(verbose=verbose)
 
-        self.check_integrity_connection(verbose=True)
+        self.check_integrity_connection(verbose=verbose)
 
-        print('Brain: integrity checking finished. All pass.\n')
+        print('Brain: integrity checking finished. All pass.')
 
     def check_integrity_neurons(self, verbose=False):
 
@@ -865,14 +945,16 @@ class Brain(object):
                                            body_position=body_position, input_map=terrain_map)
                 elif curr_eye.get_input_type() == 'food':
                     if food_map is not None:
-                        is_fire = curr_eye.act(t_point=t_point, action_history=action_histories[i, 'action_history'],
-                                               body_position=curr_eye_pos, input_map=food_map)
+                        is_fire = curr_eye.act(t_point=t_point,
+                                               action_history=action_histories.loc[i, 'action_history'],
+                                               body_position=body_position, input_map=food_map)
                     else:
                         is_fire = False
                 elif curr_eye.get_input_type() == 'fish':
                     if fish_map is not None:
-                        is_fire = curr_eye.act(t_point=t_point, action_history=action_histories[i, 'action_history'],
-                                               body_position=curr_eye_pos, input_map=fish_map)
+                        is_fire = curr_eye.act(t_point=t_point,
+                                               action_history=action_histories.loc[i, 'action_history'],
+                                               body_position=body_position, input_map=fish_map)
                     else:
                         is_fire = False
                 else:
@@ -885,7 +967,7 @@ class Brain(object):
 
             elif neuron['layer'] < self.layer_num - 1:  # hidden layer
                 curr_neuron = neuron['neuron']
-                is_fire = curr_neuron.act(t_point=t_point, action_history=action_histories.iloc[i, 0],
+                is_fire = curr_neuron.act(t_point=t_point, action_history=action_histories.loc[i, 'action_history'],
                                           probability_input=psp_waveforms[i, t_point])
                 if is_fire:
                     # print('neuron spike')
@@ -894,7 +976,7 @@ class Brain(object):
             elif neuron['layer'] == self.layer_num - 1:  # muscle layer
                 curr_muscle = neuron['neuron']
                 curr_movement_attempt = curr_muscle.act(t_point=t_point,
-                                                        action_history=action_histories.iloc[i, 0],
+                                                        action_history=action_histories.loc[i, 'action_history'],
                                                         probability_input=psp_waveforms[i, t_point])
                 if curr_movement_attempt is not False:
                     # print('muscle spike')
@@ -1134,6 +1216,8 @@ class Fish(object):
                           transient event
         """
 
+        print('\nFish: Creating littlefish.core.fish.Fish object.')
+
         if name is None:
             self._name = 'test_fish'
         else:
@@ -1152,12 +1236,10 @@ class Fish(object):
         if brain is None:
             self._brain = Brain()
         else:
-            brain.check_integrity()
+            brain.check_integrity(verbose=False)
             self._brain = brain
 
-        # self._curr_health = None
-
-        print('\nFish: fish object generated successfully.')
+        print('Fish: littlefish.core.fish.Fish object created successfully.')
 
     def get_name(self):
         return self._name
@@ -1463,6 +1545,10 @@ if __name__ == '__main__':
     # =========================================================================================
     # min_brain = generate_minimal_brain()
     # print min_brain._neurons
+    # =========================================================================================
+
+    # =========================================================================================
+    generate_standard_fish()
     # =========================================================================================
 
     print('\nfor debug ...')
