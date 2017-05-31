@@ -192,6 +192,11 @@ class Simulation(object):
         return self._simulation_histories[fish_n]['life_history'].loc[t_point, 'health'] <= 0.
 
     def run(self, verbose=1):
+        """
+        
+        :param verbose: 
+        :return: print out message as a string
+        """
 
         if self._simulation_status == 2:
 
@@ -203,16 +208,22 @@ class Simulation(object):
 
             curr_progress = -1  # percentage finished, for printing the simulation progress
             t0 = time.time()
+            msg = ''
 
             # print('\nstart of simulation. start time: {}'.format(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(t0))))
-            print('\nstart of simulation. start time: {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            curr_msg = '\nstart of simulation. start time: {}'.\
+                format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            print(curr_msg)
+            msg += curr_msg
 
             while len(alive_fish_list) > 0 and curr_t < self.simulation_length:
 
                 if (verbose > 0) and (self._simulation_length > 100):
                     if curr_t // (self.simulation_length // 10) > curr_progress:
-                        print('\n{:09.2f} second: {:2d} %'.format(time.time() - t0,
-                                                                (curr_t // (self.simulation_length // 10)) * 10))
+                        curr_msg = '\n{:09.2f} second: {:2d} %'.\
+                            format(time.time() - t0, (curr_t // (self.simulation_length // 10)) * 10)
+                        print(curr_msg)
+                        msg += curr_msg
                         curr_progress = curr_t // (self.simulation_length // 10)
 
                 curr_food_positions = self._terrain.update_food_map(self.food_num, self._food_map)
@@ -239,9 +250,11 @@ class Simulation(object):
                     updated_health, movement_attempt, food_eated = _
 
                     if (food_eated > 0) and (verbose > 0):
-                        print("Fish:{}; eated {} food pellet(s). "
-                              "previous HP:{}, updated HP:{}.".format(curr_fish.name, food_eated,
-                                                                      curr_health, updated_health))
+                        curr_msg = "Fish:{}; eated {} food pellet(s). " \
+                                   "previous HP:{}, updated HP:{}.".format(curr_fish.name, food_eated,
+                                                                           curr_health, updated_health)
+                        print(curr_msg)
+                        msg += curr_msg
 
                     if curr_t < self.simulation_length - 1:  # if not at the end of simulation
 
@@ -257,10 +270,11 @@ class Simulation(object):
                             else:
 
                                 if verbose > 0:
-                                    print('Fish:{}; time point:{}; health:{}; try to move:{}'.format(curr_fish.name,
-                                                                                                     curr_t,
-                                                                                                     curr_health,
-                                                                                                     movement_attempt))
+                                    curr_msg = 'Fish:{}; time point:{}; ' \
+                                               'health:{}; try to move:{}'.format(curr_fish.name, curr_t,
+                                                                                  curr_health, movement_attempt)
+                                    print(curr_msg)
+                                    msg += curr_msg
 
                                 # update fish's body center postion at curr_t + 1
                                 new_pos_row = curr_position[0] + movement_attempt[0]
@@ -277,28 +291,34 @@ class Simulation(object):
 
                                 if verbose > 0:
                                     if (new_pos_row != curr_position[0]) or (new_pos_col != curr_position[1]):
-                                        print('Fish:{}; move from old position: [row:{}, col:{}] to new position: '
-                                              '[row:{}, col:{}].'.format(curr_fish.name,
-                                                                         curr_position[0],
-                                                                         curr_position[1],
-                                                                         new_pos_row,
-                                                                         new_pos_col))
+                                        curr_msg = 'Fish:{}; move from old position: [row:{}, col:{}] to new ' \
+                                                   'position: [row:{}, col:{}].'.format(curr_fish.name,
+                                                                                        curr_position[0],
+                                                                                        curr_position[1],
+                                                                                        new_pos_row,
+                                                                                        new_pos_col)
+                                        print(curr_msg)
+                                        msg += curr_msg
                                     else:
-                                        print('Fish:{}; move attempt not successful. Stay at old position: '
-                                              '[row:{}, col:{}].'.format(curr_fish.name,
-                                                                         curr_position[0],
-                                                                         curr_position[1]))
-
+                                        curr_msg = 'Fish:{}; move attempt not successful. Stay at old ' \
+                                                   'position: [row:{}, col:{}].'.format(curr_fish.name,
+                                                                                        curr_position[0],
+                                                                                        curr_position[1])
+                                        print(curr_msg)
+                                        msg += curr_msg
 
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos_row
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos_col
 
                             if verbose > 1:
-                                print("Fish:{}; time point:{}; health:{}; position:[{},{}]".format(curr_fish.name,
-                                                                                                   curr_t + 1,
-                                                                                                   updated_health,
-                                                                                                   new_pos_row,
-                                                                                                   new_pos_col))
+                                curr_msg = "Fish:{}; time point:{}; health:{}; " \
+                                           "position:[{},{}]".format(curr_fish.name,
+                                                                     curr_t + 1,
+                                                                     updated_health,
+                                                                     new_pos_row,
+                                                                     new_pos_col)
+                                print(curr_msg)
+                                msg += curr_msg
 
                         else:  # if dead
                             dead_fish_list.append(curr_fish)
@@ -314,23 +334,31 @@ class Simulation(object):
 
             else:
                 if curr_t == self.simulation_length:
-                    print("Simulation: End of Simulation. Prespecified simulation length reached.")
+                    curr_msg = "\nSimulation: End of Simulation. Prespecified simulation length reached."
+                    print(curr_msg)
+                    msg += curr_msg
 
                 elif len(alive_fish_list) == 0:
                     self._simulation_histories['food_pos_history'] = \
                         self._simulation_histories['food_pos_history'][0: curr_t + 1]
-                    print("Simulation: End of Simulation. All fish are dead. "
-                          "Last simulated time point: {}".format(curr_t))
+                    curr_msg = "\nSimulation: End of Simulation. All fish are dead. " \
+                               "Last simulated time point: {}".format(curr_t)
+                    print(curr_msg)
+                    msg += curr_msg
 
             self._simulation_status = 4
 
         else:
             raise RuntimeError("Simulation: Cannot run simulation. Simulation not initialized properly.")
 
-    def save_log(self, log_folder, is_save_psp_waveforms=True):
+        return msg
+
+    def save_log(self, log_folder, msg='', is_save_psp_waveforms=True):
         """
         save simulation results into a hdf5 file
         :param log_folder: directory path to save save_log
+        :param msg: str, print out string
+        :param is_save_psp_waveforms: 
         :return: None
         """
 
@@ -340,6 +368,7 @@ class Simulation(object):
                 os.makedirs(log_folder)
             log_f = h5py.File(os.path.join(log_folder, save_name))
             log_f['terrain_map'] = self._terrain._terrain_map
+            log_f['message'] = msg
             fish_list_grp = log_f.create_group('fish_list')
             for curr_fish in self._fish_list:
 
