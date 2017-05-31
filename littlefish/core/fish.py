@@ -1280,9 +1280,12 @@ class Fish(object):
         if food_map is not None:
             body_food_overlap = self._eval_food(food_map=food_map, curr_position=curr_position)
             updated_health = self._eat_food(body_food_overlap=body_food_overlap, curr_health=updated_health)
+            food_eated = body_food_overlap
 
             # update food map
             food_map[curr_position[0] - 1: curr_position[0] + 2, curr_position[1] - 1: curr_position[1] + 2] = 0
+        else:
+            food_eated = 0
 
         # evaluate the extend of how much of the fish is on the land
         body_land_overlap = self._eval_terrain(terrain_map=terrain_map, curr_position=curr_position)
@@ -1306,7 +1309,7 @@ class Fish(object):
         else:
             movement_attempt = None
 
-        return updated_health, movement_attempt
+        return updated_health, movement_attempt, food_eated
 
     @staticmethod
     def _eval_terrain(terrain_map, curr_position):

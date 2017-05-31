@@ -204,11 +204,14 @@ class Simulation(object):
             curr_progress = -1  # percentage finished, for printing the simulation progress
             t0 = time.time()
 
+            # print('\nstart of simulation. start time: {}'.format(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(t0))))
+            print('\nstart of simulation. start time: {}'.format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
             while len(alive_fish_list) > 0 and curr_t < self.simulation_length:
 
                 if (verbose > 0) and (self._simulation_length > 100):
                     if curr_t // (self.simulation_length // 10) > curr_progress:
-                        print('{:09.2f} second: {:2d} %'.format(time.time() - t0,
+                        print('\n{:09.2f} second: {:2d} %'.format(time.time() - t0,
                                                                 (curr_t // (self.simulation_length // 10)) * 10))
                         curr_progress = curr_t // (self.simulation_length // 10)
 
@@ -225,13 +228,20 @@ class Simulation(object):
                                      int(curr_fish_history['life_history'].loc[curr_t, 'pos_col'])]
                     curr_health = curr_fish_history['life_history'].loc[curr_t, 'health']
 
-                    updated_health, movement_attempt = curr_fish.act(t_point=curr_t,
-                                                                     curr_position=curr_position,
-                                                                     curr_health=curr_health,
-                                                                     action_histories=curr_fish_history['action_histories'],
-                                                                     psp_waveforms=curr_fish_history['psp_waveforms'],
-                                                                     terrain_map=self._terrain._terrain_map,
-                                                                     food_map=self._food_map, fish_map=None)
+                    _ = curr_fish.act(t_point=curr_t,
+                                      curr_position=curr_position,
+                                      curr_health=curr_health,
+                                      action_histories=curr_fish_history['action_histories'],
+                                      psp_waveforms=curr_fish_history['psp_waveforms'],
+                                      terrain_map=self._terrain._terrain_map,
+                                      food_map=self._food_map, fish_map=None)
+
+                    updated_health, movement_attempt, food_eated = _
+
+                    if (food_eated > 0) and (verbose > 0):
+                        print("Fish:{}; eated {} food pellet(s). "
+                              "previous HP:{}, updated HP:{}.".format(curr_fish.name, food_eated,
+                                                                      curr_health, updated_health))
 
                     if curr_t < self.simulation_length - 1:  # if not at the end of simulation
 
@@ -317,42 +327,7 @@ class Simulation(object):
         else:
             raise RuntimeError("Simulation: Cannot run simulation. Simulation not initialized properly.")
 
-
-    # def act()
-    #
-    #     self._move(movement_attempt, terrain_map=terrain_map)
-    #     self._simulation_history.loc[len(self._simulation_history)] = [t_point, self._curr_position[0],
-    #                                                                    self._curr_position[1], self._curr_health]
-
-    # def _move(self, movement_attempt, terrain_map):
-    #     """
-    #     update self._curr_position according to the movement_attempt but not moving out of the terrain map
-    #     """
-    #     if self._simulation_status == 1:
-    #         if self._curr_position[0] + movement_attempt[0] < 1:
-    #             self._curr_position[0] = 1
-    #         elif self._curr_position[0] + movement_attempt[0] > terrain_map.shape[0] - 2:
-    #             self._curr_position[0] = terrain_map.shape[0] - 2
-    #         else:
-    #             self._curr_position[0] += movement_attempt[0]
-    #
-    #         if self._curr_position[1] + movement_attempt[1] < 1:
-    #             self._curr_position[1] = 1
-    #         elif self._curr_position[1] + movement_attempt[1] > terrain_map.shape[1] - 2:
-    #             self._curr_position[1] = terrain_map.shape[1] - 2
-    #         else:
-    #             self._curr_position[1] += movement_attempt[1]
-    #     elif self._simulation_status == 0:
-    #         raise RuntimeError('Fish: cannot evaluate terrain. Simulation not started!')
-    #     elif self._simulation_status == 2:
-    #         raise RuntimeError('Fish: cannot evaluate terrain. Simulation already stopped!')
-    #     else:
-    #         raise RuntimeError('Fish: self._simulation_status should 0, 1 or 2.')
-
-    # def _clear_simulation_history(self):
-    #     self._simulation_history = pd.DataFrame(columns=['t_point', 'row', 'column, ''health'])
-
-    def save_log(self, log_folder):
+    def save_log(self, log_folder, is_save_psp_waveforms=True):
         """
         save simulation results into a hdf5 file
         :param log_folder: directory path to save save_log
@@ -386,12 +361,11 @@ class Simulation(object):
                 for neuron_ind, ah in curr_fish_ah.iterrows():
                     curr_fish_ah_grp['neuron_' + util.int2str(neuron_ind, 4)] = ah.iloc[0]
 
-                #===================this can be comment out=================================
-                # save psp waveforms of all neurons in current fish
-                curr_fish_psp_wf_dset = curr_fish_sim_grp.create_dataset('psp_waveforms',
-                                                                         data=curr_sim_history['psp_waveforms'])
-                curr_fish_psp_wf_dset.attrs['data_format'] = 'neuron_ind x time_point'
-                # ===================this can be comment out=================================
+                if is_save_psp_waveforms:
+                    # save psp waveforms of all neurons in current fish
+                    curr_fish_psp_wf_dset = curr_fish_sim_grp.create_dataset('psp_waveforms',
+                                                                             data=curr_sim_history['psp_waveforms'])
+                    curr_fish_psp_wf_dset.attrs['data_format'] = 'neuron_ind x time_point'
 
                 # save life history of fish
                 curr_life_his = self._simulation_histories['test_fish']['life_history']

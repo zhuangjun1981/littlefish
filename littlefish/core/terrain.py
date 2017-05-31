@@ -16,7 +16,7 @@ class TerrainGenerator(object):
     terrain object, a square matrix containing altitude
     '''
 
-    def __init__(self,size=(128,128),sea_level=0.6):
+    def __init__(self, size=(128,128), sea_level=0.6):
         '''
         :param size: size of world_map (height, width)
         :param sea_level: a simple threshold
@@ -43,7 +43,7 @@ class TerrainGenerator(object):
         :return:
         '''
         float_map = np.random.random(self._size)
-        float_map = ni.filters.gaussian_filter(float_map,sigma)
+        float_map = ni.filters.gaussian_filter(float_map, sigma)
         float_map = util.array_nor(float_map)
 
         return float_map
