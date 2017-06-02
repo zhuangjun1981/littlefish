@@ -11,7 +11,7 @@ import littlefish.core.simulation as si
 import littlefish.core.terrain as tr
 
 log_folder = r'C:\little_fish_simulation_logs'
-simulation_length = 100000
+simulation_length = 200  # 100000
 random_seed = 111
 np_random_seed = 50
 
@@ -23,7 +23,7 @@ random.seed(random_seed)
 np.random.seed(np_random_seed)
 
 fish = fi.generate_standard_fish()
-save_name = 'fish_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S')
+save_name = 'fish_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S') + '.hdf5'
 save_f = h5py.File(save_name)
 fish_grp = save_f.create_group(fish.name)
 fish.to_h5_group(fish_grp)

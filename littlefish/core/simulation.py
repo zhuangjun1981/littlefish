@@ -218,8 +218,8 @@ class Simulation(object):
             new_pos = [new_pos_row, new_pos_col]
 
             if new_pos != curr_pos:
-                msg += 'Time:{:8d}; Fish:{}; move from [{:3d}, {:3d}] to [{:3d}, {:3d}].'.\
-                    format(curr_t, curr_fish.name, curr_pos[0], curr_pos[1], new_pos[0], new_pos[1])
+                msg += 'Time: {:08d}; Fish: {}; Health: {:3.4f}; move from [{:3d}, {:3d}] to [{:3d}, {:3d}].'.\
+                    format(curr_t, curr_fish.name, curr_health, curr_pos[0], curr_pos[1], new_pos[0], new_pos[1])
 
         return new_pos, msg
 
@@ -281,8 +281,9 @@ class Simulation(object):
 
                     # print eat food message
                     if (food_eated > 0) and (verbose > 0):
-                        curr_msg = "Time:{:8d}; Fish:{}; eated {} food pellet(s). previous HP:{}, updated HP:{}."\
-                            .format(curr_t, curr_fish.name, food_eated, curr_health, updated_health)
+                        curr_msg = "Time: {:08d}; Fish: {}; eated {} food pellet(s). HP: {:3.4f} -> {:3.4f}."\
+                            .format(curr_t, curr_fish.name, food_eated, curr_health,
+                                                                updated_health)
                         print(curr_msg)
                         msg += ('\n' + curr_msg)
 
@@ -303,7 +304,7 @@ class Simulation(object):
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos[1]
 
                             if verbose > 1:
-                                curr_msg = "Time:{:8d}; Fish:{}; health:{}; position:[{},{}]".\
+                                curr_msg = "Time: {:08d}; Fish: {}; health: {:3.4f}; position:[{:3d},{:3d}]".\
                                     format(curr_t + 1, curr_fish.name, updated_health, new_pos[0], new_pos[1])
                                 print(curr_msg)
                                 msg += ('\n' + curr_msg)
