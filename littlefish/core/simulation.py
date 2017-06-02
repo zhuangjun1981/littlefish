@@ -191,6 +191,38 @@ class Simulation(object):
             raise RuntimeError("Simulation: Try to get fish health status at an unsimulated time point.")
         return self._simulation_histories[fish_n]['life_history'].loc[t_point, 'health'] <= 0.
 
+    def _get_fish_status(self, t_point, fish_history):
+
+        curr_position = [int(fish_history['life_history'].loc[t_point, 'pos_row']),
+                         int(fish_history['life_history'].loc[t_point, 'pos_col'])]
+        curr_health = fish_history['life_history'].loc[t_point, 'health']
+        return curr_position, curr_health
+
+    def _move_fish(self, curr_fish, curr_t, curr_pos, curr_health, movement_attempt):
+
+        msg = ''
+
+        # no movement attempt
+        if np.array_equal(movement_attempt, np.array([0, 0], np.int8)):
+            new_pos = curr_pos
+        else:
+            # update fish's body center postion at curr_t + 1
+            new_pos_row = curr_pos[0] + movement_attempt[0]
+            new_pos_row = max([1, new_pos_row])
+            new_pos_row = min([new_pos_row, self.terrain_shape[0] - 2])
+
+            new_pos_col = curr_pos[1] + movement_attempt[1]
+            new_pos_col = max([1, new_pos_col])
+            new_pos_col = min([new_pos_col, self.terrain_shape[1] - 2])
+
+            new_pos = [new_pos_row, new_pos_col]
+
+            if new_pos != curr_pos:
+                msg += 'Time:{:8d}; Fish:{}; move from [{:3d}, {:3d}] to [{:3d}, {:3d}].'.\
+                    format(curr_t, curr_fish.name, curr_pos[0], curr_pos[1], new_pos[0], new_pos[1])
+
+        return new_pos, msg
+
     def run(self, verbose=1):
         """
         
@@ -200,44 +232,42 @@ class Simulation(object):
 
         if self._simulation_status == 2:
 
+            # at t0
             self._simulation_status = 3
-
-            alive_fish_list = list(self._fish_list)
-
-            curr_t = 0
-
-            curr_progress = -1  # percentage finished, for printing the simulation progress
             t0 = time.time()
             msg = ''
 
-            # print('\nstart of simulation. start time: {}'.format(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(t0))))
             curr_msg = '\nstart of simulation. start time: {}'.\
                 format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             print(curr_msg)
-            msg += curr_msg
+            msg += (curr_msg)
+
+            alive_fish_list = list(self._fish_list)
+            curr_t = 0
+            curr_progress = -1  # percentage finished, for printing the simulation progress
 
             while len(alive_fish_list) > 0 and curr_t < self.simulation_length:
 
+                # print simulation progress
                 if (verbose > 0) and (self._simulation_length > 100):
                     if curr_t // (self.simulation_length // 10) > curr_progress:
                         curr_msg = '\n{:09.2f} second: {:2d} %'.\
                             format(time.time() - t0, (curr_t // (self.simulation_length // 10)) * 10)
                         print(curr_msg)
-                        msg += curr_msg
+                        msg += ('\n' + curr_msg)
                         curr_progress = curr_t // (self.simulation_length // 10)
 
+                # update food position
                 curr_food_positions = self._terrain.update_food_map(self.food_num, self._food_map)
-                # self._simulation_histories['food_pos_history'].loc[curr_t, 'food_pos'] = curr_food_pos_list
                 self._simulation_histories['food_pos_history'][curr_t] = curr_food_positions
 
                 dead_fish_list = []  # list of fish is going to die at curr_t
 
-                for curr_fish in alive_fish_list:
+                for curr_fish in alive_fish_list:  # loop through current live fish
 
+                    # get current fish status
                     curr_fish_history = self._simulation_histories[curr_fish.name]
-                    curr_position = [int(curr_fish_history['life_history'].loc[curr_t, 'pos_row']),
-                                     int(curr_fish_history['life_history'].loc[curr_t, 'pos_col'])]
-                    curr_health = curr_fish_history['life_history'].loc[curr_t, 'health']
+                    curr_position, curr_health = self._get_fish_status(curr_t, curr_fish_history)
 
                     _ = curr_fish.act(t_point=curr_t,
                                       curr_position=curr_position,
@@ -249,12 +279,12 @@ class Simulation(object):
 
                     updated_health, movement_attempt, food_eated = _
 
+                    # print eat food message
                     if (food_eated > 0) and (verbose > 0):
-                        curr_msg = "Fish:{}; eated {} food pellet(s). " \
-                                   "previous HP:{}, updated HP:{}.".format(curr_fish.name, food_eated,
-                                                                           curr_health, updated_health)
+                        curr_msg = "Time:{:8d}; Fish:{}; eated {} food pellet(s). previous HP:{}, updated HP:{}."\
+                            .format(curr_t, curr_fish.name, food_eated, curr_health, updated_health)
                         print(curr_msg)
-                        msg += curr_msg
+                        msg += ('\n' + curr_msg)
 
                     if curr_t < self.simulation_length - 1:  # if not at the end of simulation
 
@@ -262,68 +292,28 @@ class Simulation(object):
                         curr_fish_history['life_history'].loc[curr_t + 1, 'health'] = updated_health
 
                         if updated_health > 0:  # if not dead
+                            new_pos, curr_msg = self._move_fish(curr_fish, curr_t, curr_position, curr_health,
+                                                                movement_attempt=movement_attempt)
 
-                            # no movement attempt
-                            if np.array_equal(movement_attempt, np.array([0, 0], np.int8)):
-                                new_pos_row = curr_position[0]
-                                new_pos_col = curr_position[1]
-                            else:
+                            if verbose > 0 and curr_msg:
+                                print curr_msg
+                                msg += ('\n' + curr_msg)
 
-                                if verbose > 0:
-                                    curr_msg = 'Fish:{}; time point:{}; ' \
-                                               'health:{}; try to move:{}'.format(curr_fish.name, curr_t,
-                                                                                  curr_health, movement_attempt)
-                                    print(curr_msg)
-                                    msg += curr_msg
-
-                                # update fish's body center postion at curr_t + 1
-                                new_pos_row = curr_position[0] + movement_attempt[0]
-                                if new_pos_row < 1:
-                                    new_pos_row = 1
-                                if new_pos_row > self.terrain_shape[0] - 2:
-                                    new_pos_row = self.terrain_shape[0] - 2
-
-                                new_pos_col = curr_position[1] + movement_attempt[1]
-                                if new_pos_col < 1:
-                                    new_pos_col = 1
-                                if new_pos_col > self.terrain_shape[1] - 2:
-                                    new_pos_col = self.terrain_shape[1] - 2
-
-                                if verbose > 0:
-                                    if (new_pos_row != curr_position[0]) or (new_pos_col != curr_position[1]):
-                                        curr_msg = 'Fish:{}; move from old position: [row:{}, col:{}] to new ' \
-                                                   'position: [row:{}, col:{}].'.format(curr_fish.name,
-                                                                                        curr_position[0],
-                                                                                        curr_position[1],
-                                                                                        new_pos_row,
-                                                                                        new_pos_col)
-                                        print(curr_msg)
-                                        msg += curr_msg
-                                    else:
-                                        curr_msg = 'Fish:{}; move attempt not successful. Stay at old ' \
-                                                   'position: [row:{}, col:{}].'.format(curr_fish.name,
-                                                                                        curr_position[0],
-                                                                                        curr_position[1])
-                                        print(curr_msg)
-                                        msg += curr_msg
-
-                            curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos_row
-                            curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos_col
+                            curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos[0]
+                            curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos[1]
 
                             if verbose > 1:
-                                curr_msg = "Fish:{}; time point:{}; health:{}; " \
-                                           "position:[{},{}]".format(curr_fish.name,
-                                                                     curr_t + 1,
-                                                                     updated_health,
-                                                                     new_pos_row,
-                                                                     new_pos_col)
+                                curr_msg = "Time:{:8d}; Fish:{}; health:{}; position:[{},{}]".\
+                                    format(curr_t + 1, curr_fish.name, updated_health, new_pos[0], new_pos[1])
                                 print(curr_msg)
-                                msg += curr_msg
+                                msg += ('\n' + curr_msg)
 
                         else:  # if dead
                             dead_fish_list.append(curr_fish)
                             self._simulation_histories[curr_fish.name]['life_history'] = \
-                                self._simulation_histories[curr_fish.name]['life_history'][0: curr_t + 1]
+                                self._simulation_histories[curr_fish.name]['life_history'][0: curr_t]
+                            self._simulation_histories[curr_fish.name]['psp_waveforms'] = \
+                                self._simulation_histories[curr_fish.name]['psp_waveforms'][:, 0: curr_t]
                     else:
                         pass
 
@@ -333,18 +323,21 @@ class Simulation(object):
                 curr_t += 1
 
             else:
+
+                self._end_t = curr_t
+
                 if curr_t == self.simulation_length:
                     curr_msg = "\nSimulation: End of Simulation. Prespecified simulation length reached."
                     print(curr_msg)
-                    msg += curr_msg
+                    msg += ('\n' + curr_msg)
 
                 elif len(alive_fish_list) == 0:
                     self._simulation_histories['food_pos_history'] = \
-                        self._simulation_histories['food_pos_history'][0: curr_t + 1]
+                        self._simulation_histories['food_pos_history'][0: curr_t]
                     curr_msg = "\nSimulation: End of Simulation. All fish are dead. " \
                                "Last simulated time point: {}".format(curr_t)
                     print(curr_msg)
-                    msg += curr_msg
+                    msg += ('\n' + curr_msg)
 
             self._simulation_status = 4
 
@@ -353,7 +346,7 @@ class Simulation(object):
 
         return msg
 
-    def save_log(self, log_folder, msg='', is_save_psp_waveforms=True):
+    def save_log(self, log_folder, msg='', is_save_psp_waveforms=False):
         """
         save simulation results into a hdf5 file
         :param log_folder: directory path to save save_log
@@ -369,6 +362,14 @@ class Simulation(object):
             log_f = h5py.File(os.path.join(log_folder, save_name))
             log_f['terrain_map'] = self._terrain._terrain_map
             log_f['message'] = msg
+
+            end_t_dset = log_f.create_dataset('last_time_point', data=self._end_t)
+            end_t_dset.attrs['description'] = 'the last time point simulated.'
+
+            food_pos_dset = log_f.create_dataset('food_pos_history',
+                                                 data=self._simulation_histories['food_pos_history'])
+            food_pos_dset.attrs['data_format'] = 'time_points x food_num x food position [row, col]'
+
             fish_list_grp = log_f.create_group('fish_list')
             for curr_fish in self._fish_list:
 
@@ -397,16 +398,63 @@ class Simulation(object):
                     curr_fish_psp_wf_dset.attrs['data_format'] = 'neuron_ind x time_point'
 
                 # save life history of fish
-                curr_life_his = self._simulation_histories['test_fish']['life_history']
+                curr_life_his = self._simulation_histories[curr_fish.name]['life_history']
                 curr_pos_arr = np.array(curr_life_his.loc[:, ['pos_row', 'pos_col']])
                 curr_fish_pos_dset = curr_fish_sim_grp.create_dataset('position_history', data=curr_pos_arr)
                 curr_fish_pos_dset.attrs['data_format'] = 'time_point x center position [row, col]'
                 curr_health_arr = np.array(curr_life_his.loc[:, 'health'])
                 curr_fish_sim_grp['health'] = curr_health_arr
+        else:
+            raise RuntimeError("Simulation: Cannot save save_log. Simulation has not run yet.")
 
-            food_pos_dset = log_f.create_dataset('food_pos_history',
-                                                 data=self._simulation_histories['food_pos_history'])
+    def save_log_to_h5_grp(self, h5_grp, msg='', is_save_psp_waveforms=False):
+        """
+        save simulation results into a hdf5 group
+        :param h5_grp, hdf5 group object
+        :param msg: str, print out string
+        :param is_save_psp_waveforms:
+        :return: None
+        """
+        if len(self._fish_list) > 1:
+            raise IOError('Simulation: Cannot save log to a hdf5 group. More than one fish in self._fish_list. '
+                          'The save_log_to_h5_grp() function only designed to save log of simulation contain only '
+                          'one fish.')
+
+        if self._simulation_status == 4:
+
+            curr_fish = self._fish_list[0]
+            curr_sim_history = self._simulation_histories[curr_fish.name]
+
+            h5_grp = h5_grp.create_group('simulation_' + curr_fish.name)
+            h5_grp['terrain_map'] = self._terrain._terrain_map
+            h5_grp['message'] = msg
+
+            food_pos_dset = h5_grp.create_dataset('food_pos_history',
+                                                    data=self._simulation_histories['food_pos_history'])
             food_pos_dset.attrs['data_format'] = 'time_points x food_num x food position [row, col]'
+
+            end_t_dset = h5_grp.create_dataset('last_time_point', data=self._end_t)
+            end_t_dset.attrs['description'] = 'the last time point simulated.'
+
+            # save action histories of every neuron in current fish
+            curr_fish_ah_grp = h5_grp.create_group('action_histories')
+            curr_fish_ah = curr_sim_history['action_histories']
+            for neuron_ind, ah in curr_fish_ah.iterrows():
+                curr_fish_ah_grp['neuron_' + util.int2str(neuron_ind, 4)] = ah.iloc[0]
+
+            if is_save_psp_waveforms:
+                # save psp waveforms of all neurons in current fish
+                curr_fish_psp_wf_dset = h5_grp.create_dataset('psp_waveforms',
+                                                              data=curr_sim_history['psp_waveforms'])
+                curr_fish_psp_wf_dset.attrs['data_format'] = 'neuron_ind x time_point'
+
+            # save life history of fish
+            curr_life_his = self._simulation_histories[curr_fish.name]['life_history']
+            curr_pos_arr = np.array(curr_life_his.loc[:, ['pos_row', 'pos_col']])
+            curr_fish_pos_dset = h5_grp.create_dataset('position_history', data=curr_pos_arr)
+            curr_fish_pos_dset.attrs['data_format'] = 'time_point x center position [row, col]'
+            curr_health_arr = np.array(curr_life_his.loc[:, 'health'])
+            h5_grp['health'] = curr_health_arr
 
         else:
             raise RuntimeError("Simulation: Cannot save save_log. Simulation has not run yet.")

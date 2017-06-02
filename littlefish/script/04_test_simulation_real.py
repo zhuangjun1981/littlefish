@@ -6,7 +6,7 @@ import littlefish.core.fish as fi
 import littlefish.core.simulation as si
 import littlefish.core.terrain as tr
 
-simulation_length = 100000  # 100000
+simulation_length = 10000  # 100000
 
 random.seed(111)
 np.random.seed(50)
