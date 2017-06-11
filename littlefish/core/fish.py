@@ -1360,16 +1360,34 @@ class Fish(object):
                 updated_health = self._max_health
             return updated_health
 
-    def to_h5_group(self, h5_group):
+    def to_h5_group(self, h5_grp):
 
-        h5_group.create_dataset('name', data=self._name)
-        h5_group.create_dataset('mother_name', data=self._mother_name)
-        h5_group.create_dataset('max_health', data=self._max_health)
-        h5_group.create_dataset('health_decay_rate_per_tu', data=self._health_decay_rate)
-        h5_group.create_dataset('land_penalty_rate_per_pixel_tu', data=self._land_penalty_rate)
-        h5_group.create_dataset('food_rate_per_pixel', data=self._food_rate)
-        brain_group = h5_group.create_group('brain')
+        h5_grp.create_dataset('name', data=self._name)
+        h5_grp.create_dataset('mother_name', data=self._mother_name)
+        h5_grp.create_dataset('max_health', data=self._max_health)
+        h5_grp.create_dataset('health_decay_rate_per_tu', data=self._health_decay_rate)
+        h5_grp.create_dataset('land_penalty_rate_per_pixel_tu', data=self._land_penalty_rate)
+        h5_grp.create_dataset('food_rate_per_pixel', data=self._food_rate)
+        brain_group = h5_grp.create_group('brain')
         self._brain.to_h5_group(brain_group)
+
+    @staticmethod
+    def from_h5_group(h5_grp):
+
+        brain_grp = h5_grp['brain']
+        curr_brain = Brain.from_h5_group(brain_grp)
+        curr_name = h5_grp['name'].value
+        curr_mother_name = h5_grp['mother_name'].value
+        curr_max_health = h5_grp['max_health'].value
+        curr_health_decay_rate = h5_grp['health_decay_rate_per_tu'].value
+        curr_land_penalty_rate = h5_grp['land_penalty_rate_per_pixel_tu'].value
+        curr_food_rate = h5_grp['food_rate_per_pixel'].value
+
+        curr_fish = Fish(name=curr_name, mother_name=curr_mother_name, brain=curr_brain, max_health=curr_max_health,
+                         health_decay_rate=curr_health_decay_rate, land_penalty_rate=curr_land_penalty_rate,
+                         food_rate=curr_food_rate)
+
+        return curr_fish
         
 
 if __name__ == '__main__':
@@ -1551,7 +1569,11 @@ if __name__ == '__main__':
     # =========================================================================================
 
     # =========================================================================================
-    generate_standard_fish()
+    # generate_standard_fish()
+    # =========================================================================================
+
+    # =========================================================================================
+
     # =========================================================================================
 
     print('\nfor debug ...')

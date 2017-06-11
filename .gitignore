@@ -60,4 +60,3 @@ docs/_build/
 target/
 
 .idea/
-*.hdf5
