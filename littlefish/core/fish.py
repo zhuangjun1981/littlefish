@@ -2,6 +2,7 @@
 #                         print_function, unicode_literals)
 # from builtins import *
 import random
+import numbers
 import numpy as np
 import pandas as pd
 from littlefish.core import utilities as util
@@ -252,7 +253,8 @@ class Neuron(object):
         if h5_group.attrs['neuron_type'] != 'neuron':
             raise ValueError('Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".')
 
-        neuron = Neuron(baseline_rate=h5_group['baseline_rate'], refractory_period=h5_group['refractory_period'])
+        neuron = Neuron(baseline_rate=h5_group['baseline_rate'].value,
+                        refractory_period=h5_group['refractory_period'].value)
         return neuron
 
 
@@ -448,9 +450,9 @@ class Eye(Neuron):
         if h5_group.attrs['neuron_type'] != 'eye':
             raise ValueError('Eye: loading from h5 file failed. "neuron_type" attribute should be "eye".')
 
-        eye = Eye(direction=h5_group['direction'], input_filter=h5_group['input_filter'], gain=h5_group['gain'],
-                  input_type=h5_group['input_type'], baseline_rate=h5_group['baseline_rate'],
-                  refractory_period=h5_group['refractory_period'])
+        eye = Eye(direction=h5_group['direction'].value, input_filter=h5_group['input_filter'].value,
+                  gain=h5_group['gain'].value, input_type=h5_group['input_type'].value,
+                  baseline_rate=h5_group['baseline_rate'].value, refractory_period=h5_group['refractory_period'].value)
         return eye
 
 
@@ -518,8 +520,8 @@ class Muscle(Neuron):
         if h5_group.attrs['neuron_type'] != 'muscle':
             raise ValueError('Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".')
 
-        muscle = Muscle(direction=h5_group['direction'], baseline_rate=h5_group['baseline_rate'],
-                        refractory_period=h5_group['refractory_period'])
+        muscle = Muscle(direction=h5_group['direction'].value, baseline_rate=h5_group['baseline_rate'].value,
+                        refractory_period=h5_group['refractory_period'].value)
         return muscle
 
 
@@ -540,22 +542,22 @@ class Connection(object):
         """
 
         if latency is not None:
-            if not isinstance(latency, int):
+            if not isinstance(latency, numbers.Integral):
                 raise ValueError('latency should be an integer.')
-            self._latency = latency
+            self._latency = int(latency)
 
         if amplitude is not None:
             self._amplitude = float(amplitude)
 
         if rise_time is not None:
-            if not isinstance(rise_time, int):
+            if not isinstance(rise_time, numbers.Integral):
                 raise ValueError('rise_time should be an integer.')
-            self._rise_time = rise_time
+            self._rise_time = int(rise_time)
 
         if decay_time is not None:
-            if not isinstance(decay_time, int):
+            if not isinstance(decay_time, numbers.Integral):
                 raise ValueError('decay_time should be an integer.')
-            self._decay_time = decay_time
+            self._decay_time = int(decay_time)
 
         self._generate_psp()
 
@@ -582,6 +584,7 @@ class Connection(object):
         self._psp = np.zeros(self._latency + self._rise_time + self._decay_time)
         self._psp[self._latency: self._latency + self._rise_time] = self._amplitude * \
             (np.arange(self._rise_time) + 1).astype(np.float32) / float(self._rise_time)
+
         self._psp[-self._decay_time:] = self._amplitude * \
             (np.arange(self._decay_time, 0, -1) - 1).astype(np.float32) / float(self._decay_time)
 
@@ -1111,13 +1114,13 @@ class Brain(object):
             curr_ind = curr_neuron_group.attrs['ind']
             if curr_neuron_group.attrs['neuron_type'] == 'neuron':
                 curr_neuron = Neuron.from_h5_group(curr_neuron_group)
-            elif curr_neuron_group.attrs['neuron_type'] == 'eye2':
-                curr_neuron = Eye2.from_h5_group(curr_neuron_group)
+            elif curr_neuron_group.attrs['neuron_type'] == 'eye':
+                curr_neuron = Eye.from_h5_group(curr_neuron_group)
             elif curr_neuron_group.attrs['neuron_type'] == 'muscle':
                 curr_neuron = Muscle.from_h5_group(curr_neuron_group)
             else:
                 raise LookupError('Brain: fail to load neuron. "neuron_type" attribute should be one of the '
-                                  'following: "eye2", "neuron" or "muscle".')
+                                  'following: "eye", "neuron" or "muscle".')
 
             neurons.loc[curr_ind] = [curr_layer, curr_neuron_ind, curr_neuron]
 
@@ -1572,8 +1575,5 @@ if __name__ == '__main__':
     # generate_standard_fish()
     # =========================================================================================
 
-    # =========================================================================================
-
-    # =========================================================================================
 
     print('\nfor debug ...')

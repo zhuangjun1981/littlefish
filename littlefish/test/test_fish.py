@@ -1,3 +1,5 @@
+import os
+import h5py
 import random
 import unittest
 import littlefish.core.fish as fi
@@ -199,6 +201,33 @@ class TestFish(unittest.TestCase):
     def test_generate_standard_fish(self):
         fi.generate_standard_fish()
 
+    def test_load_brain(self):
+        curr_folder = os.path.dirname(os.path.realpath(__file__))
+        example_log_f = h5py.File(os.path.join(curr_folder, 'example_simulation_log.hdf5'))
+        brain_grp = example_log_f['fish_test_fish/brain']
+        curr_brain = fi.Brain.from_h5_group(brain_grp)
+        assert (curr_brain.get_neurons().loc[0, 'neuron']._gain == 0.005)
+        assert (curr_brain.get_neurons().loc[0, 'neuron']._baseline_rate == 0.)
+        assert (curr_brain.get_neurons().loc[0, 'neuron']._refractory_period == 1.2)
+        assert (curr_brain._connections['L001_L002'].loc[16, 8]._amplitude == 0.001)
+        assert (curr_brain._connections['L001_L002'].loc[16, 8]._latency == 3)
+        assert (curr_brain._connections['L001_L002'].loc[16, 8]._rise_time == 2)
+        assert (curr_brain._connections['L001_L002'].loc[16, 8]._decay_time == 5)
+        example_log_f.close()
+
+    def test_load_fish(self):
+        curr_folder = os.path.dirname(os.path.realpath(__file__))
+        example_log_f = h5py.File(os.path.join(curr_folder, 'example_simulation_log.hdf5'))
+        fish_grp = example_log_f['fish_test_fish']
+        curr_fish = fi.Fish.from_h5_group(fish_grp)
+        assert (curr_fish._food_rate == 10.)
+        assert (curr_fish._health_decay_rate == 0.001)
+        assert (curr_fish._land_penalty_rate == 0.01)
+        assert (curr_fish._max_health == 100.)
+        assert (curr_fish._mother_name == '')
+        assert (curr_fish._name == 'test_fish')
+        example_log_f.close()
+
 
 if __name__ == '__main__':
 
@@ -213,3 +242,7 @@ if __name__ == '__main__':
     tfb.test_brain_minimum_brain()
     tfb.test_brain_generate_empty_action_histories()
     tfb.test_get_eye_type()
+    tfb.test_get_muscle_direction()
+    tfb.test_generate_standard_fish()
+    tfb.test_load_brain()
+    tfb.test_load_fish()

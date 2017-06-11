@@ -430,9 +430,12 @@ class Simulation(object):
             h5_grp['terrain_map'] = self._terrain._terrain_map
             h5_grp['message'] = msg
 
+            #===============================================================================
+            #todo: save light weighted food positions history
             food_pos_dset = h5_grp.create_dataset('food_pos_history',
                                                     data=self._simulation_histories['food_pos_history'])
             food_pos_dset.attrs['data_format'] = 'time_points x food_num x food position [row, col]'
+            # ===============================================================================
 
             end_t_dset = h5_grp.create_dataset('last_time_point', data=self._end_t)
             end_t_dset.attrs['description'] = 'the last time point simulated.'
@@ -451,9 +454,14 @@ class Simulation(object):
 
             # save life history of fish
             curr_life_his = self._simulation_histories[curr_fish.name]['life_history']
+
+            # ===============================================================================
+            #todo: save light weighted position history
             curr_pos_arr = np.array(curr_life_his.loc[:, ['pos_row', 'pos_col']])
             curr_fish_pos_dset = h5_grp.create_dataset('position_history', data=curr_pos_arr)
             curr_fish_pos_dset.attrs['data_format'] = 'time_point x center position [row, col]'
+            # ===============================================================================
+
             curr_health_arr = np.array(curr_life_his.loc[:, 'health'])
             h5_grp['health'] = curr_health_arr
 
