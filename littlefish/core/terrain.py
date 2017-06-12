@@ -57,7 +57,7 @@ class TerrainGenerator(object):
         float_map = self.generate_float_map(sigma=sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)
         binary_map[float_map > self._sea_level] = 1
-        # print(binary_map.dtype)
+        # print(binary_map._dtype)
 
         if is_plot:
             f = plt.figure(figsize=(20, 8))
@@ -84,7 +84,7 @@ class BinaryTerrain(object):
         if util.check_binary_2d_array(input_array):
             self._terrain_map = input_array
         else:
-            raise ValueError('BinaryTerrain: input array should be binary 2d numpy array, with dtype np.int.')
+            raise ValueError('BinaryTerrain: input array should be binary 2d numpy array, with _dtype np.int.')
 
     def get_terrain_shape(self):
         return self._terrain_map.shape
@@ -120,7 +120,7 @@ class BinaryTerrain(object):
         :param food_map: 2-d binary array, 0: non-food, 1: food
         :param food_num: positive integer, number of food pixels after update
         :return: food_map: updated food map
-                 food_positions: 2d array, food_num x 2, dtype: uint16, array of food pixel coordinates, 
+                 food_positions: 2d array, food_num x 2, _dtype: uint16, array of food pixel coordinates,
                                 each row is a food position, columns: [row, col]
         """
 
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     # terrain_map = terrain_generator.generate_binary_map(sigma=5., is_plot=True)
     # binary_terrain = BinaryTerrain(terrain_map)
     # fish_poss = binary_terrain.generate_fish_starting_position(5)
-    # fish_map = np.zeros(binary_terrain.get_terrain_shape(), dtype=np.uint8)
+    # fish_map = np.zeros(binary_terrain.get_terrain_shape(), _dtype=np.uint8)
     #
     # for fish_pos in fish_poss:
     #     fish_map[fish_pos[0] - 1: fish_pos[0] + 2, fish_pos[1] - 1: fish_pos[1] + 2] = 1
@@ -190,8 +190,8 @@ if __name__ == '__main__':
 
 
     # =============================================================
-    # food_map = np.zeros((5, 5), dtype=np.uint8)
-    # terrain_map = np.zeros((5, 5), dtype=np.uint8)
+    # food_map = np.zeros((5, 5), _dtype=np.uint8)
+    # terrain_map = np.zeros((5, 5), _dtype=np.uint8)
     # terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1
     # terrain = BinaryTerrain(terrain_map)
     # food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)

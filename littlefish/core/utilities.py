@@ -109,7 +109,7 @@ def check_arithmetic_progression(seq):
 
 def check_binary_2d_array(array):
     """
-    check if an array is 2 dimensional and dtype is int and only contains 0s and 1s
+    check if an array is 2 dimensional and _dtype is int and only contains 0s and 1s
     """
 
     if not isinstance(array, np.ndarray):
@@ -168,7 +168,7 @@ def plot_mask_borders(mask, plot_axis=None, color='#ff0000', border_width=2, clo
     as background, and non-zero, non-nan pixel will be considered in ROI.
     '''
     if not check_binary_2d_array(mask):
-        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with dtype as integer and contains '
+        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains '
                           'only 0s and 1s.')
 
     if not plot_axis:
@@ -198,7 +198,7 @@ def plot_mask(mask, plot_axis=None, color='#ff0000', closing_iteration=None, **k
     as background, and non-zero, non-nan pixel will be considered in ROI.
     '''
     if not check_binary_2d_array(mask):
-        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with dtype as integer and contains '
+        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains '
                           'only 0s and 1s.')
 
     if not plot_axis:
@@ -290,7 +290,7 @@ if __name__ == '__main__':
     # ==================================================
 
     # ==================================================
-    # array = np.zeros((100, 100), dtype=np.uint8)
+    # array = np.zeros((100, 100), _dtype=np.uint8)
     # array[35: 38, 40: 43] = 1
     # array[35, 40] = 1
     # plot_mask(array)

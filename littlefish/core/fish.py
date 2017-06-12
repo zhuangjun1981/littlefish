@@ -198,12 +198,24 @@ class Neuron(object):
 
     def __str__(self):
         return 'littlefish.brain.Neuron object'
+    
+    def copy(self):
+        """
+        :return: a copy of self for i.e. mutation 
+        """
+        return Neuron(baseline_rate=self.get_baseline_rate(), refractory_period=self.get_refractory_period())
 
     def get_baseline_rate(self):
         return self._baseline_rate
 
     def get_refractory_period(self):
         return self._refractory_period
+    
+    def set_baseline_rate(self, new_baseline_rate):
+        self._baseline_rate = float(new_baseline_rate)
+        
+    def set_refractory_period(self, new_refractory_period):
+        self._refractory_period = new_refractory_period
 
     def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
         """
@@ -346,7 +358,24 @@ class Eye(Neuron):
 
     def __str__(self):
         return 'littlefish.brain.Eye object'
+    
+    def copy(self):
+        """
+        :return: a copy of self for i.e. mutation 
+        """
+        return Eye(direction=self.get_direction(), input_filter=self.get_input_filter(), gain=self.get_gain(),
+                   input_type=self.get_input_type(), baseline_rate=self.get_baseline_rate(), 
+                   refractory_period=self.get_refractory_period())
 
+    def get_direction(self):
+        return self._direction
+    
+    def get_input_filter(self):
+        return self._input_filter
+    
+    def get_gain(self):
+        return self._gain
+    
     def get_input_type(self):
         return self._input_type
 
@@ -354,7 +383,7 @@ class Eye(Neuron):
         """
         get pixel coordinate of receptive field
         
-        :return rf_positions: 2d array, shape: (16, 2), dtype: int64. each row is a pixel in the receptive field,
+        :return rf_positions: 2d array, shape: (16, 2), _dtype: int64. each row is a pixel in the receptive field,
                               [row, col] relative to the position of the body center pixel
         """
 
@@ -461,7 +490,7 @@ class Muscle(Neuron):
     muscle class for determining the motion of the fish. Subclass of Neuron class
     """
 
-    def __init__(self, direction, baseline_rate=0.0001, refractory_period=5000):
+    def __init__(self, direction, baseline_rate=0.001, refractory_period=500.):
 
         if direction in ['east', 'north', 'west', 'south']:
             self._direction = direction
@@ -472,6 +501,16 @@ class Muscle(Neuron):
 
     def __str__(self):
         return 'littlefish.brain.Muscle object'
+    
+    def copy(self):
+        """
+        :return: a copy of self for i.e. mutation 
+        """
+        return Muscle(direction=self.get_direction(), baseline_rate=self.get_baseline_rate(), 
+                      refractory_period=self.get_refractory_period())
+    
+    def get_direction(self):
+        return self._direction
 
     def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
         """
@@ -542,7 +581,7 @@ class Connection(object):
         """
 
         if latency is not None:
-            if not isinstance(latency, numbers.Integral):
+            if not util.is_integer(latency):
                 raise ValueError('latency should be an integer.')
             self._latency = int(latency)
 
@@ -550,12 +589,12 @@ class Connection(object):
             self._amplitude = float(amplitude)
 
         if rise_time is not None:
-            if not isinstance(rise_time, numbers.Integral):
+            if not util.is_integer(rise_time):
                 raise ValueError('rise_time should be an integer.')
             self._rise_time = int(rise_time)
 
         if decay_time is not None:
-            if not isinstance(decay_time, numbers.Integral):
+            if not util.is_integer(decay_time):
                 raise ValueError('decay_time should be an integer.')
             self._decay_time = int(decay_time)
 
@@ -563,18 +602,51 @@ class Connection(object):
 
     def __str__(self):
         return 'littlefish.brain.Connection object'
+    
+    def copy(self):
+        """
+        :return: a copy of self for i.e. mutation 
+        """
+        return Connection(latency=self.get_latency(), amplitude=self.get_amplitude(), rise_time=self.get_rise_time(),
+                          decay_time=self.get_decay_time())
 
     def get_latency(self):
         return self._latency
+    
+    def set_latency(self, new_latency):
+        if new_latency is not None:
+            if not util.is_integer(new_latency):
+                raise ValueError('new_latency should be an integer.')
+            self._latency = int(new_latency)
+            self._generate_psp()
 
     def get_amplitude(self):
         return self._amplitude
+    
+    def set_ampletude(self, new_amplitude):
+        if new_amplitude is not None:
+            self._amplitude = float(new_amplitude)
+            self._generate_psp()
 
     def get_rise_time(self):
         return self._rise_time
+    
+    def set_rise_time(self, new_rise_time):
+        if new_rise_time is not None:
+            if not util.is_integer(new_rise_time):
+                raise ValueError('new_rise should be an integer.')
+            self._rise_time = int(new_rise_time)
+            self._generate_psp()
 
     def get_decay_time(self):
         return self._decay_time
+    
+    def set_decay_time(self, new_decay_time):
+        if new_decay_time is not None:
+            if not util.is_integer(new_decay_time):
+                raise ValueError('new_decay should be an integer.')
+            self._decay_time = int(new_decay_time)
+            self._generate_psp()
 
     def _generate_psp(self):
         """
@@ -1397,7 +1469,7 @@ if __name__ == '__main__':
 
     # =========================================================================================
     # starting_position = (10, 10)
-    # terrain_map = np.zeros((20, 20), dtype=np.uint8)
+    # terrain_map = np.zeros((20, 20), _dtype=np.uint8)
     #
     # fish = Fish()
     # fish.initialize_simulation(starting_position=starting_position, terrain_map=terrain_map)
@@ -1472,7 +1544,7 @@ if __name__ == '__main__':
     # =========================================================================================
     # SIMULATION_LENGTH = 100000
     #
-    # terrain_map = np.zeros((5, 5), dtype=np.uint8)
+    # terrain_map = np.zeros((5, 5), _dtype=np.uint8)
     # terrain_map[3, 3] = 1
     # print(terrain_map)
     #
@@ -1505,7 +1577,7 @@ if __name__ == '__main__':
     # =========================================================================================
     # SIMULATION_LENGTH = 100000
     #
-    # terrain_map = np.zeros((5, 5), dtype=np.uint8)
+    # terrain_map = np.zeros((5, 5), _dtype=np.uint8)
     # terrain_map[3, 3] = 1
     # print(terrain_map)
     #
