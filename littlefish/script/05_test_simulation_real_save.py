@@ -11,7 +11,7 @@ import littlefish.core.simulation as si
 import littlefish.core.terrain as tr
 
 log_folder = r'C:\little_fish_simulation_logs'
-simulation_length = 200  # 100000
+simulation_length = 2000  # 100000
 random_seed = 111
 np_random_seed = 50
 

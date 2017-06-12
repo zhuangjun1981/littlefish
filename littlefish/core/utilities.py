@@ -11,6 +11,7 @@ import scipy.ndimage as ni
 def is_integer(var):
     return isinstance(var, numbers.Integral)
 
+
 def array_nor(arr):
     arr = arr.astype(np.float32)
     return (arr - np.amin(arr)) / (np.amax(arr) - np.amin(arr))

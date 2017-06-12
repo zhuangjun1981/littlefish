@@ -60,7 +60,7 @@ class Simulation(object):
             # food_pos_history, simulation_length x food_num x 2, (row, col)
             self._simulation_histories.update({'food_pos_history':
                                                    np.zeros((self._simulation_length, self._food_num, 2),
-                                                            dtype=np.uint16)})
+                                                            dtype=np.uint32)})
 
             #  generate non-overlapping positions for all fish
             fish_start_positions = self._terrain.generate_fish_starting_position(len(self._fish_list))
@@ -433,7 +433,8 @@ class Simulation(object):
             #===============================================================================
             #todo: save light weighted food positions history
             food_pos_dset = h5_grp.create_dataset('food_pos_history',
-                                                    data=self._simulation_histories['food_pos_history'])
+                                                  data=self._simulation_histories['food_pos_history'], dtype=np.uint32,
+                                                  compression='gzip')
             food_pos_dset.attrs['data_format'] = 'time_points x food_num x food position [row, col]'
             # ===============================================================================
 
@@ -458,7 +459,8 @@ class Simulation(object):
             # ===============================================================================
             #todo: save light weighted position history
             curr_pos_arr = np.array(curr_life_his.loc[:, ['pos_row', 'pos_col']])
-            curr_fish_pos_dset = h5_grp.create_dataset('position_history', data=curr_pos_arr)
+            curr_fish_pos_dset = h5_grp.create_dataset('position_history', data=curr_pos_arr, dtype=np.uint32,
+                                                       compression='gzip')
             curr_fish_pos_dset.attrs['data_format'] = 'time_point x center position [row, col]'
             # ===============================================================================
 
