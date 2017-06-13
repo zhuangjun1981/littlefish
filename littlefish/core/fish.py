@@ -569,7 +569,7 @@ class Connection(object):
     synaptic connection between two neurons
     """
 
-    def __init__(self, latency=3, amplitude=0.0001, rise_time=5, decay_time=10):
+    def __init__(self, latency=3, amplitude=0.001, rise_time=5, decay_time=10):
         """
 
         :param latency: int, temporal latency from presynaptic neuron action to the postsynaptic effect onset, number
