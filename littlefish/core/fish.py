@@ -210,6 +210,9 @@ class Neuron(object):
 
     def get_refractory_period(self):
         return self._refractory_period
+
+    def get_neuron_type(self):
+        return 'neuron'
     
     def set_baseline_rate(self, new_baseline_rate):
         self._baseline_rate = float(new_baseline_rate)
@@ -379,6 +382,9 @@ class Eye(Neuron):
     def get_input_type(self):
         return self._input_type
 
+    def get_neuron_type(self):
+        return 'eye'
+
     def _get_rf_positions(self):
         """
         get pixel coordinate of receptive field
@@ -508,6 +514,9 @@ class Muscle(Neuron):
         """
         return Muscle(direction=self.get_direction(), baseline_rate=self.get_baseline_rate(), 
                       refractory_period=self.get_refractory_period())
+
+    def get_neuron_type(self):
+        return 'muscle'
     
     def get_direction(self):
         return self._direction
@@ -749,58 +758,18 @@ class Brain(object):
             self._neurons = neurons
             self._connections = connections
 
-        self.check_integrity(verbose=True)
+        self.check_integrity(verbose=False)
 
         print('Brain: littlefish.core.fish.Brain created successfully.')
 
     def __str__(self):
         return 'littlefish.brain.Brain object'
 
-    # def _generate_default_neurons(self):
-    #     """
-    #     generate and return a dataframe containing all neurons with default parameters
-    #     """
-    #     neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
-    #
-    #     ind = 0
-    #     for i in range(8):
-    #         curr_dir, curr_type = self.get_eye_type(i)
-    #         neurons.loc[ind] = [0, i, Eye(direction=curr_dir)]
-    #         ind += 1
-    #
-    #     for i in range(8):
-    #         neurons.loc[ind] = [1, i, Neuron()]
-    #         ind += 1
-    #
-    #     for i in range(4):
-    #         curr_dir = self.get_muscle_direction(i)
-    #         neurons.loc[ind] = [2, i, Muscle(direction=curr_dir)]
-    #         ind += 1
-    #
-    #     neurons['layer'] = neurons['layer'].astype(np.uint32)
-    #     neurons['neuron_ind'] = neurons['neuron_ind'].astype(np.uint32)
-    #
-    #     return neurons
-    #
-    # def _generate_default_connections(self):
-    #     """
-    #     generate all possible connections among self_neurons with default parameters
-    #     """
-    #
-    #     connections = {}
-    #
-    #     default_connection = Connection()
-    #
-    #     for pre_layer in range(self.layer_num - 1):
-    #         post_layer = pre_layer + 1
-    #         post_neuron_inds = self.get_neuron_inds_in_layer(post_layer)
-    #         pre_neuron_inds = self.get_neuron_inds_in_layer(pre_layer)
-    #         curr_name = 'L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)
-    #         curr_df = pd.DataFrame([[default_connection] * len(pre_neuron_inds)] * len(post_neuron_inds),
-    #                                columns=pre_neuron_inds, index=post_neuron_inds)
-    #         connections.update({curr_name: curr_df})
-    #
-    #     return connections
+    def copy(self):
+        """
+        :return: a copy of self for i.e. mutation
+        """
+        return Brain(neurons=self.get_neurons().copy(), connections=dict(self.get_connections()))
 
     def get_neurons(self):
         return self._neurons
@@ -834,7 +803,7 @@ class Brain(object):
                  for muscles ('muscle', short of direction)
         """
 
-        self.check_integrity_neurons()
+        # self.check_integrity_neurons()
 
         curr_row = self._neurons.loc[ind]
         curr_layer = curr_row['layer']
@@ -903,13 +872,15 @@ class Brain(object):
         check integrity of object data structure
         """
 
-        print('Brain: checking integrity of attrbitue data structure ...')
+        if verbose:
+            print('Brain: checking integrity of attrbitue data structure ...')
 
         self.check_integrity_neurons(verbose=verbose)
 
         self.check_integrity_connection(verbose=verbose)
 
-        print('Brain: integrity checking finished. All pass.')
+        if verbose:
+            print('Brain: integrity checking finished. All pass.')
 
     def check_integrity_neurons(self, verbose=False):
 
@@ -1124,8 +1095,8 @@ class Brain(object):
                  above
         """
 
-        self.check_integrity_neurons()
-        self.check_integrity_connection()
+        # self.check_integrity_neurons()
+        # self.check_integrity_connection()
 
         rows = self.get_neuron_inds_in_layer(post_layer)
         cols = self.get_neuron_inds_in_layer(pre_layer)
@@ -1316,6 +1287,14 @@ class Fish(object):
 
         print('Fish: littlefish.core.fish.Fish object created successfully.')
 
+    def copy(self):
+        """
+        :return: a copy of self for i.e. mutation
+        """
+        return Fish(name=self.get_name(), mother_name=self.get_mother_name(), brain=self.get_brain(),
+                    max_health=self.get_max_health(), health_decay_rate=self.get_health_decay_rate(),
+                    food_rate=self.get_food_rate())
+
     def get_name(self):
         return self._name
 
@@ -1323,8 +1302,23 @@ class Fish(object):
     def name(self):
         return self.get_name()
 
+    def get_mother_name(self):
+        return self._mother_name
+
+    def get_brain(self):
+        return self._brain
+
     def get_max_health(self):
         return self._max_health
+
+    def get_health_decay_rate(self):
+        return self._health_decay_rate
+
+    def get_land_penalty_rate(self):
+        return self._land_penalty_rate
+
+    def get_food_rate(self):
+        return self._food_rate
 
     def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
             food_map=None, fish_map=None):

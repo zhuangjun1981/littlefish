@@ -1,5 +1,34 @@
 import random
+import datetime
+import numpy as np
+import itertools
 import littlefish.core.fish as fi
+
+
+
+def choose_index_1d(indices, mutation_rate):
+    """
+    randomly chooses a subset of indices from a list of indices based on the mutation_rate
+    :param indices: list of unsigned integers, all indices to choose from
+    :param mutation_rate: float, [0., 1.]
+    :return: list of unsigned integers, a list of subset of the indices
+    """
+    mutate_num = int(np.ceil(len(indices) * float(mutation_rate)))
+    return random.sample(indices, mutate_num)
+
+
+def choose_index_2d(indices0, indices1, mutation_rate):
+    """
+    randomly choose a subset of index pairs from a 2d grid based on the mutation rates
+    :param indices0: 1d seq, list of indices along axis 0 (rows)
+    :param indices1: 1d seq, list of indices along axis 1 (columns)
+    :param mutation_rate: float, [0., 1.]
+    :return: list of index pairs, each pair contains two elements [index0, index1] representing the coordinates of a
+             randomly chosen location
+    """
+    all_coordinates = list(itertools.product(indices0, indices1))
+    mutate_num = int(np.ceil(len(all_coordinates) * float(mutation_rate)))
+    return random.sample(all_coordinates, mutate_num)
 
 
 def mutate_neuron(neuron, neuron_mutation):
@@ -23,7 +52,7 @@ def mutate_neuron(neuron, neuron_mutation):
     return mutated_neuron
     
 
-def mutation_connection(connection, connection_mutation):
+def mutate_connection(connection, connection_mutation):
     """
     mutate a connection
     :param connection: the initial little_fish.core.fish.Connection object
@@ -49,6 +78,65 @@ def mutation_connection(connection, connection_mutation):
 
     return fi.Connection(latency=mutated_latency, amplitude=mutated_amplitude, rise_time=mutated_rise_time,
                          decay_time=mutated_decay_time)
+
+
+def mutate_brain(brain, brain_mutation, verbose=False):
+
+    if verbose:
+        print('\nmutating input brain ...')
+
+    mutated_neurons = brain.get_neurons().copy()
+    mutated_connections = dict(brain.get_connections())
+
+    mutate_neuron_ind = choose_index_1d(mutated_neurons.index.values, brain_mutation.get_neuron_mutation_rate())
+
+    if verbose:
+        print('\nmutating neurons:')
+        print('total number of neurons: {}. neuron mutation rate: {}. number of neurons to be mutated: {}.'
+              .format(len(mutated_neurons), brain_mutation.get_neuron_mutation_rate(), len(mutate_neuron_ind)))
+
+    for mni in mutate_neuron_ind:
+        curr_neuron = mutated_neurons.loc[mni, 'neuron']
+        if curr_neuron.get_neuron_type() == 'eye':
+            curr_mutated_neuron = mutate_neuron(neuron=curr_neuron, neuron_mutation=brain_mutation.get_eye_mutation())
+            mutated_neurons.loc[mni, 'neuron'] = curr_mutated_neuron
+
+        elif curr_neuron.get_neuron_type() == 'neuron':
+            curr_mutated_neuron = mutate_neuron(neuron=curr_neuron,
+                                                neuron_mutation=brain_mutation.get_neuron_mutation())
+            mutated_neurons.loc[mni, 'neuron'] = curr_mutated_neuron
+
+        elif curr_neuron.get_neuron_type() == 'muscle':
+            curr_mutated_neuron = mutate_neuron(neuron=curr_neuron,
+                                                neuron_mutation=brain_mutation.get_muscle_mutation())
+            mutated_neurons.loc[mni, 'neuron'] = curr_mutated_neuron
+
+    if verbose:
+        print('\nmutating connections:')
+
+    for con_name, con_df in mutated_connections.items():
+
+        indices0 = con_df.index.values
+        indices1 = con_df.columns.values
+
+        mutate_conn_coors = choose_index_2d(indices0=indices0, indices1=indices1,
+                                            mutation_rate=brain_mutation.get_connection_mutation_rate())
+
+        if verbose:
+            print('layer: {}'.format(con_name))
+            print('total number of connections: {}. connection mutation rate: {}. '
+                  'number of connections to be mutated: {}.'.format(len(indices0) * len(indices1),
+                                                                    brain_mutation.get_connection_mutation_rate(),
+                                                                    len(mutate_conn_coors)))
+
+        for mutate_coor in mutate_conn_coors:
+            curr_con = con_df.loc[mutate_coor[0], mutate_coor[1]]
+            curr_mutated_con = mutate_connection(connection=curr_con,
+                                                 connection_mutation=brain_mutation.get_connection_mutation())
+            con_df.loc[mutate_coor[0], mutate_coor[1]] = curr_mutated_con
+
+    mutated_brain = fi.Brain(neurons=mutated_neurons, connections=mutated_connections)
+    return mutated_brain
 
 
 class UniformMutation(object):
@@ -224,5 +312,49 @@ class ConnectionMutation(object):
             return None
         else:
             return self.decay_time_mutation.get_value()
+
+
+class BrainMutation(object):
+    """
+    definition of a brain mutation
+    """
+
+    def __init__(self, neuron_mutation_rate=0., eye_mutation=NeuronMutation(), neuron_mutation=NeuronMutation(),
+                 muscle_mutation=NeuronMutation(), connection_mutation_rate=0.,
+                 connection_mutation=ConnectionMutation()):
+        """
+        :param neuron_mutation_rate: float, [0, 1.], fraction of neurons (eyes, hidden neurons and muscles) to be
+                                     mutated
+        :param eye_mutation: littlefish.core.evolution.NeuronMutation object
+        :param neuron_mutation: littlefish.core.evolution.NeuronMutation object
+        :param muscle_mutation: littlefish.core.evolution.NeuronMutation object
+        :param connection_mutation_rate: float, [0, 1.], fraction of connections to be mutated for each layer
+        :param connection_mutation: littlefish.core.evolution.ConnectionMutation object
+        """
+
+        self._neuron_mutation_rate = neuron_mutation_rate
+        self._eye_mutation = eye_mutation
+        self._neuron_mutation = neuron_mutation
+        self._muscle_mutation = muscle_mutation
+        self._connection_mutation_rate = connection_mutation_rate
+        self._connection_mutation = connection_mutation
+
+    def get_neuron_mutation_rate(self):
+        return self._neuron_mutation_rate
+
+    def get_eye_mutation(self):
+        return self._eye_mutation
+
+    def get_neuron_mutation(self):
+        return self._neuron_mutation
+
+    def get_muscle_mutation(self):
+        return self._muscle_mutation
+
+    def get_connection_mutation_rate(self):
+        return self._connection_mutation_rate
+
+    def get_connection_mutation(self):
+        return self._connection_mutation
 
 
