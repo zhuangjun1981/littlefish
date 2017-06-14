@@ -12,7 +12,7 @@ import littlefish.core.simulation as si
 
 data_folder = r'C:\little_fish_simulation_logs'
 
-generation = 2
+generation = 3
 
 # five times of a standard fish's life span without hitting land and eating, 5 * max_health / health_decay_rate
 # max_health of a standard fish: 100

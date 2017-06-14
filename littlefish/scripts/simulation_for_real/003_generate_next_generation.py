@@ -10,9 +10,27 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-gen_num = 1
+gen_num = 2
 
-reproducing_rate = 0.0002  # offsprings per time unit, default life span of a standard fish: 10000
+'''
+the default life span of a standard fish is max_health (100) / health_decay_rate (0.01) = 10000
+if the fish reached this default life span in any simulation, it will give the fish one offspring
+
+for fish with life longer than default in any simulation, those extra time will allow the fish to reproduce at 
+the following rate.
+
+for example: 
+
+if the fish's life spans in three simulations are: 10000, 456, 11000, respectively
+
+since it reached default life span (10000) in two simulations, it will have one base offspring.
+furthermore, in the third simulation, it managed to get one food pellet (10 extra hp), which provides it energy
+for extra life for 10 / health_decay_rate (0.01) = 1000 time point. This extra time allows the fish to reproduce
+at the following rate. So the fish will have 1000 x 0.002 = 2 more offsprings.
+
+So in total the fish will have 3 offsprings.
+'''
+reproducing_rate = 0.002
 random_seed = 113
 
 neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
@@ -79,13 +97,21 @@ for mother_fish_fn in all_mother_fish_lst:
 
     mother_sim_ns = [sim for sim in mother_fish_f.keys() if sim[0:11] == 'simulation_']
 
-    mother_life_span = 0
+    mother_life_spans = []
     for mother_sim_n in mother_sim_ns:
         curr_sim_log_grp = mother_fish_f[mother_sim_n]['simulation_log']
-        mother_life_span += curr_sim_log_grp['last_time_point'].value
+        mother_life_spans.append(curr_sim_log_grp['last_time_point'].value)
 
-    offspring_num = int(mother_life_span * reproducing_rate)
-    print('total life spam: {} time unit. Spawning {} child(ren).'.format(mother_life_span, offspring_num))
+    offspring_num = 0
+    default_life_span = int(mother_fish.get_max_health() / mother_fish.get_health_decay_rate())
+    if max(mother_life_spans) >= default_life_span:
+        offspring_num += 1
+
+    for mother_life_span in mother_life_spans:
+        if mother_life_span > default_life_span:
+            offspring_num += int(round((mother_life_span - default_life_span) * reproducing_rate))
+
+    print('life spans: {} time unit. Spawning {} child(ren).'.format(mother_life_spans, offspring_num))
     print('=========================================================================\n')
     children_lst = []
     for i in range(offspring_num):
