@@ -426,7 +426,7 @@ class Simulation(object):
             curr_fish = self._fish_list[0]
             curr_sim_history = self._simulation_histories[curr_fish.name]
 
-            h5_grp = h5_grp.create_group('simulation_' + curr_fish.name)
+            h5_grp = h5_grp.create_group('simulation_log')
             h5_grp['terrain_map'] = self._terrain._terrain_map
             h5_grp['message'] = msg
 

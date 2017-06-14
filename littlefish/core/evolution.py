@@ -139,6 +139,18 @@ def mutate_brain(brain, brain_mutation, verbose=False):
     return mutated_brain
 
 
+def mutate_fish(fish, brain_mutation):
+
+    mutated_brain = mutate_brain(fish.get_brain(), brain_mutation)
+    mother_name = fish.get_name()
+    name = 'fish_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S')
+
+    mutated_fish = fi.Fish(name=name, mother_name=mother_name, brain=mutated_brain, max_health=fish.get_max_health(),
+                           health_decay_rate=fish.get_health_decay_rate(),
+                           land_penalty_rate=fish.get_land_penalty_rate(), food_rate=fish.get_food_rate())
+    return mutated_fish
+
+
 class UniformMutation(object):
     """
     definition of a single mutation of a single value, based on a uniform distribution of a value range. uses builtin
