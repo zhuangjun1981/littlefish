@@ -10,10 +10,11 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
+gen_num = 1
+
 reproducing_rate = 0.0002  # offsprings per time unit, default life span of a standard fish: 10000
 random_seed = 113
 
-gen_num = 0
 neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
 eye_bl_r = (0., 0.1)  # baseline rate range of eyes, 0 to 0.1 action per time unit (100 spk/sec)
 eye_rp_r = None  # refractory period range of eyes, not mutating right now
