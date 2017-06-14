@@ -13,7 +13,7 @@ import littlefish.core.simulation as si
 data_folder = r'C:\little_fish_simulation_logs'
 # a standard fish's life span without hitting land and eating, max_health / health_decay_rate
 simulation_length = 100000
-generation = 0
+generation = 1
 random_seeds = [30, 57, 68]
 terrain_size = [128, 128]
 sea_level = 0.6
