@@ -1,12 +1,17 @@
 import os
+import sys
 import h5py
 import time
+import random
+import inspect
+import numpy as np
 import littlefish.core.utilities as util
 import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
 reproducing_rate = 0.00005  # offsprings per time unit
+random_seed = 113
 
 gen_num = 0
 neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
@@ -22,6 +27,8 @@ connection_a_r = (-0.1, 0.1)  # amplitude range of connections, (-100~100 spk/se
 connection_rt_r = None  # rise time range of connections, not mutating right now
 connection_dt_r = None  # decay time range of connections, not mutating right now
 
+random.seed(random_seed)
+np.random.seed(random_seed)
 
 def get_single_param_mutation(value_range, dtype):
     if value_range is None:
@@ -83,10 +90,14 @@ for mother_fish_fn in all_mother_fish_lst:
         child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'))
         child_fish_grp = child_fish_f.create_group('fish')
         child_fish.to_h5_group(child_fish_grp)
+        child_fish_f['generation'] = gen_num + 1
         child_fish_f.close()
         children_lst.append(child_fish.name)
         time.sleep(1.)
 
-    mother_fish_f['children_list'] = children_lst
+    ng_grp = mother_fish_f.create_group('next_generation')
+    ng_grp['children_list'] = children_lst
+    ng_grp['random_seed'] = random_seed
+    ng_grp['script_text'] = inspect.getsource(sys.modules[__name__])
 
     mother_fish_f.close()
