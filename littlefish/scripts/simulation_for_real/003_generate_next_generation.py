@@ -6,7 +6,7 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-reproducing_rate = 0.00002  # offsprings per time unit
+reproducing_rate = 0.00005  # offsprings per time unit
 
 gen_num = 0
 neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
@@ -77,12 +77,16 @@ for mother_fish_fn in all_mother_fish_lst:
 
     offspring_num = int(mother_life_span * reproducing_rate)
     print('\ntotal life spam: {} time unit. Spawning {} child(ren).'.format(mother_life_span, offspring_num))
+    children_lst = []
     for i in range(offspring_num):
         child_fish = evo.mutate_fish(fish=mother_fish, brain_mutation=brain_mutation)
         child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'))
         child_fish_grp = child_fish_f.create_group('fish')
         child_fish.to_h5_group(child_fish_grp)
         child_fish_f.close()
+        children_lst.append(child_fish.name)
         time.sleep(1.)
+
+    mother_fish_f['children_list'] = children_lst
 
     mother_fish_f.close()
