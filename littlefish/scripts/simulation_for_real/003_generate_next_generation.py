@@ -95,7 +95,7 @@ for mother_fish_fn in all_mother_fish_lst:
         children_lst.append(child_fish.name)
         time.sleep(1.)
 
-    ng_grp = mother_fish_f.create_group('next_generation')
+    ng_grp = mother_fish_f.create_group('next_generation_seed_' + util.int2str(random_seed, 5))
     ng_grp['children_list'] = children_lst
     ng_grp['random_seed'] = random_seed
     ng_grp['script_text'] = inspect.getsource(sys.modules[__name__])
