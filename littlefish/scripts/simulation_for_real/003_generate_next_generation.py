@@ -10,7 +10,7 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-reproducing_rate = 0.00005  # offsprings per time unit
+reproducing_rate = 0.0002  # offsprings per time unit, default life span of a standard fish: 10000
 random_seed = 113
 
 gen_num = 0
@@ -71,7 +71,8 @@ if not os.path.isdir(next_gen_folder):
     os.mkdir(next_gen_folder)
 
 for mother_fish_fn in all_mother_fish_lst:
-    print('\nprocessing mother fish: {}'.format(mother_fish_fn))
+    print('\n=========================================================================')
+    print('processing mother fish: {}'.format(mother_fish_fn))
     mother_fish_f = h5py.File(os.path.join(curr_gen_folder, mother_fish_fn))
     mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
 
@@ -83,7 +84,8 @@ for mother_fish_fn in all_mother_fish_lst:
         mother_life_span += curr_sim_log_grp['last_time_point'].value
 
     offspring_num = int(mother_life_span * reproducing_rate)
-    print('\ntotal life spam: {} time unit. Spawning {} child(ren).'.format(mother_life_span, offspring_num))
+    print('total life spam: {} time unit. Spawning {} child(ren).'.format(mother_life_span, offspring_num))
+    print('=========================================================================\n')
     children_lst = []
     for i in range(offspring_num):
         child_fish = evo.mutate_fish(fish=mother_fish, brain_mutation=brain_mutation)

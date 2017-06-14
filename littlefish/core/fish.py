@@ -40,7 +40,6 @@ import matplotlib.pyplot as plt
 # FISH_LAND_PENALTY_RATE = 0.005
 # FISH_FOOD_RATE = 20
 
-
 def generate_minimal_brain():
     """
     :return: a Brain object with one eye, two neuron in hidden layer and one muscle 
@@ -144,8 +143,8 @@ def generate_standard_fish():
     # generate standard brain
     standard_brain = Brain(neurons=neurons, connections=connections)
 
-    return Fish(mother_name=None, brain=standard_brain, max_health=100, health_decay_rate=0.001,
-                land_penalty_rate=0.01, food_rate=10.)
+    return Fish(mother_name=None, brain=standard_brain, max_health=100, health_decay_rate=0.01,
+                land_penalty_rate=1., food_rate=10.)
 
 
 def get_eye_type(ind, dir_num=4):
