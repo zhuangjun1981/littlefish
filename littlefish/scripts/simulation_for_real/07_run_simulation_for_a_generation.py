@@ -23,7 +23,7 @@ gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation, 
 os.chdir(gen_folder)
 
 fish_lst = [f for f in os.listdir(gen_folder) if f[0:5] == 'fish_']
-print fish_lst
+print(fish_lst)
 
 tg = tr.TerrainGenerator(size=terrain_size, sea_level=sea_level)
 
