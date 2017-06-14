@@ -39,7 +39,7 @@ for fish_path in fish_lst:
         random.seed(curr_seed)
         np.random.seed(curr_seed)
 
-        print('\n\n===================== fish: {}; simulation: {} start ======================='.
+        print('\n\n============================= fish: {}; simulation: {} start ==============================='.
               format(curr_fish.name, sim_num))
 
         curr_terrain_map = tg.generate_binary_map(sigma=3., is_plot=False)
@@ -58,7 +58,7 @@ for fish_path in fish_lst:
         curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
         curr_simulation.save_log_to_h5_grp(curr_sim_grp, msg=curr_msg, is_save_psp_waveforms=False)
 
-        print('\n===================== fish: {}; simulation: {} end =======================\n'.
+        print('\n============================= fish: {}; simulation: {} end ===============================\n'.
               format(curr_fish.name, sim_num))
 
     curr_fish_f.close()
