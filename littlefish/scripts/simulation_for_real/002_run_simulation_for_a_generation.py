@@ -12,7 +12,7 @@ import littlefish.core.simulation as si
 
 data_folder = r'C:\little_fish_simulation_logs'
 
-generation = 7
+generation = 10
 
 # five times of a standard fish's life span without hitting land and eating, 5 * max_health / health_decay_rate
 # max_health of a standard fish: 100
@@ -43,7 +43,7 @@ for fish_num, fish_path in enumerate(fish_lst):
         np.random.seed(curr_seed)
 
         print('\n\n============================= {}/{}; fish: {}; simulation: {} start ==============================='.
-              format(fish_num, total_fish_num, curr_fish.name, sim_num))
+              format(fish_num, total_fish_num - 1, curr_fish.name, sim_num))
 
         curr_terrain_map = tg.generate_binary_map(sigma=3., is_plot=False)
         curr_terrain = tr.BinaryTerrain(curr_terrain_map)
@@ -62,7 +62,7 @@ for fish_num, fish_path in enumerate(fish_lst):
         curr_simulation.save_log_to_h5_grp(curr_sim_grp, msg=curr_msg, is_save_psp_waveforms=False)
 
         print('\n============================= {}/{}; fish: {}; simulation: {} end ===============================\n'.
-              format(fish_num, total_fish_num, curr_fish.name, sim_num))
+              format(fish_num, total_fish_num - 1, curr_fish.name, sim_num))
 
     curr_fish_f.close()
 

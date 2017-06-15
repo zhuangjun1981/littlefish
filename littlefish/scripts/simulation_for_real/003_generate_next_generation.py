@@ -10,7 +10,7 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-gen_num = 6
+gen_num = 9
 
 '''
 the default life span of a standard fish is max_health (100) / health_decay_rate (0.01) = 10000
@@ -23,15 +23,29 @@ for example:
 
 if the fish's life spans in three simulations are: 10000, 456, 11000, respectively
 
-since it reached default life span (10000) in two simulations, it will have one base offspring.
+----------------------------------------------- stage one ----------------------------------------------
+since it reached default life span (10000) in two simulations, it will have one base offspring. 
+this is good for the beginning of evolution or new environment. When the population is still getting
+familiar with the environment. it prevent the population to die out.
+----------------------------------------------- stage one ----------------------------------------------
+
+----------------------------------------------- stage two ----------------------------------------------
+just reaching the default life span (10000) will not give the fish any offspring, because this
+'selection' favors the fish which do not move much (low chance to hit the land) but not favors 
+the fish which takes risk of moving around to find food. This is good for the middle stage of the evolution.
+When the population somehow adapted to the environment and the food is abundant. At this stage, 
+every generation has significant portion reach the default life span and some of them has encountered 
+one or more food pellets thus obtained life longer than the default life span. 
+----------------------------------------------- stage two ----------------------------------------------
+
 furthermore, in the third simulation, it managed to get one food pellet (10 extra hp), which provides it energy
 for extra life for 10 / health_decay_rate (0.01) = 1000 time point. This extra time allows the fish to reproduce
 at the following rate. So the fish will have 1000 x 0.002 = 2 more offsprings.
 
 So in total the fish will have 3 offsprings.
 '''
-reproducing_rate = 0.002
-random_seed = 113
+reproducing_rate = 0.005  # 0.002
+random_seed = 48
 
 neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
 eye_bl_r = (0., 0.1)  # baseline rate range of eyes, 0 to 0.1 action per time unit (100 spk/sec)
@@ -93,6 +107,7 @@ for mother_fish_fn in all_mother_fish_lst:
     print('\n=========================================================================')
     print('processing mother fish: {}'.format(mother_fish_fn))
     mother_fish_f = h5py.File(os.path.join(curr_gen_folder, mother_fish_fn))
+    del mother_fish_f['next_generation_seed_00113']
     mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
 
     mother_sim_ns = [sim for sim in mother_fish_f.keys() if sim[0:11] == 'simulation_']
@@ -104,8 +119,11 @@ for mother_fish_fn in all_mother_fish_lst:
 
     offspring_num = 0
     default_life_span = int(mother_fish.get_max_health() / mother_fish.get_health_decay_rate())
-    if max(mother_life_spans) >= default_life_span:
-        offspring_num += 1
+
+    # --------------------------------------- stage one - ---------------------------------------
+    # if max(mother_life_spans) >= default_life_span:
+    #     offspring_num += 1  # 3
+    # --------------------------------------- stage one - ---------------------------------------
 
     for mother_life_span in mother_life_spans:
         if mother_life_span > default_life_span:

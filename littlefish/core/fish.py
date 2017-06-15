@@ -234,9 +234,11 @@ class Neuron(object):
 
         if probability_base is None:
             probability_base = random.random()
-        else:
-            if probability_base < 0. or probability_base >= 1.:
-                raise ValueError('Neuron: probability_base should be no less than 0 and less than 1.')
+
+        # this block of code is commented out to speed up simulation
+        # else:
+        #     if probability_base < 0. or probability_base >= 1.:
+        #         raise ValueError('Neuron: probability_base should be no less than 0 and less than 1.')
 
         # this block of code is commented out to speed up simulation
         # if len(action_history) >= 2:
@@ -497,10 +499,19 @@ class Muscle(Neuron):
 
     def __init__(self, direction, baseline_rate=0.001, refractory_period=500.):
 
-        if direction in ['east', 'north', 'west', 'south']:
-            self._direction = direction
+        self._direction = direction
+
+        if self._direction == 'east':
+            self._step_motion = np.array([0, 1], dtype=np.int8)
+        elif self._direction == 'north':
+            self._step_motion = np.array([-1, 0], dtype=np.int8)
+        elif self._direction == 'west':
+            self._step_motion = np.array([0, -1], dtype=np.int8)
+        elif self._direction == 'south':
+            self._step_motion = np.array([1, 0], dtype=np.int8)
         else:
-            raise ValueError("direction should be one of the following: ['east', 'north', 'west', 'south'].")
+            raise ValueError("self.direction should be one of the following: "
+                             "['east', 'north', 'west', 'south'].")
 
         super(Muscle, self).__init__(baseline_rate=baseline_rate, refractory_period=refractory_period)
 
@@ -538,17 +549,7 @@ class Muscle(Neuron):
                                          probability_base=probability_base)
 
         if is_act:
-            if self._direction == 'east':
-                return np.array([0, 1], dtype=np.int8)
-            elif self._direction == 'north':
-                return np.array([-1, 0], dtype=np.int8)
-            elif self._direction == 'west':
-                return np.array([0, -1], dtype=np.int8)
-            elif self._direction == 'south':
-                return np.array([1, 0], dtype=np.int8)
-            else:
-                raise ValueError("self.direction should be one of the following: "
-                                 "['east', 'north', 'west', 'south'].")
+            return self._step_motion
         else:
             return is_act
 
@@ -1026,7 +1027,6 @@ class Brain(object):
                 if curr_movement_attempt is not False:
                     # print('muscle spike')
                     movement_attempt = movement_attempt + curr_movement_attempt
-
             else:
                 raise ValueError('Brain: neuron at index' + str(i) + ' has invalid layer location.')
 
@@ -1044,20 +1044,33 @@ class Brain(object):
 
         neuron_layer = int(round(self._neurons.loc[presynaptic_neuron_ind, 'layer']))
 
-        if 0 <= neuron_layer < self.layer_num - 1:  # eye layer or hidden layer
-            curr_conn_df = self._connections['L' + util.int2str(neuron_layer, 3) +
-                                             '_L' + util.int2str(neuron_layer + 1, 3)]
-            postsynaptic_neuron_inds = self.get_postsynaptic_neuron_inds(neuron_ind=presynaptic_neuron_ind)
+        # ========================= slower but better method =====================================================
+        # if 0 <= neuron_layer < self.layer_num - 1:  # eye layer or hidden layer
+        #     curr_conn_df = self._connections['L' + util.int2str(neuron_layer, 3) +
+        #                                      '_L' + util.int2str(neuron_layer + 1, 3)]
+        #     postsynaptic_neuron_inds = self.get_postsynaptic_neuron_inds(neuron_ind=presynaptic_neuron_ind)
+        #
+        #     for postsynaptic_neuron_ind in postsynaptic_neuron_inds:
+        #         curr_connection = curr_conn_df.loc[postsynaptic_neuron_ind, presynaptic_neuron_ind]
+        #         curr_connection.act(t_point=t_point, postsynaptic_index=postsynaptic_neuron_ind,
+        #                             psp_waveforms=psp_waveforms)
+        # elif neuron_layer == self.layer_num - 1:  # muscle layer
+        #     print('Brain: a firing of a muscle has no effect on brain itself. Please use Muscle.act() method to '
+        #           'generate movement attempt.')
+        # else:
+        #     raise ValueError('Brain: neuron at index' + str(presynaptic_neuron_ind) + ' has invalid layer location.')
+        # ========================= slower but better method =====================================================
 
-            for postsynaptic_neuron_ind in postsynaptic_neuron_inds:
-                curr_connection = curr_conn_df.loc[postsynaptic_neuron_ind, presynaptic_neuron_ind]
-                curr_connection.act(t_point=t_point, postsynaptic_index=postsynaptic_neuron_ind,
-                                    psp_waveforms=psp_waveforms)
-        elif neuron_layer == self.layer_num - 1:  # muscle layer
-            print('Brain: a firing of a muscle has no effect on brain itself. Please use Muscle.act() method to '
-                  'generate movement attempt.')
-        else:
-            raise ValueError('Brain: neuron at index' + str(presynaptic_neuron_ind) + ' has invalid layer location.')
+        # ========================= faster but unsafe method =====================================================
+        curr_conn_df = self._connections['L' + util.int2str(neuron_layer, 3) +
+                                         '_L' + util.int2str(neuron_layer + 1, 3)]
+        postsynaptic_neuron_inds = self.get_postsynaptic_neuron_inds(neuron_ind=presynaptic_neuron_ind)
+
+        for postsynaptic_neuron_ind in postsynaptic_neuron_inds:
+            curr_connection = curr_conn_df.loc[postsynaptic_neuron_ind, presynaptic_neuron_ind]
+            curr_connection.act(t_point=t_point, postsynaptic_index=postsynaptic_neuron_ind,
+                                psp_waveforms=psp_waveforms)
+        # ========================= faster but unsafe method =====================================================
 
     def get_all_presynaptic_neuron_indices(self):
         """

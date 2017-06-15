@@ -297,7 +297,8 @@ class Simulation(object):
                                                                 movement_attempt=movement_attempt)
 
                             if verbose > 0 and curr_msg:
-                                print curr_msg
+                                if verbose > 1:
+                                    print curr_msg
                                 msg += ('\n' + curr_msg)
 
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos[0]
