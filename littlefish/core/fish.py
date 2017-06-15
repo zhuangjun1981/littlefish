@@ -1297,9 +1297,6 @@ class Fish(object):
     def get_name(self):
         return self._name
 
-    def set_name(self, name):
-        self._name = name
-
     @property
     def name(self):
         return self.get_name()
@@ -1321,6 +1318,16 @@ class Fish(object):
 
     def get_food_rate(self):
         return self._food_rate
+
+    def set_name(self, name):
+        self._name = name
+
+    def set_brain(self, brain):
+        brain.check_integrity(verbose=False)
+        self._brain = brain
+
+    def set_food_rate(self, food_rate):
+        self._food_rate = float(food_rate)
 
     def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
             food_map=None, fish_map=None):

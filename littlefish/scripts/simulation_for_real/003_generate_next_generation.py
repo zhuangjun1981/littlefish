@@ -10,7 +10,7 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-gen_num = 5
+gen_num = 6
 
 '''
 the default life span of a standard fish is max_health (100) / health_decay_rate (0.01) = 10000
@@ -116,6 +116,16 @@ for mother_fish_fn in all_mother_fish_lst:
     children_lst = []
     for i in range(offspring_num):
         child_fish = evo.mutate_fish(fish=mother_fish, brain_mutation=brain_mutation)
+
+        # ========= set muscle refractory period to 25, and child fish food rate to 20 ==========
+        # curr_brain = child_fish.get_brain()
+        # for neuron_ind in range(len(curr_brain.get_neurons())):
+        #     if curr_brain.get_neurons().loc[neuron_ind, 'neuron'].get_neuron_type() == 'muscle':
+        #         curr_brain.get_neurons().loc[neuron_ind, 'neuron'].set_refractory_period(25)
+        # child_fish.set_brain(brain=curr_brain)
+        # child_fish.set_food_rate(food_rate=20.)
+        # =======================================================================================
+
         child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'))
         child_fish_grp = child_fish_f.create_group('fish')
         child_fish.to_h5_group(child_fish_grp)

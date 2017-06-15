@@ -12,7 +12,7 @@ import littlefish.core.simulation as si
 
 data_folder = r'C:\little_fish_simulation_logs'
 
-generation = 6
+generation = 7
 
 # five times of a standard fish's life span without hitting land and eating, 5 * max_health / health_decay_rate
 # max_health of a standard fish: 100
@@ -20,18 +20,21 @@ generation = 6
 simulation_length = 50000
 random_seeds = [30, 57, 68]
 terrain_size = [128, 128]
-sea_level = 0.6
-food_num = 100
+sea_level = 0.5
+food_num = 200
 
 gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation, 6))
 os.chdir(gen_folder)
 
 fish_lst = [f for f in os.listdir(gen_folder) if f[0:5] == 'fish_']
-print(fish_lst)
+fish_lst.sort()
+print('\n'.join(fish_lst) + '\n')
+
+total_fish_num = len(fish_lst)
 
 tg = tr.TerrainGenerator(size=terrain_size, sea_level=sea_level)
 
-for fish_path in fish_lst:
+for fish_num, fish_path in enumerate(fish_lst):
     curr_fish_f = h5py.File(fish_path)
     curr_fish = fi.Fish.from_h5_group(curr_fish_f['fish'])
 
@@ -39,8 +42,8 @@ for fish_path in fish_lst:
         random.seed(curr_seed)
         np.random.seed(curr_seed)
 
-        print('\n\n============================= fish: {}; simulation: {} start ==============================='.
-              format(curr_fish.name, sim_num))
+        print('\n\n============================= {}/{}; fish: {}; simulation: {} start ==============================='.
+              format(fish_num, total_fish_num, curr_fish.name, sim_num))
 
         curr_terrain_map = tg.generate_binary_map(sigma=3., is_plot=False)
         curr_terrain = tr.BinaryTerrain(curr_terrain_map)
@@ -58,8 +61,8 @@ for fish_path in fish_lst:
         curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
         curr_simulation.save_log_to_h5_grp(curr_sim_grp, msg=curr_msg, is_save_psp_waveforms=False)
 
-        print('\n============================= fish: {}; simulation: {} end ===============================\n'.
-              format(curr_fish.name, sim_num))
+        print('\n============================= {}/{}; fish: {}; simulation: {} end ===============================\n'.
+              format(fish_num, total_fish_num, curr_fish.name, sim_num))
 
     curr_fish_f.close()
 
