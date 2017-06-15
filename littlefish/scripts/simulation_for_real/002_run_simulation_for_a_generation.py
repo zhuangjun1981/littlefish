@@ -12,7 +12,7 @@ import littlefish.core.simulation as si
 
 data_folder = r'C:\little_fish_simulation_logs'
 
-generation = 3
+generation = 6
 
 # five times of a standard fish's life span without hitting land and eating, 5 * max_health / health_decay_rate
 # max_health of a standard fish: 100
@@ -21,7 +21,7 @@ simulation_length = 50000
 random_seeds = [30, 57, 68]
 terrain_size = [128, 128]
 sea_level = 0.6
-food_num = 20
+food_num = 100
 
 gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation, 6))
 os.chdir(gen_folder)

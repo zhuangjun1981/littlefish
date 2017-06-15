@@ -10,7 +10,7 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-gen_num = 2
+gen_num = 5
 
 '''
 the default life span of a standard fish is max_health (100) / health_decay_rate (0.01) = 10000
