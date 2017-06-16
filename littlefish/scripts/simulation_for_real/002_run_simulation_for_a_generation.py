@@ -18,9 +18,9 @@ generation = 10
 # max_health of a standard fish: 100
 # health_decay_rate of a standard fish: 0.01
 simulation_length = 50000
-random_seeds = [30, 57, 68]
+random_seeds = [random.randrange(2 ** 32 - 1), random.randrange(2 ** 32 - 1), random.randrange(2 ** 32 - 1)]
 terrain_size = [128, 128]
-sea_level = 0.5
+sea_level = 0.55
 food_num = 200
 
 gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation, 6))
@@ -53,8 +53,8 @@ for fish_num, fish_path in enumerate(fish_lst):
         curr_simulation.initiate_simulation()
         curr_msg = curr_simulation.run(verbose=1)
 
-        curr_sim_grp = curr_fish_f.create_group('simulation_' + util.int2str(sim_num, 3) + '_seed_' +
-                                                util.int2str(curr_seed, 5))
+        curr_sim_grp = curr_fish_f.create_group('simulation_' + util.int2str(sim_num, 3) + '_' +
+                                                util.int2str(sim_num, 3))
         curr_sim_grp['ending_time'] = datetime.datetime.now().strftime('%y%m%d_%H_%M_%S')
         curr_sim_grp['random_seed'] = curr_seed
         curr_sim_grp['simulation_length'] = simulation_length

@@ -1342,6 +1342,9 @@ class Fish(object):
     def set_food_rate(self, food_rate):
         self._food_rate = float(food_rate)
 
+    def set_health_decay_rate(self, health_decay_rate):
+        self._health_decay_rate = health_decay_rate
+
     def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
             food_map=None, fish_map=None):
         """

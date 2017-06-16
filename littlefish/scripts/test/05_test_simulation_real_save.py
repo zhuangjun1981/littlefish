@@ -43,6 +43,6 @@ sim_grp['random_seed'] = random_seed
 sim_grp['np_random_seed'] = np_random_seed
 sim_grp['simulation_length'] = simulation_length
 sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
-simulation.save_log_to_h5_grp(sim_grp, msg=msg, is_save_psp_waveforms=False)
+simulation.save_log_to_h5_grp(sim_grp, is_save_psp_waveforms=False)
 
 print('for debug ...')

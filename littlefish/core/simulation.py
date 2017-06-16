@@ -55,9 +55,11 @@ class Simulation(object):
 
             #  generate food map, food position history and initial food positions
             self._food_map = np.zeros(self._terrain.get_terrain_shape(), dtype=np.uint8)
-            # food_pos_history = pd.Series([[] for i in range(self.simulation_length)])
-            # food_pos_history = pd.DataFrame(food_pos_history, columns=['food_pos'])
-            # food_pos_history, simulation_length x food_num x 2, (row, col)
+
+            self._simulation_histories.update({'message': ''})
+
+            fish_movement_num = {}
+
             self._simulation_histories.update({'food_pos_history':
                                                    np.zeros((self._simulation_length, self._food_num, 2),
                                                             dtype=np.uint32)})
@@ -70,6 +72,7 @@ class Simulation(object):
                 simulation_history_curr_fish = {}
                 simulation_history_curr_fish.update({'action_histories': fish._brain.generate_empty_action_histories()})
                 simulation_history_curr_fish.update({'psp_waveforms': fish._brain.generate_empty_psp_waveforms(self._simulation_length)})
+                simulation_history_curr_fish.update({'total_moves': 0})
 
                 life_history = pd.DataFrame(np.zeros((self._simulation_length,), dtype=[('pos_row', np.uint16),
                                                                                         ('pos_col', np.uint16),
@@ -235,12 +238,11 @@ class Simulation(object):
             # at t0
             self._simulation_status = 3
             t0 = time.time()
-            msg = ''
 
             curr_msg = '\nstart of simulation. start time: {}'.\
                 format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             print(curr_msg)
-            msg += (curr_msg)
+            self._simulation_histories['message'] += (curr_msg)
 
             alive_fish_list = list(self._fish_list)
             curr_t = 0
@@ -254,7 +256,7 @@ class Simulation(object):
                         curr_msg = '\n{:09.2f} second: {:2d} %'.\
                             format(time.time() - t0, (curr_t // (self.simulation_length // 10)) * 10)
                         print(curr_msg)
-                        msg += ('\n' + curr_msg)
+                        self._simulation_histories['message'] += ('\n' + curr_msg)
                         curr_progress = curr_t // (self.simulation_length // 10)
 
                 # update food position
@@ -285,7 +287,7 @@ class Simulation(object):
                             .format(curr_t, curr_fish.name, food_eated, curr_health,
                                                                 updated_health)
                         print(curr_msg)
-                        msg += ('\n' + curr_msg)
+                        self._simulation_histories['message'] += ('\n' + curr_msg)
 
                     if curr_t < self.simulation_length - 1:  # if not at the end of simulation
 
@@ -296,10 +298,12 @@ class Simulation(object):
                             new_pos, curr_msg = self._move_fish(curr_fish, curr_t, curr_position, curr_health,
                                                                 movement_attempt=movement_attempt)
 
-                            if verbose > 0 and curr_msg:
+                            if curr_msg:
+                                self._simulation_histories['message'] += ('\n' + curr_msg)
+                                self._simulation_histories[curr_fish.name]['total_moves'] += 1
+
                                 if verbose > 1:
                                     print curr_msg
-                                msg += ('\n' + curr_msg)
 
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos[0]
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos[1]
@@ -308,9 +312,13 @@ class Simulation(object):
                                 curr_msg = "Time: {:08d}; Fish: {}; health: {:3.4f}; position:[{:3d},{:3d}]".\
                                     format(curr_t + 1, curr_fish.name, updated_health, new_pos[0], new_pos[1])
                                 print(curr_msg)
-                                msg += ('\n' + curr_msg)
+                                self._simulation_histories['message'] += ('\n' + curr_msg)
 
                         else:  # if dead
+                            curr_msg = 'fish: {} died. Total number of movements: {}'\
+                                .format(curr_fish.name,
+                                        self._simulation_histories[curr_fish.name]['total_moves'])
+                            self._simulation_histories['message'] += ('\n' + curr_msg)
                             dead_fish_list.append(curr_fish)
                             self._simulation_histories[curr_fish.name]['life_history'] = \
                                 self._simulation_histories[curr_fish.name]['life_history'][0: curr_t]
@@ -329,9 +337,16 @@ class Simulation(object):
                 self._end_t = curr_t
 
                 if curr_t == self.simulation_length:
-                    curr_msg = "\nSimulation: End of Simulation. Prespecified simulation length reached."
+                    curr_msg = "Simulation: End of Simulation. Prespecified simulation length reached.\n"
+
+                    for sur_fish in alive_fish_list:
+                        add_msg = "Survived fish: {}. Final health: {}. Total number of movements: {}".\
+                            format(sur_fish.name,
+                                   self._simulation_histories[sur_fish.name]['life_history'].loc[curr_t - 1, 'health'],
+                                   self._simulation_histories[sur_fish.name]['total_moves'])
+                        curr_msg += '\n' + add_msg
                     print(curr_msg)
-                    msg += ('\n' + curr_msg)
+                    self._simulation_histories['message'] += ('\n' + curr_msg)
 
                 elif len(alive_fish_list) == 0:
                     self._simulation_histories['food_pos_history'] = \
@@ -339,16 +354,16 @@ class Simulation(object):
                     curr_msg = "\nSimulation: End of Simulation. All fish are dead. " \
                                "Last simulated time point: {}".format(curr_t)
                     print(curr_msg)
-                    msg += ('\n' + curr_msg)
+                    self._simulation_histories['message'] += ('\n' + curr_msg)
 
             self._simulation_status = 4
 
         else:
             raise RuntimeError("Simulation: Cannot run simulation. Simulation not initialized properly.")
 
-        return msg
+        return
 
-    def save_log(self, log_folder, msg='', is_save_psp_waveforms=False):
+    def save_log(self, log_folder, is_save_psp_waveforms=False):
         """
         save simulation results into a hdf5 file
         :param log_folder: directory path to save save_log
@@ -363,7 +378,7 @@ class Simulation(object):
                 os.makedirs(log_folder)
             log_f = h5py.File(os.path.join(log_folder, save_name))
             log_f['terrain_map'] = self._terrain._terrain_map
-            log_f['message'] = msg
+            log_f['message'] = self._simulation_histories['message']
 
             end_t_dset = log_f.create_dataset('last_time_point', data=self._end_t)
             end_t_dset.attrs['description'] = 'the last time point simulated.'
@@ -387,6 +402,9 @@ class Simulation(object):
                 curr_fish_sim_grp = curr_fish_grp.create_group('sim_history')
                 curr_sim_history = self._simulation_histories[curr_fish.name]
 
+                # save total moves
+                curr_fish_grp['total_moves'] = curr_sim_history['total_moves']
+
                 # save action histories of every neuron in current fish
                 curr_fish_ah_grp = curr_fish_sim_grp.create_group('action_histories')
                 curr_fish_ah = curr_sim_history['action_histories']
@@ -409,7 +427,7 @@ class Simulation(object):
         else:
             raise RuntimeError("Simulation: Cannot save save_log. Simulation has not run yet.")
 
-    def save_log_to_h5_grp(self, h5_grp, msg='', is_save_psp_waveforms=False):
+    def save_log_to_h5_grp(self, h5_grp, is_save_psp_waveforms=False):
         """
         save simulation results into a hdf5 group
         :param h5_grp, hdf5 group object
@@ -427,46 +445,42 @@ class Simulation(object):
             curr_fish = self._fish_list[0]
             curr_sim_history = self._simulation_histories[curr_fish.name]
 
-            h5_grp = h5_grp.create_group('simulation_log')
-            h5_grp['terrain_map'] = self._terrain._terrain_map
-            h5_grp['message'] = msg
+            sim_grp = h5_grp.create_group('simulation_log')
+            sim_grp['terrain_map'] = self._terrain._terrain_map
+            sim_grp['message'] = self._simulation_histories['message']
 
-            #===============================================================================
-            #todo: save light weighted food positions history
-            food_pos_dset = h5_grp.create_dataset('food_pos_history',
+            sim_grp['total_moves'] = curr_sim_history['total_moves']
+
+            food_pos_dset = sim_grp.create_dataset('food_pos_history',
                                                   data=self._simulation_histories['food_pos_history'], dtype=np.uint32,
                                                   compression='gzip')
             food_pos_dset.attrs['data_format'] = 'time_points x food_num x food position [row, col]'
-            # ===============================================================================
 
-            end_t_dset = h5_grp.create_dataset('last_time_point', data=self._end_t)
+            end_t_dset = sim_grp.create_dataset('last_time_point', data=self._end_t)
             end_t_dset.attrs['description'] = 'the last time point simulated.'
 
             # save action histories of every neuron in current fish
-            curr_fish_ah_grp = h5_grp.create_group('action_histories')
+            curr_fish_ah_grp = sim_grp.create_group('action_histories')
             curr_fish_ah = curr_sim_history['action_histories']
             for neuron_ind, ah in curr_fish_ah.iterrows():
                 curr_fish_ah_grp['neuron_' + util.int2str(neuron_ind, 4)] = ah.iloc[0]
 
             if is_save_psp_waveforms:
                 # save psp waveforms of all neurons in current fish
-                curr_fish_psp_wf_dset = h5_grp.create_dataset('psp_waveforms',
+                curr_fish_psp_wf_dset = sim_grp.create_dataset('psp_waveforms',
                                                               data=curr_sim_history['psp_waveforms'])
                 curr_fish_psp_wf_dset.attrs['data_format'] = 'neuron_ind x time_point'
 
             # save life history of fish
             curr_life_his = self._simulation_histories[curr_fish.name]['life_history']
 
-            # ===============================================================================
-            #todo: save light weighted position history
             curr_pos_arr = np.array(curr_life_his.loc[:, ['pos_row', 'pos_col']])
-            curr_fish_pos_dset = h5_grp.create_dataset('position_history', data=curr_pos_arr, dtype=np.uint32,
+            curr_fish_pos_dset = sim_grp.create_dataset('position_history', data=curr_pos_arr, dtype=np.uint32,
                                                        compression='gzip')
             curr_fish_pos_dset.attrs['data_format'] = 'time_point x center position [row, col]'
-            # ===============================================================================
 
             curr_health_arr = np.array(curr_life_his.loc[:, 'health'])
-            h5_grp['health'] = curr_health_arr
+            sim_grp['health'] = curr_health_arr
 
         else:
             raise RuntimeError("Simulation: Cannot save save_log. Simulation has not run yet.")
