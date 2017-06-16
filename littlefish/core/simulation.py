@@ -315,9 +315,10 @@ class Simulation(object):
                                 self._simulation_histories['message'] += ('\n' + curr_msg)
 
                         else:  # if dead
-                            curr_msg = 'fish: {} died. Total number of movements: {}'\
-                                .format(curr_fish.name,
+                            curr_msg = 'Time: {:08d}; Fish: {} died. Total number of movements: {}'\
+                                .format(curr_t, curr_fish.name,
                                         self._simulation_histories[curr_fish.name]['total_moves'])
+                            print('\n' + curr_msg)
                             self._simulation_histories['message'] += ('\n' + curr_msg)
                             dead_fish_list.append(curr_fish)
                             self._simulation_histories[curr_fish.name]['life_history'] = \

@@ -12,7 +12,7 @@ import littlefish.core.simulation as si
 
 data_folder = r'C:\little_fish_simulation_logs'
 
-generation = 10
+generation = 16
 
 # five times of a standard fish's life span without hitting land and eating, 5 * max_health / health_decay_rate
 # max_health of a standard fish: 100
@@ -20,8 +20,8 @@ generation = 10
 simulation_length = 50000
 random_seeds = [random.randrange(2 ** 32 - 1), random.randrange(2 ** 32 - 1), random.randrange(2 ** 32 - 1)]
 terrain_size = [128, 128]
-sea_level = 0.55
-food_num = 200
+sea_level = 0.6
+food_num = 100
 
 gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation, 6))
 os.chdir(gen_folder)
@@ -59,7 +59,7 @@ for fish_num, fish_path in enumerate(fish_lst):
         curr_sim_grp['random_seed'] = curr_seed
         curr_sim_grp['simulation_length'] = simulation_length
         curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
-        curr_simulation.save_log_to_h5_grp(curr_sim_grp, msg=curr_msg, is_save_psp_waveforms=False)
+        curr_simulation.save_log_to_h5_grp(curr_sim_grp, is_save_psp_waveforms=False)
 
         print('\n============================= {}/{}; fish: {}; simulation: {} end ===============================\n'.
               format(fish_num, total_fish_num - 1, curr_fish.name, sim_num))

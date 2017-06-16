@@ -10,7 +10,7 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-gen_num = 9
+gen_num = 15
 
 '''
 the default life span of a standard fish is max_health (100) / health_decay_rate (0.01) = 10000
@@ -55,8 +55,8 @@ at the following rate. So the fish will have 1000 x 0.002 = 2 more offsprings.
 So in total the fish will have 3 offsprings.
 '''
 
-reproducing_rate = 0.005  # 0.002
-random_seed = random.randrange(2**32 - 1)
+reproducing_rate = 0.001  # 0.002
+random_seed = random.randrange(2 ** 32 - 1)
 
 neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
 eye_bl_r = (0., 0.1)  # baseline rate range of eyes, 0 to 0.1 action per time unit (100 spk/sec)
@@ -74,13 +74,15 @@ connection_dt_r = None  # decay time range of connections, not mutating right no
 random.seed(random_seed)
 np.random.seed(random_seed)
 
+
 def get_single_param_mutation(value_range, dtype):
     if value_range is None:
         mutation = None
     else:
         mutation = evo.UniformMutation(value_range=value_range, dtype=dtype)
-    
+
     return mutation
+
 
 eye_bl_mutation = get_single_param_mutation(eye_bl_r, 'float')
 eye_rp_mutation = get_single_param_mutation(eye_rp_r, 'float')
@@ -92,7 +94,7 @@ connection_l_mutation = get_single_param_mutation(connection_l_r, 'int')
 connection_a_mutation = get_single_param_mutation(connection_a_r, 'float')
 connection_rt_mutation = get_single_param_mutation(connection_rt_r, 'int')
 connection_dt_mutation = get_single_param_mutation(connection_dt_r, 'int')
-    
+
 eye_mutation = evo.NeuronMutation(baseline_mutation=eye_bl_mutation, refractory_mutation=eye_rp_mutation)
 neuron_mutation = evo.NeuronMutation(baseline_mutation=neuron_bl_mutation, refractory_mutation=neuron_rp_mutation)
 muscle_mutation = evo.NeuronMutation(baseline_mutation=muscle_bl_mutation, refractory_mutation=muscle_rp_mutation)
@@ -133,7 +135,7 @@ for mother_fish_fn in all_mother_fish_lst:
 
     # --------------------------------------- stage one -----------------------------------------
     # if max(mother_life_spans) >= default_life_span:
-    #     offspring_num += 1  # 3
+    #     offspring_num += 3  # 3
     # for mother_life_span in mother_life_spans:
     #     if mother_life_span > default_life_span:
     #         offspring_num += int(round((mother_life_span - default_life_span) * reproducing_rate))
