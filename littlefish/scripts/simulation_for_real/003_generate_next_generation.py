@@ -2,6 +2,7 @@ import os
 import sys
 import h5py
 import time
+import datetime
 import random
 import inspect
 import numpy as np
@@ -10,7 +11,7 @@ import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
-gen_num = 15
+gen_num = 31
 
 '''
 the default life span of a standard fish is max_health (100) / health_decay_rate (0.01) = 10000
@@ -48,6 +49,14 @@ thus obtained life longer than the default life span. This extra life will give 
 The example fish above will not have child in stage three.
 ----------------------------------------------- stage three ----------------------------------------------
 
+
+----------------------------------------------- strategy two ----------------------------------------------
+for each simulation the time extended from a fraction of default life span is calculated as breeding time. if 
+the life span is shorter than the default life span, then breeding time is 0. The average breeding time
+is calculated across all simulations. the number of offspring then is determined by time the average 
+breeding time with the reproducing rate.
+----------------------------------------------- stage three ----------------------------------------------
+
 furthermore, in the third simulation, it managed to get one food pellet (10 extra hp), which provides it energy
 for extra life for 10 / health_decay_rate (0.01) = 1000 time point. This extra time allows the fish to reproduce
 at the following rate. So the fish will have 1000 x 0.002 = 2 more offsprings.
@@ -55,7 +64,7 @@ at the following rate. So the fish will have 1000 x 0.002 = 2 more offsprings.
 So in total the fish will have 3 offsprings.
 '''
 
-reproducing_rate = 0.001  # 0.002
+reproducing_rate = 0.002  # 0.002
 random_seed = random.randrange(2 ** 32 - 1)
 
 neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
@@ -67,7 +76,7 @@ muscle_bl_r = (0., 0.1)  # baseline rate range of muscles, 0 to 0.1 action per t
 muscle_rp_r = None  # refractory period range of muscles, not mutating right now
 connection_mr = 0.001  # mutation rate of connections for each layer
 connection_l_r = None  # latency range of connections, not mutating right now
-connection_a_r = (-0.1, 0.1)  # amplitude range of connections, (-100~100 spk/sec)
+connection_a_r = (-1.0, 1.0)  # amplitude range of connections, (-100~100 spk/sec)
 connection_rt_r = None  # rise time range of connections, not mutating right now
 connection_dt_r = None  # decay time range of connections, not mutating right now
 
@@ -133,6 +142,15 @@ for mother_fish_fn in all_mother_fish_lst:
     offspring_num = 0
     default_life_span = int(mother_fish.get_max_health() / mother_fish.get_health_decay_rate())
 
+    # --------------------------------------- strategy two -----------------------------------------
+    thr = default_life_span / 2
+    breeding_time = 0
+    for mother_life_span in mother_life_spans:
+        if mother_life_span > thr:
+            breeding_time += (mother_life_span - thr)
+    offspring_num += int(round(breeding_time / len(mother_life_spans) * reproducing_rate))
+    # --------------------------------------- strategy two -----------------------------------------
+
     # --------------------------------------- stage one -----------------------------------------
     # if max(mother_life_spans) >= default_life_span:
     #     offspring_num += 3  # 3
@@ -148,9 +166,9 @@ for mother_fish_fn in all_mother_fish_lst:
     # --------------------------------------- stage two -----------------------------------------
 
     # --------------------------------------- stage three -----------------------------------------
-    if min(mother_life_spans) >= default_life_span:
-        for mother_life_span in mother_life_spans:
-            offspring_num += int(round((mother_life_span - default_life_span) * reproducing_rate))
+    # if min(mother_life_spans) >= default_life_span:
+    #     for mother_life_span in mother_life_spans:
+    #         offspring_num += int(round((mother_life_span - default_life_span) * reproducing_rate))
     # --------------------------------------- stage three -----------------------------------------
 
     print('life spans: {} time unit. Spawning {} child(ren).'.format(mother_life_spans, offspring_num))
@@ -176,7 +194,7 @@ for mother_fish_fn in all_mother_fish_lst:
         children_lst.append(child_fish.name)
         time.sleep(1.)
 
-    ng_grp = mother_fish_f.create_group('next_generation_seed_' + util.int2str(random_seed, 10))
+    ng_grp = mother_fish_f.create_group('next_generation_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S'))
     ng_grp['children_list'] = children_lst
     ng_grp['random_seed'] = random_seed
     ng_grp['script_text'] = inspect.getsource(sys.modules[__name__])

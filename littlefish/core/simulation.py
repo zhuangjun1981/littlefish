@@ -322,9 +322,9 @@ class Simulation(object):
                             self._simulation_histories['message'] += ('\n' + curr_msg)
                             dead_fish_list.append(curr_fish)
                             self._simulation_histories[curr_fish.name]['life_history'] = \
-                                self._simulation_histories[curr_fish.name]['life_history'][0: curr_t]
+                                self._simulation_histories[curr_fish.name]['life_history'][0: curr_t + 1]
                             self._simulation_histories[curr_fish.name]['psp_waveforms'] = \
-                                self._simulation_histories[curr_fish.name]['psp_waveforms'][:, 0: curr_t]
+                                self._simulation_histories[curr_fish.name]['psp_waveforms'][:, 0: curr_t + 1]
                     else:
                         pass
 
@@ -351,7 +351,7 @@ class Simulation(object):
 
                 elif len(alive_fish_list) == 0:
                     self._simulation_histories['food_pos_history'] = \
-                        self._simulation_histories['food_pos_history'][0: curr_t]
+                        self._simulation_histories['food_pos_history'][0: curr_t + 1]
                     curr_msg = "\nSimulation: End of Simulation. All fish are dead. " \
                                "Last simulated time point: {}".format(curr_t)
                     print(curr_msg)
