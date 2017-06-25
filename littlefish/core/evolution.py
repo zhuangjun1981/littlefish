@@ -46,6 +46,7 @@ def mutate_neuron(neuron, neuron_mutation):
         mutated_neuron.set_baseline_rate(mutated_baseline)
     
     mutated_refractory = neuron_mutation.get_mutated_refractory()
+
     if mutated_refractory is not None:
         mutated_neuron.set_refractory_period(mutated_refractory)
 
@@ -88,7 +89,7 @@ def mutate_brain(brain, brain_mutation, verbose=False):
     mutated_neurons = brain.get_neurons().copy()
     mutated_connections = dict(brain.get_connections())
 
-    mutate_neuron_ind = choose_index_1d(mutated_neurons.index.values, brain_mutation.get_neuron_mutation_rate())
+    mutate_neuron_ind = choose_index_1d(list(mutated_neurons.index.values), brain_mutation.get_neuron_mutation_rate())
 
     if verbose:
         print('\nmutating neurons:')
@@ -98,15 +99,21 @@ def mutate_brain(brain, brain_mutation, verbose=False):
     for mni in mutate_neuron_ind:
         curr_neuron = mutated_neurons.loc[mni, 'neuron']
         if curr_neuron.get_neuron_type() == 'eye':
+            if verbose:
+                print('Evolution: mutating eye. Index: {}.'.format(mni))
             curr_mutated_neuron = mutate_neuron(neuron=curr_neuron, neuron_mutation=brain_mutation.get_eye_mutation())
             mutated_neurons.loc[mni, 'neuron'] = curr_mutated_neuron
 
         elif curr_neuron.get_neuron_type() == 'neuron':
+            if verbose:
+                print('Evolution: mutating hidden neuron. Index: {}.'.format(mni))
             curr_mutated_neuron = mutate_neuron(neuron=curr_neuron,
                                                 neuron_mutation=brain_mutation.get_neuron_mutation())
             mutated_neurons.loc[mni, 'neuron'] = curr_mutated_neuron
 
         elif curr_neuron.get_neuron_type() == 'muscle':
+            if verbose:
+                print('Evolution: mutating muscle. Index: {}.'.format(mni))
             curr_mutated_neuron = mutate_neuron(neuron=curr_neuron,
                                                 neuron_mutation=brain_mutation.get_muscle_mutation())
             mutated_neurons.loc[mni, 'neuron'] = curr_mutated_neuron

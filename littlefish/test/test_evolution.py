@@ -96,9 +96,9 @@ class TestEvolution(unittest.TestCase):
         assert (mutated_brain.get_neurons().loc[12, 'neuron'].get_baseline_rate() >= 0.01)
         assert (mutated_brain.get_neurons().loc[12, 'neuron'].get_baseline_rate() < 0.03)
         assert (mutated_brain.get_neurons().loc[12, 'neuron'].get_refractory_period() == 1.2)
-        assert (mutated_brain.get_neurons().loc[18, 'neuron'].get_baseline_rate() == 0.0001)
-        assert (mutated_brain.get_neurons().loc[18, 'neuron'].get_refractory_period() >= 13.)
-        assert (mutated_brain.get_neurons().loc[18, 'neuron'].get_refractory_period() < 14.5)
+        assert (mutated_brain.get_neurons().loc[19, 'neuron'].get_baseline_rate() == 0.0001)
+        assert (mutated_brain.get_neurons().loc[19, 'neuron'].get_refractory_period() >= 13.)
+        assert (mutated_brain.get_neurons().loc[19, 'neuron'].get_refractory_period() < 14.5)
 
         test_conn = mutated_brain.get_connections()['L000_L001'].loc[9, 0]
         assert (test_conn.get_latency() >= 15)

@@ -303,7 +303,7 @@ class Simulation(object):
                                 self._simulation_histories[curr_fish.name]['total_moves'] += 1
 
                                 if verbose > 1:
-                                    print curr_msg
+                                    print(curr_msg)
 
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos[0]
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos[1]
@@ -509,4 +509,4 @@ if __name__ == '__main__':
     sim.run(verbose=1)
     # -------------------------------------------------------------------------
 
-    print 'for debugging...'
+    print('for debug')

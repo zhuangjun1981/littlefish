@@ -84,7 +84,7 @@ def int2str(num,length=None):
     '''
     rawstr = str(int(num))
     if length is None or length == len(rawstr):return rawstr
-    elif length < len(rawstr): raise ValueError, 'Length of the number is longer then defined display length!'
+    elif length < len(rawstr): raise ValueError('Length of the number is longer then defined display length!')
     elif length > len(rawstr): return '0'*(length-len(rawstr)) + rawstr
 
 

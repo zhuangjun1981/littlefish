@@ -266,7 +266,7 @@ class Neuron(object):
     @staticmethod
     def from_h5_group(h5_group):
 
-        if h5_group.attrs['neuron_type'] != 'neuron':
+        if h5_group.attrs['neuron_type'].decode('UTF-8') != 'neuron':
             raise ValueError('Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".')
 
         neuron = Neuron(baseline_rate=h5_group['baseline_rate'].value,
@@ -483,12 +483,15 @@ class Eye(Neuron):
     @staticmethod
     def from_h5_group(h5_group):
 
-        if h5_group.attrs['neuron_type'] != 'eye':
+        if h5_group.attrs['neuron_type'].decode('UTF-8') != 'eye':
             raise ValueError('Eye: loading from h5 file failed. "neuron_type" attribute should be "eye".')
 
-        eye = Eye(direction=h5_group['direction'].value, input_filter=h5_group['input_filter'].value,
-                  gain=h5_group['gain'].value, input_type=h5_group['input_type'].value,
-                  baseline_rate=h5_group['baseline_rate'].value, refractory_period=h5_group['refractory_period'].value)
+        direction = h5_group['direction'].value.decode('UTF-8')
+        input_type = h5_group['input_type'].value.decode('UTF-8')
+
+        eye = Eye(direction=direction, input_filter=h5_group['input_filter'].value, gain=h5_group['gain'].value,
+                  input_type=input_type, baseline_rate=h5_group['baseline_rate'].value,
+                  refractory_period=h5_group['refractory_period'].value)
         return eye
 
 
@@ -565,10 +568,11 @@ class Muscle(Neuron):
     @staticmethod
     def from_h5_group(h5_group):
 
-        if h5_group.attrs['neuron_type'] != 'muscle':
+        if h5_group.attrs['neuron_type'].decode('UTF-8') != 'muscle':
             raise ValueError('Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".')
 
-        muscle = Muscle(direction=h5_group['direction'].value, baseline_rate=h5_group['baseline_rate'].value,
+        direction = h5_group['direction'].value.decode('UTF-8')
+        muscle = Muscle(direction=direction, baseline_rate=h5_group['baseline_rate'].value,
                         refractory_period=h5_group['refractory_period'].value)
         return muscle
 
@@ -935,7 +939,7 @@ class Brain(object):
             matching_keys.append('L' + util.int2str(i, 3) + '_L' + util.int2str(i+1, 3))
         matching_keys.sort()
 
-        conn_keys = self._connections.keys()
+        conn_keys = list(self._connections.keys())
         conn_keys.sort()
 
         if not conn_keys == matching_keys:
@@ -1160,18 +1164,19 @@ class Brain(object):
         neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
 
         neurons_group = h5_group['neurons']
-        neuron_names = neurons_group.keys()
+        neuron_names = list(neurons_group.keys())
         neuron_names.sort()
         for neuron_name in neuron_names:
             curr_neuron_group = neurons_group[neuron_name]
             curr_layer = curr_neuron_group.attrs['layer']
             curr_neuron_ind = curr_neuron_group.attrs['neuron_ind']
             curr_ind = curr_neuron_group.attrs['ind']
-            if curr_neuron_group.attrs['neuron_type'] == 'neuron':
+            curr_neuron_type = curr_neuron_group.attrs['neuron_type'].decode('UTF-8')
+            if curr_neuron_type == 'neuron':
                 curr_neuron = Neuron.from_h5_group(curr_neuron_group)
-            elif curr_neuron_group.attrs['neuron_type'] == 'eye':
+            elif curr_neuron_type == 'eye':
                 curr_neuron = Eye.from_h5_group(curr_neuron_group)
-            elif curr_neuron_group.attrs['neuron_type'] == 'muscle':
+            elif curr_neuron_type == 'muscle':
                 curr_neuron = Muscle.from_h5_group(curr_neuron_group)
             else:
                 raise LookupError('Brain: fail to load neuron. "neuron_type" attribute should be one of the '
@@ -1182,7 +1187,7 @@ class Brain(object):
         connections = {}
 
         connections_group = h5_group['connections']
-        connections_names = connections_group.keys()
+        connections_names = list(connections_group.keys())
         connections_names.sort()
         for connections_name in connections_names:
             curr_conn_group = connections_group[connections_name]
@@ -1470,8 +1475,8 @@ class Fish(object):
 
         brain_grp = h5_grp['brain']
         curr_brain = Brain.from_h5_group(brain_grp)
-        curr_name = h5_grp['name'].value
-        curr_mother_name = h5_grp['mother_name'].value
+        curr_name = h5_grp['name'].value.decode('UTF-8')
+        curr_mother_name = h5_grp['mother_name'].value.decode('UTF-8')
         curr_max_health = h5_grp['max_health'].value
         curr_health_decay_rate = h5_grp['health_decay_rate_per_tu'].value
         curr_land_penalty_rate = h5_grp['land_penalty_rate_per_pixel_tu'].value

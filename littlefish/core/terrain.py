@@ -106,7 +106,7 @@ class BinaryTerrain(object):
         position_maps[:, -1] = 1
         position_maps[0, :] = 1
         position_maps[-1, :] = 1
-        possible_positions = np.array(zip(*np.where(position_maps == 0)))
+        possible_positions = np.array(list(zip(*np.where(position_maps == 0))))
         fish_positions = possible_positions[np.random.choice(range(len(possible_positions)), size=fish_num,
                                                              replace=True)]
         return [tuple(p) for p in fish_positions]
@@ -125,7 +125,7 @@ class BinaryTerrain(object):
         """
 
         curr_food_pos_list = np.where(food_map == 1)
-        curr_food_pos_list = zip(*curr_food_pos_list)
+        curr_food_pos_list = list(zip(*curr_food_pos_list))
 
         if len(curr_food_pos_list) == food_num:  # current number of food equal food_num
             food_pos_list = curr_food_pos_list
@@ -147,7 +147,7 @@ class BinaryTerrain(object):
         elif len(curr_food_pos_list) < food_num:  # current number of food less than food_num
 
             # get positions to add food
-            possible_positions = zip(*np.where(np.logical_or(self._terrain_map, food_map) == 0))
+            possible_positions = list(zip(*np.where(np.logical_or(self._terrain_map, food_map) == 0)))
             food_add_index = np.random.choice(range(len(possible_positions)), size=food_num - len(curr_food_pos_list),
                                               replace=False)
             food_add_list = [possible_positions[ind] for ind in food_add_index]
@@ -243,4 +243,4 @@ if __name__ == '__main__':
     # assert (food_pos_array.shape == (5, 2))
     # =============================================================
 
-    print 'for debug'
+    print('for debug')
