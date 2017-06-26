@@ -13,7 +13,8 @@ import numpy as np
 import pandas as pd
 
 
-def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size, sea_level, food_num, hard_thr=0):
+def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size, sea_level, food_num, hard_thr=0,
+                      fish_ind=0, fish_num=0):
 
     tg = tr.TerrainGenerator(size=terrain_size, sea_level=sea_level)
 
@@ -26,8 +27,8 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size
         np.random.seed(curr_seed)
 
         print(
-            '\n\n========================= fish: {}; simulation: {} / {} start ==========================='.
-            format(curr_fish.name, sim_ind + 1, simulation_num))
+            '\n\n========================= {}/{}; fish: {} ; simulation: {}/{} start ==========================='.
+            format(fish_ind + 1, fish_num, curr_fish.name, sim_ind + 1, simulation_num))
 
         curr_terrain_map = tg.generate_binary_map(sigma=3., is_plot=False)
         curr_terrain = tr.BinaryTerrain(curr_terrain_map)
@@ -45,8 +46,8 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size
         curr_simulation.save_log_to_h5_grp(curr_sim_grp, is_save_psp_waveforms=False)
 
         print(
-            '\n========================== fish: {}; simulation: {} / {} end ============================'.
-                format(curr_fish.name, sim_ind + 1, simulation_num))
+            '\n========================== {}/{}; fish: {}; simulation: {}/{} end ============================'.
+                format(fish_ind + 1, fish_num, curr_fish.name, sim_ind + 1, simulation_num))
 
         if curr_simulation._end_t < hard_thr:
             print("\nSimulation: fish life span was less than the hard threshold. end the simulation of current"

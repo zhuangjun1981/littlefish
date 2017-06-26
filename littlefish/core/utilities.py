@@ -269,6 +269,23 @@ def check_monotonicity(arr, direction='increasing'):
                           '"non-increasing", "non-decreasing"!')
 
 
+def decode(str_like, code='UTF-8'):
+    """
+    if a string like object is actually a 'bytes' type, decode it by 'UTF-8', and return the string. This is to deal
+    with the hdf5 string format madness.
+    :param str_like:
+    :param code:
+    :return: str
+    """
+
+    if isinstance(str_like, str):
+        return str_like
+    elif isinstance(str_like, bytes):
+        return str_like.decode(code)
+    else:
+        raise ValueError('Utility: decode function do not understand the input type. Should be "str" or "bytes".')
+
+
 if __name__ == '__main__':
 
     #==================================================

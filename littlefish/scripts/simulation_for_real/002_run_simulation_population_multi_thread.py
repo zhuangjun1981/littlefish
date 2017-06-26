@@ -22,14 +22,16 @@ def simulation_fish_multiprocessing(f_path):
                          terrain_size=TERRAIN_SIZE,
                          sea_level=SEA_LEVEL,
                          food_num=FOOD_NUM,
-                         hard_thr=HARD_THR)
+                         hard_thr=HARD_THR,
+                         fish_ind=0,
+                         fish_num=0)
 
 
 if __name__ == '__main__':
 
     data_folder = r"C:\little_fish_simulation_logs"
     generation_num = 1
-    process_num = 3
+    process_num = 6
 
     gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation_num, 6) + '_multi_thread')
     os.chdir(gen_folder)

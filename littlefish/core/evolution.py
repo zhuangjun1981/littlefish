@@ -158,30 +158,27 @@ def mutate_fish(fish, brain_mutation):
     return mutated_fish
 
 
-def get_offspring_num(mother_life_spans, default_life_span, hard_thr_ratio=0, soft_thr_ratio=0.5,
-                      reproducing_rate=0.0002):
+def get_offspring_num(mother_life_spans, hard_thr, soft_thr, reproducing_rate=0.0002):
     """
     given a list of mother life spans in multiple simulations, return a number representing how many offsprings it
     will produce.
 
     :param mother_life_spans: list of non-negative int, mother's life spans in multiple simulation
-    :param hard_thr_ratio: non-negative float, mother will have chance to reproduce only if all life spans in
-                           mother_life_spans are no less than this ratio x default_life_span
-    :param soft_thr_ratio: non-negative int, each life span in mother_life_spans longer than
-                           (this ratio x default_life_span) will be used to calculated offspring number
-    :param reproducing_rate: positive float, this rate time the life spans that exceed
-                             default_life_span x soft_thr_ratio will be returned
+    :param hard_thr: non-negative int, mother will have chance to reproduce only if all life spans in
+                     mother_life_spans are no less than this threshold
+    :param soft_thr: non-negative int, each life span in mother_life_spans longer than this threshold will be used to
+                     calculated offspring number
+    :param reproducing_rate: positive float, this rate time the life spans that exceed soft_thr x soft_thr_ratio
+                             will be returned
     :return: non-negative int, number of offsprings the mother fish wil produce
     """
 
     offspring_num = 0
-    hard_thr = int(hard_thr_ratio * default_life_span)
-    soft_thr = int(soft_thr_ratio * default_life_span)
     if min(mother_life_spans) >= hard_thr:
-       for mother_life_span in mother_life_spans:
-           reproducing_life = mother_life_span - soft_thr
-           if reproducing_life > 0:
-               offspring_num += int(np.ceil((reproducing_life * reproducing_rate)))
+        for mother_life_span in mother_life_spans:
+            reproducing_life = mother_life_span - soft_thr
+            if reproducing_life > 0:
+                offspring_num += int(np.ceil((reproducing_life * reproducing_rate)))
     return offspring_num
 
 

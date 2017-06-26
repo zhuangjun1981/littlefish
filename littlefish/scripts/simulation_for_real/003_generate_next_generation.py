@@ -12,9 +12,9 @@ import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
 
-gen_num = 0
-hard_thr_ratio = 0.1
-soft_thr_ratio = 0.5
+gen_num = 47
+hard_thr_ratio = 0.5
+soft_thr_ratio = 0.8
 reproducing_rate = 0.002  # 0.002
 random_seed = random.randrange(2 ** 32 - 1)
 
@@ -76,22 +76,20 @@ if not os.path.isdir(next_gen_folder):
 for mother_fish_ind, mother_fish_fn in enumerate(all_mother_fish_lst):
     print('\n=========================================================================')
     print('processing mother fish: {}. {} / {} '.format(mother_fish_fn, mother_fish_ind + 1, len(all_mother_fish_lst)))
+
     mother_fish_f = h5py.File(os.path.join(curr_gen_folder, mother_fish_fn))
-    # del mother_fish_f['next_generation_seed_00113']
     mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
-
     mother_sim_ns = [sim for sim in mother_fish_f.keys() if sim[0:11] == 'simulation_']
-
     mother_life_spans = []
+
     for mother_sim_n in mother_sim_ns:
         curr_sim_log_grp = mother_fish_f[mother_sim_n]['simulation_log']
         mother_life_spans.append(curr_sim_log_grp['last_time_point'].value)
 
     default_life_span = int(mother_fish.get_max_health() / mother_fish.get_health_decay_rate())
     offspring_num = evo.get_offspring_num(mother_life_spans=mother_life_spans,
-                                          default_life_span=default_life_span,
-                                          hard_thr_ratio=hard_thr_ratio,
-                                          soft_thr_ratio=soft_thr_ratio,
+                                          hard_thr=int(default_life_span * hard_thr_ratio),
+                                          soft_thr=int(default_life_span * soft_thr_ratio),
                                           reproducing_rate=reproducing_rate)
 
     print('life spans: {} time unit. Spawning {} child(ren).'.format(mother_life_spans, offspring_num))
@@ -118,7 +116,7 @@ for mother_fish_ind, mother_fish_fn in enumerate(all_mother_fish_lst):
         time.sleep(1.)
 
     ng_grp = mother_fish_f.create_group('next_generation_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S'))
-    ng_grp['children_list'] = [c.encode('utf8') for c in children_lst]
+    ng_grp['children_list'] = children_lst
     ng_grp['random_seed'] = random_seed
     ng_grp['script_text'] = inspect.getsource(sys.modules[__name__])
 
