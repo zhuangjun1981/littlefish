@@ -266,7 +266,9 @@ class Neuron(object):
     @staticmethod
     def from_h5_group(h5_group):
 
-        if h5_group.attrs['neuron_type'].decode('UTF-8') != 'neuron':
+        # the following line is for python 3.6
+        # if h5_group.attrs['neuron_type'].decode('UTF-8') != 'neuron':
+        if h5_group.attrs['neuron_type'] != 'neuron':
             raise ValueError('Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".')
 
         neuron = Neuron(baseline_rate=h5_group['baseline_rate'].value,
@@ -483,11 +485,16 @@ class Eye(Neuron):
     @staticmethod
     def from_h5_group(h5_group):
 
-        if h5_group.attrs['neuron_type'].decode('UTF-8') != 'eye':
+        # the following line is for python 3.6
+        # if h5_group.attrs['neuron_type'].decode('UTF-8') != 'eye':
+        if h5_group.attrs['neuron_type'] != 'eye':
             raise ValueError('Eye: loading from h5 file failed. "neuron_type" attribute should be "eye".')
 
-        direction = h5_group['direction'].value.decode('UTF-8')
-        input_type = h5_group['input_type'].value.decode('UTF-8')
+        # the following lines are for python 3.6
+        # direction = h5_group['direction'].value.decode('UTF-8')
+        # input_type = h5_group['input_type'].value.decode('UTF-8')
+        direction = h5_group['direction'].value
+        input_type = h5_group['input_type'].value
 
         eye = Eye(direction=direction, input_filter=h5_group['input_filter'].value, gain=h5_group['gain'].value,
                   input_type=input_type, baseline_rate=h5_group['baseline_rate'].value,
@@ -568,10 +575,14 @@ class Muscle(Neuron):
     @staticmethod
     def from_h5_group(h5_group):
 
-        if h5_group.attrs['neuron_type'].decode('UTF-8') != 'muscle':
+        # the following line is for python 3.6
+        # if h5_group.attrs['neuron_type'].decode('UTF-8') != 'muscle':
+        if h5_group.attrs['neuron_type'] != 'muscle':
             raise ValueError('Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".')
 
-        direction = h5_group['direction'].value.decode('UTF-8')
+        # the following line is for python 3.6
+        # direction = h5_group['direction'].value.decode('UTF-8')
+        direction = h5_group['direction'].value
         muscle = Muscle(direction=direction, baseline_rate=h5_group['baseline_rate'].value,
                         refractory_period=h5_group['refractory_period'].value)
         return muscle
@@ -1171,7 +1182,11 @@ class Brain(object):
             curr_layer = curr_neuron_group.attrs['layer']
             curr_neuron_ind = curr_neuron_group.attrs['neuron_ind']
             curr_ind = curr_neuron_group.attrs['ind']
-            curr_neuron_type = curr_neuron_group.attrs['neuron_type'].decode('UTF-8')
+
+            # the following line is for python 3.6
+            # curr_neuron_type = curr_neuron_group.attrs['neuron_type'].decode('UTF-8')
+            curr_neuron_type = curr_neuron_group.attrs['neuron_type']
+
             if curr_neuron_type == 'neuron':
                 curr_neuron = Neuron.from_h5_group(curr_neuron_group)
             elif curr_neuron_type == 'eye':
@@ -1475,8 +1490,12 @@ class Fish(object):
 
         brain_grp = h5_grp['brain']
         curr_brain = Brain.from_h5_group(brain_grp)
-        curr_name = h5_grp['name'].value.decode('UTF-8')
-        curr_mother_name = h5_grp['mother_name'].value.decode('UTF-8')
+        # the following lines are for python 3.6
+        # curr_name = h5_grp['name'].value.decode('UTF-8')
+        # curr_mother_name = h5_grp['mother_name'].value.decode('UTF-8')
+
+        curr_name = h5_grp['name'].value
+        curr_mother_name = h5_grp['mother_name'].value
         curr_max_health = h5_grp['max_health'].value
         curr_health_decay_rate = h5_grp['health_decay_rate_per_tu'].value
         curr_land_penalty_rate = h5_grp['land_penalty_rate_per_pixel_tu'].value

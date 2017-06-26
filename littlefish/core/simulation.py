@@ -1,12 +1,59 @@
-import datetime
 import os
+import sys
 import time
-
+import datetime
+import random
 import h5py
+import inspect
 import littlefish.core.utilities as util
+import littlefish.core.terrain as tr
+import littlefish.core.fish as fi
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+
+def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size, sea_level, food_num, hard_thr=0):
+
+    tg = tr.TerrainGenerator(size=terrain_size, sea_level=sea_level)
+
+    curr_fish_f = h5py.File(fish_path)
+    curr_fish = fi.Fish.from_h5_group(curr_fish_f['fish'])
+
+    for sim_ind in range(simulation_num):
+        curr_seed = random.randrange(2 ** 32 - 1)
+        random.seed(curr_seed)
+        np.random.seed(curr_seed)
+
+        print(
+            '\n\n========================= fish: {}; simulation: {} / {} start ==========================='.
+            format(curr_fish.name, sim_ind + 1, simulation_num))
+
+        curr_terrain_map = tg.generate_binary_map(sigma=3., is_plot=False)
+        curr_terrain = tr.BinaryTerrain(curr_terrain_map)
+        curr_simulation = Simulation(terrain=curr_terrain, fish_list=[curr_fish],
+                                     simulation_length=simulation_length, food_num=food_num)
+
+        curr_simulation.initiate_simulation()
+        curr_simulation.run(verbose=1)
+
+        curr_sim_grp = curr_fish_f.create_group('simulation_' + util.int2str(sim_ind, 3))
+        curr_sim_grp['ending_time'] = datetime.datetime.now().strftime('%y%m%d_%H_%M_%S')
+        curr_sim_grp['random_seed'] = curr_seed
+        curr_sim_grp['simulation_length'] = simulation_length
+        curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
+        curr_simulation.save_log_to_h5_grp(curr_sim_grp, is_save_psp_waveforms=False)
+
+        print(
+            '\n========================== fish: {}; simulation: {} / {} end ============================'.
+                format(curr_fish.name, sim_ind + 1, simulation_num))
+
+        if curr_simulation._end_t < hard_thr:
+            print("\nSimulation: fish life span was less than the hard threshold. end the simulation of current"
+                  "fish: {}".format(curr_fish.name))
+            break
+
+    curr_fish_f.close()
 
 
 class Simulation(object):

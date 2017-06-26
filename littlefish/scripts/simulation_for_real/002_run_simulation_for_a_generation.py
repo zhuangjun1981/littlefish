@@ -1,5 +1,7 @@
 import os
 import sys
+sys.path.extend([r"C:\Users\woodstocker\PycharmProjects\littlefish"])
+import time
 import h5py
 import random
 import inspect
@@ -12,7 +14,7 @@ import littlefish.core.simulation as si
 
 data_folder = r'C:\little_fish_simulation_logs'
 
-generation = 44
+generation = 1
 
 # five times of a standard fish's life span without hitting land and eating, 5 * max_health / health_decay_rate
 # max_health of a standard fish: 100
@@ -22,13 +24,16 @@ sim_num = 3
 terrain_size = [128, 128]
 sea_level = 0.5
 food_num = 200
+hard_thr = 1000
 
-gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation, 6))
+gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation, 6) + '_single_thread')
 os.chdir(gen_folder)
 
 fish_lst = [f for f in os.listdir(gen_folder) if f[0:5] == 'fish_']
 fish_lst.sort()
 print('\n'.join(fish_lst) + '\n')
+
+t0 = time.time()
 
 total_fish_num = len(fish_lst)
 
@@ -64,5 +69,12 @@ for fish_num, fish_path in enumerate(fish_lst):
         print('\n============================= {}/{}; fish: {}; simulation: {} end ===============================\n'.
               format(fish_num, total_fish_num - 1, curr_fish.name, sim_ind))
 
+        if curr_simulation._end_t < hard_thr:
+            print("\nSimulation: fish life span was less than the hard threshold. end the simulation of current"
+                  "fish: {}".format(curr_fish.name))
+            break
+
     curr_fish_f.close()
+
+print("time: {} min.".format((time.time() - t0) / 60))
 

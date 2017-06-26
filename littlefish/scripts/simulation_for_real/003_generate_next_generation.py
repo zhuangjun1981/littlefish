@@ -12,7 +12,7 @@ import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
 
-gen_num = 43
+gen_num = 0
 hard_thr_ratio = 0.1
 soft_thr_ratio = 0.5
 reproducing_rate = 0.002  # 0.002
@@ -118,7 +118,7 @@ for mother_fish_ind, mother_fish_fn in enumerate(all_mother_fish_lst):
         time.sleep(1.)
 
     ng_grp = mother_fish_f.create_group('next_generation_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S'))
-    ng_grp['children_list'] = children_lst
+    ng_grp['children_list'] = [c.encode('utf8') for c in children_lst]
     ng_grp['random_seed'] = random_seed
     ng_grp['script_text'] = inspect.getsource(sys.modules[__name__])
 
