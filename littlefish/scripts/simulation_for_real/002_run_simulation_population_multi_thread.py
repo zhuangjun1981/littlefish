@@ -33,7 +33,7 @@ if __name__ == '__main__':
     generation_num = 1
     process_num = 6
 
-    gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation_num, 6) + '_multi_thread')
+    gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation_num, 6))
     os.chdir(gen_folder)
 
     fish_lst = [f for f in os.listdir(gen_folder) if f[0:5] == 'fish_' and f[-5:] == '.hdf5']
