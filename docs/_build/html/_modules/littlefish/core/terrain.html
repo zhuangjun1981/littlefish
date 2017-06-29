@@ -1,0 +1,347 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>littlefish.core.terrain &#8212; littlefish 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for littlefish.core.terrain</h1><div class="highlight"><pre>
+<span></span><span class="c1"># the 2-d terrain generator</span>
+
+<span class="c1"># from __future__ import (absolute_import, division,</span>
+<span class="c1">#                         print_function, unicode_literals)</span>
+<span class="c1"># from builtins import *</span>
+
+<span class="kn">import</span> <span class="nn">littlefish.core.utilities</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.ndimage</span> <span class="k">as</span> <span class="nn">ni</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">ioff</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TerrainGenerator"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.TerrainGenerator">[docs]</a><span class="k">class</span> <span class="nc">TerrainGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    terrain object, a square matrix containing altitude</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span><span class="mi">128</span><span class="p">),</span> <span class="n">sea_level</span><span class="o">=</span><span class="mf">0.6</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param size: size of world_map (height, width)</span>
+<span class="sd">        :param sea_level: a simple threshold</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sea_level</span> <span class="o">=</span> <span class="n">sea_level</span>
+
+<div class="viewcode-block" id="TerrainGenerator.get_size"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.TerrainGenerator.get_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :return: size of world_map (height, width)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span></div>
+
+<div class="viewcode-block" id="TerrainGenerator.get_sea_level"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.TerrainGenerator.get_sea_level">[docs]</a>    <span class="k">def</span> <span class="nf">get_sea_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :return: sea level</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sea_level</span></div>
+
+<div class="viewcode-block" id="TerrainGenerator.generate_float_map"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.TerrainGenerator.generate_float_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_float_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        generate a world_map with floating point with elevation [0., 1.]</span>
+
+<span class="sd">        :param sigma: filter sigma to filter the world_map</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">float_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">)</span>
+        <span class="n">float_map</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">float_map</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="n">float_map</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">array_nor</span><span class="p">(</span><span class="n">float_map</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">float_map</span></div>
+
+<div class="viewcode-block" id="TerrainGenerator.generate_binary_map"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.TerrainGenerator.generate_binary_map">[docs]</a>    <span class="k">def</span> <span class="nf">generate_binary_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">is_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param sigma: filter sigma to filter the world_map</span>
+<span class="sd">        :param is_plot: if True, pop a plot of binary world_map</span>
+<span class="sd">        :return: a binary world_map with defined size, 0 means under water. 1 means above water</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">float_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_float_map</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">binary_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">float_map</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">binary_map</span><span class="p">[</span><span class="n">float_map</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sea_level</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># print(binary_map._dtype)</span>
+
+        <span class="k">if</span> <span class="n">is_plot</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+            <span class="n">ax1</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+            <span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">float_map</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+            <span class="n">ax2</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">binary_map</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">binary_map</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BinaryTerrain"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.BinaryTerrain">[docs]</a><span class="k">class</span> <span class="nc">BinaryTerrain</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    2 dimensional binary terrain object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param input_array:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">util</span><span class="o">.</span><span class="n">check_binary_2d_array</span><span class="p">(</span><span class="n">input_array</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_terrain_map</span> <span class="o">=</span> <span class="n">input_array</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;BinaryTerrain: input array should be binary 2d numpy array, with _dtype np.int.&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BinaryTerrain.get_terrain_shape"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.BinaryTerrain.get_terrain_shape">[docs]</a>    <span class="k">def</span> <span class="nf">get_terrain_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_terrain_map</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="BinaryTerrain.get_terrain_map"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.BinaryTerrain.get_terrain_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_terrain_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_terrain_map</span></div>
+
+<div class="viewcode-block" id="BinaryTerrain.generate_fish_starting_position"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.BinaryTerrain.generate_fish_starting_position">[docs]</a>    <span class="k">def</span> <span class="nf">generate_fish_starting_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fish_num</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return randomized fish starting position. Note: fishes can be completely or partially overlapping</span>
+
+<span class="sd">        :param fish_num: positive integer, number of fish positions to return</span>
+<span class="sd">        :return: list of tuple, each tuple contains 2 positive integers (row, col) of a random position for a 3x3 fish,</span>
+<span class="sd">                 where its body will not cover 1s in self._terrain_map</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">position_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_terrain_map</span><span class="p">)</span>
+        <span class="n">position_maps</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">binary_dilation</span><span class="p">(</span><span class="n">position_maps</span><span class="p">,</span> <span class="n">structure</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">position_maps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">position_maps</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">position_maps</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">position_maps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">possible_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">position_maps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))))</span>
+        <span class="n">fish_positions</span> <span class="o">=</span> <span class="n">possible_positions</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">possible_positions</span><span class="p">)),</span> <span class="n">size</span><span class="o">=</span><span class="n">fish_num</span><span class="p">,</span>
+                                                             <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fish_positions</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="BinaryTerrain.update_food_map"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.BinaryTerrain.update_food_map">[docs]</a>    <span class="k">def</span> <span class="nf">update_food_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">food_num</span><span class="p">,</span> <span class="n">food_map</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        update the input food_map and food_pos_array, to generate new food map and food_pos_array so that the terrain</span>
+<span class="sd">        contains food_num of food pixels (each food only occupies one pixel). If the number of food is less than</span>
+<span class="sd">        food_num, new food will be added, if the number of food is more than food_num, extra food will be removed.</span>
+
+<span class="sd">        :param food_map: 2-d binary array, 0: non-food, 1: food</span>
+<span class="sd">        :param food_num: positive integer, number of food pixels after update</span>
+<span class="sd">        :return: food_map: updated food map</span>
+<span class="sd">        :return: food_positions: 2d array, food_num x 2, _dtype: uint16, array of food pixel coordinates,</span>
+<span class="sd">                                 each row is a food position, columns: [row, col]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">curr_food_pos_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">food_map</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">curr_food_pos_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">curr_food_pos_list</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_food_pos_list</span><span class="p">)</span> <span class="o">==</span> <span class="n">food_num</span><span class="p">:</span>  <span class="c1"># current number of food equal food_num</span>
+            <span class="n">food_pos_list</span> <span class="o">=</span> <span class="n">curr_food_pos_list</span>
+
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_food_pos_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">food_num</span><span class="p">:</span>  <span class="c1"># curren number of food more than food_num</span>
+
+            <span class="c1"># get food positions to retain</span>
+            <span class="n">food_retain_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">curr_food_pos_list</span><span class="p">)),</span> <span class="n">size</span><span class="o">=</span><span class="n">food_num</span><span class="p">,</span>
+                                                 <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">food_pos_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">curr_food_pos_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">food_retain_index</span><span class="p">]</span>
+
+            <span class="c1"># get food positions to remove</span>
+            <span class="n">food_remove_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">curr_food_pos_list</span><span class="p">)))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">food_retain_index</span><span class="p">)))</span>
+            <span class="n">food_remove_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">curr_food_pos_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">food_remove_index</span><span class="p">]</span>
+
+            <span class="c1"># update food_map</span>
+            <span class="n">food_map</span><span class="p">[[</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">food_remove_list</span><span class="p">],</span> <span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">food_remove_list</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_food_pos_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">food_num</span><span class="p">:</span>  <span class="c1"># current number of food less than food_num</span>
+
+            <span class="c1"># get positions to add food</span>
+            <span class="n">possible_positions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_terrain_map</span><span class="p">,</span> <span class="n">food_map</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)))</span>
+            <span class="n">food_add_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">possible_positions</span><span class="p">)),</span> <span class="n">size</span><span class="o">=</span><span class="n">food_num</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_food_pos_list</span><span class="p">),</span>
+                                              <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">food_add_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">possible_positions</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">food_add_index</span><span class="p">]</span>
+
+            <span class="c1"># update food_pos_array</span>
+            <span class="n">food_pos_list</span> <span class="o">=</span> <span class="n">curr_food_pos_list</span> <span class="o">+</span> <span class="n">food_add_list</span>
+
+            <span class="c1"># update food_map</span>
+            <span class="n">food_map</span><span class="p">[[</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">food_add_list</span><span class="p">],</span> <span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">food_add_list</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Terrain: cannot update food map. Do not understand current food position list.&quot;</span><span class="p">)</span>
+
+        <span class="n">food_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">food_pos_list</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">food_positions</span></div>
+
+<div class="viewcode-block" id="BinaryTerrain.plot_terrain"><a class="viewcode-back" href="../../../littlefish.core.terrain.html#littlefish.core.terrain.BinaryTerrain.plot_terrain">[docs]</a>    <span class="k">def</span> <span class="nf">plot_terrain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># todo: finish this method</span>
+        <span class="k">pass</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1">#=============================================================</span>
+    <span class="c1"># terrain_generator = TerrainGenerator(sea_level=0.6)</span>
+    <span class="c1"># terrain_map = terrain_generator.generate_binary_map(sigma=5., is_plot=True)</span>
+    <span class="c1"># binary_terrain = BinaryTerrain(terrain_map)</span>
+    <span class="c1"># fish_poss = binary_terrain.generate_fish_starting_position(5)</span>
+    <span class="c1"># fish_map = np.zeros(binary_terrain.get_terrain_shape(), _dtype=np.uint8)</span>
+    <span class="c1">#</span>
+    <span class="c1"># for fish_pos in fish_poss:</span>
+    <span class="c1">#     fish_map[fish_pos[0] - 1: fish_pos[0] + 2, fish_pos[1] - 1: fish_pos[1] + 2] = 1</span>
+    <span class="c1">#</span>
+    <span class="c1"># f = plt.figure(figsize=(10, 10))</span>
+    <span class="c1"># ax = f.add_subplot(111)</span>
+    <span class="c1"># ax.imshow(binary_terrain.get_terrain_map(), cmap=&#39;gray&#39;, vmin=0, vmax=1, interpolation=&#39;nearest&#39;)</span>
+    <span class="c1"># util.plot_mask(fish_map, plot_axis=ax, color=&#39;#ff0000&#39;)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="c1">#=============================================================</span>
+
+
+    <span class="c1"># =============================================================</span>
+    <span class="c1"># food_map = np.zeros((5, 5), _dtype=np.uint8)</span>
+    <span class="c1"># terrain_map = np.zeros((5, 5), _dtype=np.uint8)</span>
+    <span class="c1"># terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1</span>
+    <span class="c1"># terrain = BinaryTerrain(terrain_map)</span>
+    <span class="c1"># food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)</span>
+    <span class="c1"># f = plt.figure(figsize=(10, 4))</span>
+    <span class="c1"># ax1 = f.add_subplot(121)</span>
+    <span class="c1"># ax1.imshow(terrain_map, interpolation=&#39;nearest&#39;)</span>
+    <span class="c1"># ax1.set_title(&#39;terrain map&#39;)</span>
+    <span class="c1"># ax2 = f.add_subplot(122)</span>
+    <span class="c1"># ax2.imshow(food_map, interpolation=&#39;nearest&#39;)</span>
+    <span class="c1"># ax2.set_title(&#39;food map&#39;)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="c1"># food_pos_array = np.array([np.array(pos) for pos in food_pos_list])</span>
+    <span class="c1"># assert (np.max(np.logical_and(terrain_map, food_map)) == 0)</span>
+    <span class="c1"># assert (np.sum(food_map.flat) == 5)</span>
+    <span class="c1"># assert (food_pos_array.shape == (5, 2))</span>
+    <span class="c1">#</span>
+    <span class="c1"># food_pos_list = terrain.update_food_map(food_num=3, food_map=food_map)</span>
+    <span class="c1"># f = plt.figure(figsize=(10, 4))</span>
+    <span class="c1"># ax1 = f.add_subplot(121)</span>
+    <span class="c1"># ax1.imshow(terrain_map, interpolation=&#39;nearest&#39;)</span>
+    <span class="c1"># ax1.set_title(&#39;terrain map&#39;)</span>
+    <span class="c1"># ax2 = f.add_subplot(122)</span>
+    <span class="c1"># ax2.imshow(food_map, interpolation=&#39;nearest&#39;)</span>
+    <span class="c1"># ax2.set_title(&#39;food map&#39;)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="c1"># food_pos_array = np.array([np.array(pos) for pos in food_pos_list])</span>
+    <span class="c1"># assert (np.max(np.logical_and(terrain_map, food_map)) == 0)</span>
+    <span class="c1"># assert (np.sum(food_map.flat) == 3)</span>
+    <span class="c1"># assert (food_pos_array.shape == (3, 2))</span>
+    <span class="c1">#</span>
+    <span class="c1"># food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)</span>
+    <span class="c1"># f = plt.figure(figsize=(10, 4))</span>
+    <span class="c1"># ax1 = f.add_subplot(121)</span>
+    <span class="c1"># ax1.imshow(terrain_map, interpolation=&#39;nearest&#39;)</span>
+    <span class="c1"># ax1.set_title(&#39;terrain map&#39;)</span>
+    <span class="c1"># ax2 = f.add_subplot(122)</span>
+    <span class="c1"># ax2.imshow(food_map, interpolation=&#39;nearest&#39;)</span>
+    <span class="c1"># ax2.set_title(&#39;food map&#39;)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="c1"># food_pos_array = np.array([np.array(pos) for pos in food_pos_list])</span>
+    <span class="c1"># assert (np.max(np.logical_and(terrain_map, food_map)) == 0)</span>
+    <span class="c1"># assert (np.sum(food_map.flat) == 5)</span>
+    <span class="c1"># assert (food_pos_array.shape == (5, 2))</span>
+    <span class="c1">#</span>
+    <span class="c1"># food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)</span>
+    <span class="c1"># food_pos_array = np.array([np.array(pos) for pos in food_pos_list])</span>
+    <span class="c1"># assert (np.max(np.logical_and(terrain_map, food_map)) == 0)</span>
+    <span class="c1"># assert (np.sum(food_map.flat) == 5)</span>
+    <span class="c1"># assert (food_pos_array.shape == (5, 2))</span>
+    <span class="c1"># =============================================================</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;for debug&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jun Zhuang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

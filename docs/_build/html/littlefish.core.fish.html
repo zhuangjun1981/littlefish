@@ -1,0 +1,918 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>littlefish.core.fish module &#8212; littlefish 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="littlefish.core.terrain module" href="littlefish.core.terrain.html" />
+    <link rel="prev" title="littlefish.core package" href="littlefish.core.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.terrain.html" title="littlefish.core.terrain module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.html" title="littlefish.core package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="littlefish.html" >littlefish package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="littlefish.core.html" accesskey="U">littlefish.core package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-littlefish.core.fish">
+<span id="littlefish-core-fish-module"></span><h1>littlefish.core.fish module<a class="headerlink" href="#module-littlefish.core.fish" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="littlefish.core.fish.Brain">
+<em class="property">class </em><code class="descclassname">littlefish.core.fish.</code><code class="descname">Brain</code><span class="sig-paren">(</span><em>neurons=None</em>, <em>connections=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>brain class, the neural network from eye to muscle</p>
+<p>a ‘brain’ has a couple of sets of 8 eyes (brain.Eye object, each at each border pixel of the body). each set of
+eyes are receiving inputs from different objects. i.e. one set of eyes will look at land/water, another set of eyes
+will look for food, another set of eyes will look for other fish.</p>
+<p>a ‘brain’ has 4 invisible muscles (brain.Muscle object, each controlling the movement in each direction).</p>
+<p>between eyes and muscles are a neural network consists of neurons (brain.Neuron object) and connections
+(brain.Connections object). Number of layers and number of neurons can be specified.</p>
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>t_point</em>, <em>action_histories</em>, <em>psp_waveforms</em>, <em>body_position</em>, <em>terrain_map</em>, <em>food_map=None</em>, <em>fish_map=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.act" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t_point</strong> – int, current time stamp of time unit axis</li>
+<li><strong>action_histories</strong> – data frame of lists, each list is the action history of a particular neuron, in the
+same order as self._neurons data frame, columns = [‘action_history’]</li>
+<li><strong>psp_waveforms</strong> – 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
+neuron in the same order as self._neurons data frame, each column represents a time point</li>
+<li><strong>body_position</strong> – tuple of two ints, (row, col), current position of body center of the fish</li>
+<li><strong>terrain_map</strong> – 2d array, with only 0s (water) and 1s (land). represents the land scape of the world</li>
+<li><strong>food_map</strong> – 2d array, with only 0s (no food) and 1s (food). represents the distribution of food</li>
+<li><strong>fish_map</strong> – not fully implemented right now.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">movement_attempt: 2-d array, np.uint8, (row, col), representing the movement attempt, be careful, this
+may not represent the actual movement, it will be evaluated by the fish object
+(fish class) containing this brain to see if the movement is possible. if the fish
+is hitting the edge the world map, then the it will not move out of the map
+None: no movement has been attempted,</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.check_integrity">
+<code class="descname">check_integrity</code><span class="sig-paren">(</span><em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.check_integrity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.check_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>check integrity of object data structure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.check_integrity_connection">
+<code class="descname">check_integrity_connection</code><span class="sig-paren">(</span><em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.check_integrity_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.check_integrity_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.check_integrity_neurons">
+<code class="descname">check_integrity_neurons</code><span class="sig-paren">(</span><em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.check_integrity_neurons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.check_integrity_neurons" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a copy of self for i.e. mutation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="littlefish.core.fish.Brain.from_h5_group">
+<em class="property">static </em><code class="descname">from_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.from_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.from_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.generate_empty_action_histories">
+<code class="descname">generate_empty_action_histories</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.generate_empty_action_histories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.generate_empty_action_histories" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a data frame with empty lists, each list is the action history of a particular neuron, in the same
+order as self._neurons data frame, columns = [‘action_history’]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.generate_empty_psp_waveforms">
+<code class="descname">generate_empty_psp_waveforms</code><span class="sig-paren">(</span><em>simulation_length</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.generate_empty_psp_waveforms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.generate_empty_psp_waveforms" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>simulation_length</strong> – int, number of time points of the simulation</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">2d-array of zeros, float32, psp waveforms of all neurons in the brain, each row represents one
+neuron in the same order as self._neurons data frame, each column represents a time point</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_all_postsynaptic_neuron_indices">
+<code class="descname">get_all_postsynaptic_neuron_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_all_postsynaptic_neuron_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_all_postsynaptic_neuron_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>get indices of all postsynaptic neurons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_all_presynaptic_neuron_indices">
+<code class="descname">get_all_presynaptic_neuron_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_all_presynaptic_neuron_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_all_presynaptic_neuron_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>get indices of all presynaptic neurons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_connection_matrices">
+<code class="descname">get_connection_matrices</code><span class="sig-paren">(</span><em>pre_layer</em>, <em>post_layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_connection_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_connection_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>return several numpy arrays each represent one parameter of all connections between a presynaptic layer and
+a postsynaptic layer, each row is a postsynaptic neuron, each column is a presynaptic neuron</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pre_layer</strong> – int, layer number of presynaptic layer</li>
+<li><strong>post_layer</strong> – int, layer number of postsynaptic layer</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return rows:</th><td class="field-body"><p class="first">list of ints, postsynaptic neuron inds for each row</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return cols:</th><td class="field-body"><p class="first">list of ints, presynaptic neuron inds for each column</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return latencies:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first last">amplitudes, rise_times, decay_times: matrices for each connection parameter as described
+above</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_connections">
+<code class="descname">get_connections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_connections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_connections" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_layer_type">
+<code class="descname">get_layer_type</code><span class="sig-paren">(</span><em>layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_layer_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_layer_type" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">layer type (str) given the layer number</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_neuron_inds_in_layer">
+<code class="descname">get_neuron_inds_in_layer</code><span class="sig-paren">(</span><em>layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_neuron_inds_in_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_neuron_inds_in_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a list of sorted neuron_indices of all neurons in a given layer</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_neuron_type">
+<code class="descname">get_neuron_type</code><span class="sig-paren">(</span><em>ind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_neuron_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_neuron_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>return neuron type as a pair of strings given the index in self._neurons</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ind</strong> – int</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">for eyes : (‘eye’, type + short of direction)
+for hidden neurons: (‘hidden’, str(layer))
+for muscles (‘muscle’, short of direction)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_neurons">
+<code class="descname">get_neurons</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_neurons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_neurons" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_postsynaptic_neuron_inds">
+<code class="descname">get_postsynaptic_neuron_inds</code><span class="sig-paren">(</span><em>neuron_ind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_postsynaptic_neuron_inds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_postsynaptic_neuron_inds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_presynaptic_neuron_inds">
+<code class="descname">get_presynaptic_neuron_inds</code><span class="sig-paren">(</span><em>neuron_ind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_presynaptic_neuron_inds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_presynaptic_neuron_inds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.get_single_connection">
+<code class="descname">get_single_connection</code><span class="sig-paren">(</span><em>pre_neuron_ind</em>, <em>post_neuron_ind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.get_single_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.get_single_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="littlefish.core.fish.Brain.layer_num">
+<code class="descname">layer_num</code><a class="headerlink" href="#littlefish.core.fish.Brain.layer_num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.neuron_fire">
+<code class="descname">neuron_fire</code><span class="sig-paren">(</span><em>presynaptic_neuron_ind</em>, <em>t_point</em>, <em>psp_waveforms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.neuron_fire"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.neuron_fire" title="Permalink to this definition">¶</a></dt>
+<dd><p>updata all corresponding psp waveforms when a presynaptic neuron (only in eye layer and hidden layer) fires</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>presynaptic_neuron_ind</strong> – int, the index of presynaptic neuron in self._neurons</li>
+<li><strong>t_point</strong> – int, time point in time unit axis of the action</li>
+<li><strong>psp_waveforms</strong> – 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
+neuron in the same order as self._neurons data frame, each column represents a time point</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Brain.to_h5_group">
+<code class="descname">to_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Brain.to_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Brain.to_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="littlefish.core.fish.Connection">
+<em class="property">class </em><code class="descclassname">littlefish.core.fish.</code><code class="descname">Connection</code><span class="sig-paren">(</span><em>latency=3</em>, <em>amplitude=0.001</em>, <em>rise_time=5</em>, <em>decay_time=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>synaptic connection between two neurons</p>
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>t_point</em>, <em>postsynaptic_index</em>, <em>psp_waveforms</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>if the presynaptic neuron fires at the ‘time_point’, a psp wave form will be generated and add to the
+input waveform of postsynaptic neuron defined by postsynaptic_index</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t_point</strong> – int, current time point as the index of time unit axis</li>
+<li><strong>postsynaptic_index</strong> – non-negative int, the index of postsynaptic neuron</li>
+<li><strong>psp_waveforms</strong> – 2-d array, float 32, the psp waveforms of all neurons in the brain, neuron id x t-point,
+the generated psp will be added to the postsynaptic_index th line of the array</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a copy of self for i.e. mutation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.get_amplitude">
+<code class="descname">get_amplitude</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.get_amplitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.get_amplitude" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.get_decay_time">
+<code class="descname">get_decay_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.get_decay_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.get_decay_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.get_latency">
+<code class="descname">get_latency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.get_latency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.get_latency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.get_psp">
+<code class="descname">get_psp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.get_psp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.get_psp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.get_rise_time">
+<code class="descname">get_rise_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.get_rise_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.get_rise_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.set_ampletude">
+<code class="descname">set_ampletude</code><span class="sig-paren">(</span><em>new_amplitude</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.set_ampletude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.set_ampletude" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.set_decay_time">
+<code class="descname">set_decay_time</code><span class="sig-paren">(</span><em>new_decay_time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.set_decay_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.set_decay_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.set_latency">
+<code class="descname">set_latency</code><span class="sig-paren">(</span><em>new_latency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.set_latency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.set_latency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.set_params">
+<code class="descname">set_params</code><span class="sig-paren">(</span><em>latency=None</em>, <em>amplitude=None</em>, <em>rise_time=None</em>, <em>decay_time=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.set_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>set new parameters and regenerate psp waveform</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>latency</strong> – int, number of time units for time delay</li>
+<li><strong>amplitude</strong> – float, peak probability</li>
+<li><strong>rise_time</strong> – int, number of time units to rise to peak</li>
+<li><strong>decay_time</strong> – int, number of time units to decay to baseline</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Connection.set_rise_time">
+<code class="descname">set_rise_time</code><span class="sig-paren">(</span><em>new_rise_time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Connection.set_rise_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Connection.set_rise_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="littlefish.core.fish.Eye">
+<em class="property">class </em><code class="descclassname">littlefish.core.fish.</code><code class="descname">Eye</code><span class="sig-paren">(</span><em>direction</em>, <em>input_filter=None</em>, <em>gain=0.001</em>, <em>input_type=’terrain’</em>, <em>baseline_rate=0.0</em>, <em>refractory_period=1.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#littlefish.core.fish.Neuron" title="littlefish.core.fish.Neuron"><code class="xref py py-class docutils literal"><span class="pre">littlefish.core.fish.Neuron</span></code></a></p>
+<p>Eye class to observe the environment and the inside of fish body, subclass of Neuron, has eye sight as 2 pixels</p>
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>t_point</em>, <em>body_position</em>, <em>input_map</em>, <em>action_history=[]</em>, <em>border_value=1</em>, <em>probability_base=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate if the eye neuron will fire at given time point</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t_point</strong> – int, current time point as the index of time unit axis</li>
+<li><strong>body_position</strong> – tuple of two ints, (row, col),  position of the body center pixel</li>
+<li><strong>input_map</strong> – binary 2-d map, for now it should only contain 0s and 1s</li>
+<li><strong>action_history</strong> – list of positive integers, list of time stamps of actions of this neuron,
+should be monotonically increasing</li>
+<li><strong>border_value</strong> – int, default 1, value for pixels outside the terrain_map</li>
+<li><strong>probability_base</strong> – float, a random number no less than 0 and less than 1, to determine if the neuron
+is going to act or not, if None, a random number will be generated by
+random.random()</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bool, True: fire; False: quite</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a copy of self for i.e. mutation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="littlefish.core.fish.Eye.from_h5_group">
+<em class="property">static </em><code class="descname">from_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.from_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.from_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.get_direction">
+<code class="descname">get_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.get_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.get_direction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.get_gain">
+<code class="descname">get_gain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.get_gain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.get_gain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.get_input_filter">
+<code class="descname">get_input_filter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.get_input_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.get_input_filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.get_input_type">
+<code class="descname">get_input_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.get_input_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.get_input_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.get_neuron_type">
+<code class="descname">get_neuron_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.get_neuron_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.get_neuron_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Eye.to_h5_group">
+<code class="descname">to_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Eye.to_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Eye.to_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="littlefish.core.fish.Fish">
+<em class="property">class </em><code class="descclassname">littlefish.core.fish.</code><code class="descname">Fish</code><span class="sig-paren">(</span><em>name=None</em>, <em>mother_name=None</em>, <em>brain=None</em>, <em>max_health=100.0</em>, <em>health_decay_rate=0.0001</em>, <em>land_penalty_rate=0.005</em>, <em>food_rate=20.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>the main fish class</p>
+<p>a ‘fish’ has a body occupies a 3x3 space.</p>
+<p>a ‘fish’ has health point (goes down over time and increases after eating a food). fish moves around in a 2d
+landscape (2-d binary map, 0 represents water, 1 represents land), when hits land, health point will go down
+quickly.</p>
+<p>the purpose of simulation is to train the fish use its eyes, brain and muscles to avoid land and look for food.</p>
+<p>the simulation works on “real-time” basis on a time unit axis (consider one time unit is equivalent to 0.1
+millisecond.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Attr _brain:</th><td class="field-body">a brain.Brain object</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Attr _max_health:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">float, maximum health point a fish can have</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Attr _health_decay_rate:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">float, the constant rate of health reduction, health point / time unit</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Attr _land_penalty_rate:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">float, the penalty of health point, if the fish’s body covers land pixels (1s) in
+the terrain map, health point / (pixel * time unit)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Attri _food_rate:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">float, the gaining of health point if fish’s body covers food pixels (1s) in the food map,
+health point / pixel. the food after taken will disappear, so no health gaining is a
+transient event</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>t_point</em>, <em>curr_position</em>, <em>curr_health</em>, <em>action_histories</em>, <em>psp_waveforms</em>, <em>terrain_map</em>, <em>food_map=None</em>, <em>fish_map=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>simulate the fish’s action at a given time point</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t_point</strong> – non-negative int, time point</li>
+<li><strong>curr_position</strong> – list or tuple of two non-negative integers, coordinates of fish center position,
+[row, col]</li>
+<li><strong>curr_health</strong> – positive float, health point at the beginning of t_point</li>
+<li><strong>action_histories</strong> – data frame of lists, each list is the action history of a particular neuron, in the
+same order as self._neurons data frame, columns = [‘action_history’], used by
+self._brain.act()</li>
+<li><strong>psp_waveforms</strong> – 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
+neuron in the same order as self._neurons data frame, each column represents a time point,
+used by self._brain.act()</li>
+<li><strong>terrain_map</strong> – 2d array, with only 0s (water) and 1s (land). represents the land scape of the world</li>
+<li><strong>food_map</strong> – 2d array, with only 0s (no food) and 1s (food). represents the distribution of food</li>
+<li><strong>fish_map</strong> – not fully implemented right now.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return updated_health:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first">float, health point at the end of t_point</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Return movement_attempt:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body"><p class="first last">list of two integers, the attempt the fish is trying to move [row_shift, col_shift].
+None if updated_health is below 0 (fish is dead).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a copy of self for i.e. mutation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="littlefish.core.fish.Fish.from_h5_group">
+<em class="property">static </em><code class="descname">from_h5_group</code><span class="sig-paren">(</span><em>h5_grp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.from_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.from_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.get_brain">
+<code class="descname">get_brain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.get_brain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.get_brain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.get_food_rate">
+<code class="descname">get_food_rate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.get_food_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.get_food_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.get_health_decay_rate">
+<code class="descname">get_health_decay_rate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.get_health_decay_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.get_health_decay_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.get_land_penalty_rate">
+<code class="descname">get_land_penalty_rate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.get_land_penalty_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.get_land_penalty_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.get_max_health">
+<code class="descname">get_max_health</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.get_max_health"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.get_max_health" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.get_mother_name">
+<code class="descname">get_mother_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.get_mother_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.get_mother_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.get_name">
+<code class="descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.get_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.get_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="littlefish.core.fish.Fish.name">
+<code class="descname">name</code><a class="headerlink" href="#littlefish.core.fish.Fish.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.set_brain">
+<code class="descname">set_brain</code><span class="sig-paren">(</span><em>brain</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.set_brain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.set_brain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.set_food_rate">
+<code class="descname">set_food_rate</code><span class="sig-paren">(</span><em>food_rate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.set_food_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.set_food_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.set_health_decay_rate">
+<code class="descname">set_health_decay_rate</code><span class="sig-paren">(</span><em>health_decay_rate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.set_health_decay_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.set_health_decay_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.set_name">
+<code class="descname">set_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.set_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.set_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Fish.to_h5_group">
+<code class="descname">to_h5_group</code><span class="sig-paren">(</span><em>h5_grp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Fish.to_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Fish.to_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="littlefish.core.fish.Muscle">
+<em class="property">class </em><code class="descclassname">littlefish.core.fish.</code><code class="descname">Muscle</code><span class="sig-paren">(</span><em>direction</em>, <em>baseline_rate=0.001</em>, <em>refractory_period=500.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Muscle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Muscle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#littlefish.core.fish.Neuron" title="littlefish.core.fish.Neuron"><code class="xref py py-class docutils literal"><span class="pre">littlefish.core.fish.Neuron</span></code></a></p>
+<p>muscle class for determining the motion of the fish. Subclass of Neuron class</p>
+<dl class="method">
+<dt id="littlefish.core.fish.Muscle.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>t_point</em>, <em>action_history=[]</em>, <em>probability_input=0.0</em>, <em>probability_base=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Muscle.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Muscle.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate if the muscle will try to move the fish or not</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t_point</strong> – int, current time point as the index of time unit axis</li>
+<li><strong>probability_input</strong> – float, summed connection inputs, as add on to baseline_rate</li>
+<li><strong>action_history</strong> – list of positive integers, list of time stamps of actions of this neuron,
+should be monotonically increasing</li>
+<li><strong>probability_base</strong> – float, a random number no less than 0 and less than 1, to determine if the neuron
+is going to act or not, if None, a random number will be generated by
+random.random()</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">no attempt: False
+attempt: movement vector, 1d array with two ints, [row_update, col_update]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Muscle.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Muscle.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Muscle.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a copy of self for i.e. mutation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="littlefish.core.fish.Muscle.from_h5_group">
+<em class="property">static </em><code class="descname">from_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Muscle.from_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Muscle.from_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Muscle.get_direction">
+<code class="descname">get_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Muscle.get_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Muscle.get_direction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Muscle.get_neuron_type">
+<code class="descname">get_neuron_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Muscle.get_neuron_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Muscle.get_neuron_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Muscle.to_h5_group">
+<code class="descname">to_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Muscle.to_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Muscle.to_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="littlefish.core.fish.Neuron">
+<em class="property">class </em><code class="descclassname">littlefish.core.fish.</code><code class="descname">Neuron</code><span class="sig-paren">(</span><em>baseline_rate=0.001</em>, <em>refractory_period=1.2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>a very simple neuron class</p>
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.act">
+<code class="descname">act</code><span class="sig-paren">(</span><em>t_point</em>, <em>action_history=[]</em>, <em>probability_input=0.0</em>, <em>probability_base=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate if the neuron will fire at given time point</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t_point</strong> – int, current time point as the index of time unit axis</li>
+<li><strong>action_history</strong> – list of positive integers, list of time stamps of actions of this neuron,
+should be monotonically increasing</li>
+<li><strong>probability_input</strong> – float, summed connection inputs, as add on to baseline_rate</li>
+<li><strong>probability_base</strong> – float, a random number no less than 0 and less than 1, to determine if the neuron
+is going to act or not, if None, a random number will be generated by
+random.random()</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bool, True: fire; False: quite</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a copy of self for i.e. mutation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="littlefish.core.fish.Neuron.from_h5_group">
+<em class="property">static </em><code class="descname">from_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.from_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.from_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.get_baseline_rate">
+<code class="descname">get_baseline_rate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.get_baseline_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.get_baseline_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.get_neuron_type">
+<code class="descname">get_neuron_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.get_neuron_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.get_neuron_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.get_refractory_period">
+<code class="descname">get_refractory_period</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.get_refractory_period"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.get_refractory_period" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.set_baseline_rate">
+<code class="descname">set_baseline_rate</code><span class="sig-paren">(</span><em>new_baseline_rate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.set_baseline_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.set_baseline_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.set_refractory_period">
+<code class="descname">set_refractory_period</code><span class="sig-paren">(</span><em>new_refractory_period</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.set_refractory_period"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.set_refractory_period" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.fish.Neuron.to_h5_group">
+<code class="descname">to_h5_group</code><span class="sig-paren">(</span><em>h5_group</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#Neuron.to_h5_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.Neuron.to_h5_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.fish.generate_minimal_brain">
+<code class="descclassname">littlefish.core.fish.</code><code class="descname">generate_minimal_brain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#generate_minimal_brain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.generate_minimal_brain" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a Brain object with one eye, two neuron in hidden layer and one muscle</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.fish.generate_standard_fish">
+<code class="descclassname">littlefish.core.fish.</code><code class="descname">generate_standard_fish</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#generate_standard_fish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.generate_standard_fish" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.fish.get_eye_type">
+<code class="descclassname">littlefish.core.fish.</code><code class="descname">get_eye_type</code><span class="sig-paren">(</span><em>ind</em>, <em>dir_num=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#get_eye_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.get_eye_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>given the neuron_ind in the eye layer return direction and input type of a specific eye</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ind</strong> – non-negative int, index of the eye in eye layer</li>
+<li><strong>dir_num</strong> – 4 or 8, if 4, eye directions iterate through 4 cardinal directions; if 8, eye directions will
+iterate through 8 directions</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">two strings, (direction, type)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.fish.get_muscle_direction">
+<code class="descclassname">littlefish.core.fish.</code><code class="descname">get_muscle_direction</code><span class="sig-paren">(</span><em>ind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/fish.html#get_muscle_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.fish.get_muscle_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>given the neuron_ind in the muscle layer return direction of a specific muscle</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">string, direction of the muscle</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="littlefish.core.html"
+                        title="previous chapter">littlefish.core package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="littlefish.core.terrain.html"
+                        title="next chapter">littlefish.core.terrain module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/littlefish.core.fish.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.terrain.html" title="littlefish.core.terrain module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.html" title="littlefish.core package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="littlefish.html" >littlefish package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="littlefish.core.html" >littlefish.core package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jun Zhuang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

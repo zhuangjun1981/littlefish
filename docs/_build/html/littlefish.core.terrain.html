@@ -1,0 +1,256 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>littlefish.core.terrain module &#8212; littlefish 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="littlefish.core.simulation module" href="littlefish.core.simulation.html" />
+    <link rel="prev" title="littlefish.core.fish module" href="littlefish.core.fish.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.simulation.html" title="littlefish.core.simulation module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.fish.html" title="littlefish.core.fish module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="littlefish.html" >littlefish package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="littlefish.core.html" accesskey="U">littlefish.core package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-littlefish.core.terrain">
+<span id="littlefish-core-terrain-module"></span><h1>littlefish.core.terrain module<a class="headerlink" href="#module-littlefish.core.terrain" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="littlefish.core.terrain.BinaryTerrain">
+<em class="property">class </em><code class="descclassname">littlefish.core.terrain.</code><code class="descname">BinaryTerrain</code><span class="sig-paren">(</span><em>input_array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#BinaryTerrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.BinaryTerrain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>2 dimensional binary terrain object.</p>
+<dl class="method">
+<dt id="littlefish.core.terrain.BinaryTerrain.generate_fish_starting_position">
+<code class="descname">generate_fish_starting_position</code><span class="sig-paren">(</span><em>fish_num=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#BinaryTerrain.generate_fish_starting_position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.BinaryTerrain.generate_fish_starting_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>return randomized fish starting position. Note: fishes can be completely or partially overlapping</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fish_num</strong> – positive integer, number of fish positions to return</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of tuple, each tuple contains 2 positive integers (row, col) of a random position for a 3x3 fish,
+where its body will not cover 1s in self._terrain_map</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.terrain.BinaryTerrain.get_terrain_map">
+<code class="descname">get_terrain_map</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#BinaryTerrain.get_terrain_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.BinaryTerrain.get_terrain_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.terrain.BinaryTerrain.get_terrain_shape">
+<code class="descname">get_terrain_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#BinaryTerrain.get_terrain_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.BinaryTerrain.get_terrain_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.terrain.BinaryTerrain.plot_terrain">
+<code class="descname">plot_terrain</code><span class="sig-paren">(</span><em>plot_axis=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#BinaryTerrain.plot_terrain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.BinaryTerrain.plot_terrain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.terrain.BinaryTerrain.update_food_map">
+<code class="descname">update_food_map</code><span class="sig-paren">(</span><em>food_num</em>, <em>food_map</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#BinaryTerrain.update_food_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.BinaryTerrain.update_food_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>update the input food_map and food_pos_array, to generate new food map and food_pos_array so that the terrain
+contains food_num of food pixels (each food only occupies one pixel). If the number of food is less than
+food_num, new food will be added, if the number of food is more than food_num, extra food will be removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>food_map</strong> – 2-d binary array, 0: non-food, 1: food</li>
+<li><strong>food_num</strong> – positive integer, number of food pixels after update</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">food_map: updated food map</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">food_positions: 2d array, food_num x 2, _dtype: uint16, array of food pixel coordinates,
+each row is a food position, columns: [row, col]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="littlefish.core.terrain.TerrainGenerator">
+<em class="property">class </em><code class="descclassname">littlefish.core.terrain.</code><code class="descname">TerrainGenerator</code><span class="sig-paren">(</span><em>size=(128</em>, <em>128)</em>, <em>sea_level=0.6</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#TerrainGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.TerrainGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>terrain object, a square matrix containing altitude</p>
+<dl class="method">
+<dt id="littlefish.core.terrain.TerrainGenerator.generate_binary_map">
+<code class="descname">generate_binary_map</code><span class="sig-paren">(</span><em>sigma=0.5</em>, <em>is_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#TerrainGenerator.generate_binary_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.TerrainGenerator.generate_binary_map" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sigma</strong> – filter sigma to filter the world_map</li>
+<li><strong>is_plot</strong> – if True, pop a plot of binary world_map</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a binary world_map with defined size, 0 means under water. 1 means above water</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.terrain.TerrainGenerator.generate_float_map">
+<code class="descname">generate_float_map</code><span class="sig-paren">(</span><em>sigma=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#TerrainGenerator.generate_float_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.TerrainGenerator.generate_float_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate a world_map with floating point with elevation [0., 1.]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sigma</strong> – filter sigma to filter the world_map</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.terrain.TerrainGenerator.get_sea_level">
+<code class="descname">get_sea_level</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#TerrainGenerator.get_sea_level"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.TerrainGenerator.get_sea_level" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">sea level</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="littlefish.core.terrain.TerrainGenerator.get_size">
+<code class="descname">get_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/terrain.html#TerrainGenerator.get_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.terrain.TerrainGenerator.get_size" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">size of world_map (height, width)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="littlefish.core.fish.html"
+                        title="previous chapter">littlefish.core.fish module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="littlefish.core.simulation.html"
+                        title="next chapter">littlefish.core.simulation module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/littlefish.core.terrain.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.simulation.html" title="littlefish.core.simulation module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.fish.html" title="littlefish.core.fish module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="littlefish.html" >littlefish package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="littlefish.core.html" >littlefish.core package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jun Zhuang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>

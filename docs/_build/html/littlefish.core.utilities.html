@@ -1,0 +1,312 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>littlefish.core.utilities module &#8212; littlefish 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="littlefish.core.visualization module" href="littlefish.core.visualization.html" />
+    <link rel="prev" title="littlefish.core.evolution module" href="littlefish.core.evolution.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.visualization.html" title="littlefish.core.visualization module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.evolution.html" title="littlefish.core.evolution module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="littlefish.html" >littlefish package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="littlefish.core.html" accesskey="U">littlefish.core package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-littlefish.core.utilities">
+<span id="littlefish-core-utilities-module"></span><h1>littlefish.core.utilities module<a class="headerlink" href="#module-littlefish.core.utilities" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="littlefish.core.utilities.array_nor">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">array_nor</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#array_nor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.array_nor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.check_arithmetic_progression">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">check_arithmetic_progression</code><span class="sig-paren">(</span><em>seq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#check_arithmetic_progression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.check_arithmetic_progression" title="Permalink to this definition">¶</a></dt>
+<dd><p>check a 1-d list of numbers is arithmetic progression sequence</p>
+<p>:return bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.check_binary_2d_array">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">check_binary_2d_array</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#check_binary_2d_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.check_binary_2d_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>check if an array is 2 dimensional and _dtype is int and only contains 0s and 1s</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.check_df_index">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">check_df_index</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#check_df_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.check_df_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>check if the indices of a pandas dataframe is a series in an ascending order with increment as 1 and starts at 0</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.check_monotonicity">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">check_monotonicity</code><span class="sig-paren">(</span><em>arr</em>, <em>direction=’increasing’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#check_monotonicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.check_monotonicity" title="Permalink to this definition">¶</a></dt>
+<dd><p>check monotonicity of a 1-d array, usually a time series</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arr</strong> – input array, should be 1 dimensional</li>
+<li><strong>direction</strong> – ‘increasing’, ‘decreasing’, ‘non-increasing’, ‘non-decreasing’</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True or False</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.decode">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">decode</code><span class="sig-paren">(</span><em>str_like</em>, <em>code=’UTF-8’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>if a string like object is actually a ‘bytes’ type, decode it by ‘UTF-8’, and return the string. This is to deal
+with the hdf5 string format madness.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>str_like</strong> – </li>
+<li><strong>code</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.discreat_crosscorrelation">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">discreat_crosscorrelation</code><span class="sig-paren">(</span><em>ts_trigger</em>, <em>ts_reference</em>, <em>t_range=(-10.0</em>, <em>20.0)</em>, <em>bin_width=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#discreat_crosscorrelation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.discreat_crosscorrelation" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate crosscorrelogram between two timestamp train</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ts_trigger</strong> – the triggering time stamps, 1d array, monotonically increasing</li>
+<li><strong>ts_reference</strong> – the reference time stamps, 1d array, monotonically increasing</li>
+<li><strong>t_range</strong> – para-trigger time range, tuple with two floats</li>
+<li><strong>bin_with</strong> – duration of a single bin</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">crosscorrelogram of counts, 1-d array, int
+t_axis, time axis of crosscorrelogram, 1-d array, float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.get_random_number">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">get_random_number</code><span class="sig-paren">(</span><em>distribution</em>, <em>shape</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#get_random_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.get_random_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>get a random number from given distribution</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>distribution</strong> – tuple in the format, (distribution type, parameter1, parameter2, …)
+supported: (‘flat’, mean, range), (‘gaussian, mean, sigma), (‘exponential’, mean)</li>
+<li><strong>shape</strong> – output shape</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a random number</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.int2str">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">int2str</code><span class="sig-paren">(</span><em>num</em>, <em>length=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#int2str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.int2str" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate a string representation for a integer with a given length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>num</strong> – input number</li>
+<li><strong>length</strong> – length of the string</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">string represetation of the integer</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.is_integer">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">is_integer</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#is_integer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.is_integer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.plot_mask">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">plot_mask</code><span class="sig-paren">(</span><em>mask</em>, <em>plot_axis=None</em>, <em>color=’#ff0000’</em>, <em>closing_iteration=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#plot_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.plot_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
+as background, and non-zero, non-nan pixel will be considered in ROI.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.plot_mask_borders">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">plot_mask_borders</code><span class="sig-paren">(</span><em>mask</em>, <em>plot_axis=None</em>, <em>color=’#ff0000’</em>, <em>border_width=2</em>, <em>closing_iteration=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#plot_mask_borders"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.plot_mask_borders" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
+as background, and non-zero, non-nan pixel will be considered in ROI.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.plot_spike_ticks">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">plot_spike_ticks</code><span class="sig-paren">(</span><em>spike_history</em>, <em>y=0.0</em>, <em>plot_axis=None</em>, <em>color=’#ff0000’</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#plot_spike_ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.plot_spike_ticks" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot spike ticks as separate dots</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spike_history</strong> – list of ints, spike timestamps on time unit axis</li>
+<li><strong>y</strong> – float, vertical locations of spike line</li>
+<li><strong>plot_axis</strong> – plotting axis, matplotlib.pyplot.axis object</li>
+<li><strong>color</strong> – plotting color</li>
+<li><strong>kwargs</strong> – other inputs to matplotlib.pyplot.plot function</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">plot_axis</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="littlefish.core.utilities.short">
+<code class="descclassname">littlefish.core.utilities.</code><code class="descname">short</code><span class="sig-paren">(</span><em>str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/littlefish/core/utilities.html#short"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#littlefish.core.utilities.short" title="Permalink to this definition">¶</a></dt>
+<dd><p>retrun abbreviation of a string</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="littlefish.core.evolution.html"
+                        title="previous chapter">littlefish.core.evolution module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="littlefish.core.visualization.html"
+                        title="next chapter">littlefish.core.visualization module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/littlefish.core.utilities.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.visualization.html" title="littlefish.core.visualization module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="littlefish.core.evolution.html" title="littlefish.core.evolution module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="littlefish.html" >littlefish package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="littlefish.core.html" >littlefish.core package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jun Zhuang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+    </div>
+  </body>
+</html>
