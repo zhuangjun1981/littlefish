@@ -1139,10 +1139,10 @@ class Brain(object):
 
         :param pre_layer: int, layer number of presynaptic layer
         :param post_layer: int, layer number of postsynaptic layer
-        :return: rows, list of ints, postsynaptic neuron inds for each row
-                 cols, list of ints, presynaptic neuron inds for each column
-                 latencies, amplitudes, rise_times, decay_times: matrices for each connection parameter as described
-                 above
+        :return rows: list of ints, postsynaptic neuron inds for each row
+        :return cols: list of ints, presynaptic neuron inds for each column
+        :return latencies: amplitudes, rise_times, decay_times: matrices for each connection parameter as described
+                           above
         """
 
         rows = self.get_neuron_inds_in_layer(post_layer)
@@ -1282,18 +1282,14 @@ class Fish(object):
     the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
     millisecond.
 
-    self._brain: a brain.Brain object
-    self._max_health: float, maximum health point a fish can have
-    self._health_decay_rate: float, the constant rate of health reduction, health point / time unit
-    self._land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
-                             the terrain map, health point / (pixel * time unit)
-    self._food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
-                     health point / pixel. the food after taken will disappear, so no health gaining is a
-                     transient event
-    self._simulation_status: 0, has not simulated
-                             1, during simulation
-                             2, after simulation
-    self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
+    :attribute _brain: a brain.Brain object
+    :attribute _max_health: float, maximum health point a fish can have
+    :attribute _health_decay_rate: float, the constant rate of health reduction, health point / time unit
+    :attribute _land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
+                                   the terrain map, health point / (pixel * time unit)
+    :attribute _food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+                           health point / pixel. the food after taken will disappear, so no health gaining is a
+                           transient event
     """
 
     def __init__(self, name=None, mother_name=None, brain=None, max_health=100., health_decay_rate=0.0001,
