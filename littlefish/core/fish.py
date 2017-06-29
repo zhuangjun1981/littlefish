@@ -42,7 +42,8 @@ import matplotlib.pyplot as plt
 
 def generate_minimal_brain():
     """
-    :return: a Brain object with one eye, two neuron in hidden layer and one muscle 
+
+    :return: a Brain object with one eye, two neuron in hidden layer and one muscle
     """
 
     eye = Eye(direction='east', input_filter=None, gain=0.05, input_type='terrain', baseline_rate=0.,
@@ -150,6 +151,7 @@ def generate_standard_fish():
 def get_eye_type(ind, dir_num=4):
     """
     given the neuron_ind in the eye layer return direction and input type of a specific eye
+
     :param ind: non-negative int, index of the eye in eye layer
     :param dir_num: 4 or 8, if 4, eye directions iterate through 4 cardinal directions; if 8, eye directions will
                     iterate through 8 directions
@@ -172,6 +174,7 @@ def get_eye_type(ind, dir_num=4):
 def get_muscle_direction(ind):
     """
     given the neuron_ind in the muscle layer return direction of a specific muscle
+
     :return: string, direction of the muscle
     """
     muscle_directions = ['east', 'north', 'west', 'south']
@@ -200,7 +203,8 @@ class Neuron(object):
     
     def copy(self):
         """
-        :return: a copy of self for i.e. mutation 
+
+        :return: a copy of self for i.e. mutation
         """
         return Neuron(baseline_rate=self.get_baseline_rate(), refractory_period=self.get_refractory_period())
 
@@ -222,6 +226,7 @@ class Neuron(object):
     def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
         """
         evaluate if the neuron will fire at given time point
+
         :param t_point: int, current time point as the index of time unit axis
         :param action_history: list of positive integers, list of time stamps of actions of this neuron,
                                should be monotonically increasing
@@ -367,7 +372,8 @@ class Eye(Neuron):
     
     def copy(self):
         """
-        :return: a copy of self for i.e. mutation 
+
+        :return: a copy of self for i.e. mutation
         """
         return Eye(direction=self.get_direction(), input_filter=self.get_input_filter(), gain=self.get_gain(),
                    input_type=self.get_input_type(), baseline_rate=self.get_baseline_rate(), 
@@ -440,6 +446,7 @@ class Eye(Neuron):
 
     def _get_input(self, input_map, body_position, border_value=1):
         """
+
         :return: float, calculate real time input from the visual field
         """
         input_pixels = self._get_input_pixels(input_map, body_position, border_value=border_value)
@@ -450,6 +457,7 @@ class Eye(Neuron):
     def act(self, t_point, body_position, input_map, action_history=[], border_value=1, probability_base=None):
         """
         evaluate if the eye neuron will fire at given time point
+
         :param t_point: int, current time point as the index of time unit axis
         :param body_position: tuple of two ints, (row, col),  position of the body center pixel
         :param input_map: binary 2-d map, for now it should only contain 0s and 1s
@@ -525,7 +533,8 @@ class Muscle(Neuron):
     
     def copy(self):
         """
-        :return: a copy of self for i.e. mutation 
+
+        :return: a copy of self for i.e. mutation
         """
         return Muscle(direction=self.get_direction(), baseline_rate=self.get_baseline_rate(), 
                       refractory_period=self.get_refractory_period())
@@ -539,6 +548,7 @@ class Muscle(Neuron):
     def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
         """
         evaluate if the muscle will try to move the fish or not
+
         :param t_point: int, current time point as the index of time unit axis
         :param probability_input: float, summed connection inputs, as add on to baseline_rate
         :param action_history: list of positive integers, list of time stamps of actions of this neuron,
@@ -620,7 +630,8 @@ class Connection(object):
     
     def copy(self):
         """
-        :return: a copy of self for i.e. mutation 
+
+        :return: a copy of self for i.e. mutation
         """
         return Connection(latency=self.get_latency(), amplitude=self.get_amplitude(), rise_time=self.get_rise_time(),
                           decay_time=self.get_decay_time())
@@ -721,6 +732,7 @@ class Connection(object):
         """
         if the presynaptic neuron fires at the 'time_point', a psp wave form will be generated and add to the
         input waveform of postsynaptic neuron defined by postsynaptic_index
+
         :param t_point: int, current time point as the index of time unit axis
         :param postsynaptic_index: non-negative int, the index of postsynaptic neuron
         :param psp_waveforms: 2-d array, float 32, the psp waveforms of all neurons in the brain, neuron id x t-point,
@@ -750,6 +762,7 @@ class Brain(object):
 
     def __init__(self, neurons=None, connections=None):
         """
+
         :param neurons: pandas dataframe
         :param connections: dict
         """
@@ -773,6 +786,7 @@ class Brain(object):
 
     def copy(self):
         """
+
         :return: a copy of self for i.e. mutation
         """
         return Brain(neurons=self.get_neurons().copy(), connections=dict(self.get_connections()))
@@ -786,7 +800,8 @@ class Brain(object):
 
     def get_layer_type(self, layer):
         """
-        return layer type (str) given the layer number
+
+        :return: layer type (str) given the layer number
         """
         if not isinstance(layer, int):
             raise ValueError('Input layer number should be integer.')
@@ -803,6 +818,7 @@ class Brain(object):
     def get_neuron_type(self, ind):
         """
         return neuron type as a pair of strings given the index in self._neurons
+
         :param ind: int
         :return: for eyes : ('eye', type + short of direction)
                  for hidden neurons: ('hidden', str(layer))
@@ -969,6 +985,7 @@ class Brain(object):
     def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_map=None,
             fish_map=None):
         """
+
         :param t_point: int, current time stamp of time unit axis
         :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
                                  same order as self._neurons data frame, columns = ['action_history']
@@ -1041,6 +1058,7 @@ class Brain(object):
     def neuron_fire(self, presynaptic_neuron_ind, t_point, psp_waveforms):
         """
         updata all corresponding psp waveforms when a presynaptic neuron (only in eye layer and hidden layer) fires
+
         :param presynaptic_neuron_ind: int, the index of presynaptic neuron in self._neurons
         :param t_point: int, time point in time unit axis of the action
         :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
@@ -1218,7 +1236,8 @@ class Brain(object):
 
     def generate_empty_action_histories(self):
         """
-        :return: a data frame with empty lists, each list is the action history of a particular neuron, in the same 
+
+        :return: a data frame with empty lists, each list is the action history of a particular neuron, in the same
         order as self._neurons data frame, columns = ['action_history']
         """
 
@@ -1232,6 +1251,7 @@ class Brain(object):
 
     def generate_empty_psp_waveforms(self, simulation_length):
         """
+
         :param simulation_length: int, number of time points of the simulation
         :return: 2d-array of zeros, float32, psp waveforms of all neurons in the brain, each row represents one
                  neuron in the same order as self._neurons data frame, each column represents a time point
@@ -1273,6 +1293,7 @@ class Fish(object):
                  land_penalty_rate=0.005, food_rate=20.):
 
         """
+
         :param brain: a brain.Brain object
         :param max_health: float, maximum health point a fish can have
         :param health_decay_rate: float, the constant rate of health reduction, health point / time unit
@@ -1310,6 +1331,7 @@ class Fish(object):
 
     def copy(self):
         """
+
         :return: a copy of self for i.e. mutation
         """
         return Fish(name=self.get_name(), mother_name=self.get_mother_name(), brain=self.get_brain(),

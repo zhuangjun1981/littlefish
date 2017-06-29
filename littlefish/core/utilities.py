@@ -54,6 +54,7 @@ def discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-10., 20.), bin
 def get_random_number(distribution, shape):
     """
     get a random number from given distribution
+
     :param distribution: tuple in the format, (distribution type, parameter1, parameter2, ...)
                         supported: ('flat', mean, range)
                                    ('gaussian, mean, sigma)
@@ -78,6 +79,7 @@ def get_random_number(distribution, shape):
 def int2str(num,length=None):
     '''
     generate a string representation for a integer with a given length
+
     :param num: input number
     :param length: length of the string
     :return: string represetation of the integer
@@ -91,6 +93,7 @@ def int2str(num,length=None):
 def check_df_index(df):
     """
     check if the indices of a pandas dataframe is a series in an ascending order with increment as 1 and starts at 0
+
     :return: bool
     """
     return np.array_equal(df.index, np.arange(len(df)))
@@ -99,6 +102,7 @@ def check_df_index(df):
 def check_arithmetic_progression(seq):
     """
     check a 1-d list of numbers is arithmetic progression sequence
+
     :return bool
     """
 
@@ -130,6 +134,7 @@ def check_binary_2d_array(array):
 def plot_spike_ticks(spike_history, y=0., plot_axis=None, color='#ff0000', **kwargs):
     """
     plot spike ticks as separate dots
+
     :param spike_history: list of ints, spike timestamps on time unit axis
     :param y: float, vertical locations of spike line
     :param plot_axis: plotting axis, matplotlib.pyplot.axis object
@@ -225,6 +230,7 @@ def plot_mask(mask, plot_axis=None, color='#ff0000', closing_iteration=None, **k
 def check_monotonicity(arr, direction='increasing'):
     """
     check monotonicity of a 1-d array, usually a time series
+
     :param arr: input array, should be 1 dimensional
     :param direction: 'increasing', 'decreasing', 'non-increasing', 'non-decreasing'
     :return: True or False
@@ -273,6 +279,7 @@ def decode(str_like, code='UTF-8'):
     """
     if a string like object is actually a 'bytes' type, decode it by 'UTF-8', and return the string. This is to deal
     with the hdf5 string format madness.
+
     :param str_like:
     :param code:
     :return: str
