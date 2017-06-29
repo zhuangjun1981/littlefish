@@ -86,7 +86,7 @@ class Simulation(object):
 
         :param terrain: terrain object, current terrain.terrain_2d.BinaryTerrain object
         :param fish_list: list of fish object (fish.fish.Fish class)
-        :param simulation_length: positive integer, number of time points of the simulation 
+        :param simulation_length: positive integer, number of time points of the simulation
         :param food_num: positive integer, number of food pixels in food map
         :return: None
         """
@@ -109,7 +109,7 @@ class Simulation(object):
     def initiate_simulation(self):
         """
         initiate simulation, check simulation status, creating simulation history variables
-        
+
         :param simulation_length: int, number of time points of the simulation
         """
 
@@ -180,11 +180,11 @@ class Simulation(object):
     def generating_fish_map(self, time_point, is_plot=False):
         """
         generating fish map containing all fishes according to self._fish_list at time_point
-        
+
         :param time_point: non-negative int, time_point in the simulation
         :param is_plot: bool
-        
-        return: fish_map, 2d array, uint16, 
+
+        return: fish_map, 2d array, uint16,
         """
 
         if self._simulation_status in [2, 3, 4]:
@@ -221,6 +221,7 @@ class Simulation(object):
         :param verbose: bool, if True, print the health_status
         :return: dataframe, with index = fish_name, column=['health']
         """
+
         health_status = pd.DataFrame(index=self.fish_names, columns=['health'])
 
         for fish_n in self.fish_names:
@@ -245,6 +246,7 @@ class Simulation(object):
         :param t_point: non-negative integer, time point to evaluate
         :return: bool
         """
+
         health_status = self.get_fish_health_status(t_point=t_point)
         return np.all(health_status['health'] <= 0.)
 
@@ -297,8 +299,8 @@ class Simulation(object):
 
     def run(self, verbose=1):
         """
-        
-        :param verbose: 
+
+        :param verbose:
         :return: print out message as a string
         """
 
@@ -439,7 +441,7 @@ class Simulation(object):
 
         :param log_folder: directory path to save save_log
         :param msg: str, print out string
-        :param is_save_psp_waveforms: 
+        :param is_save_psp_waveforms:
         :return: None
         """
 
@@ -507,6 +509,7 @@ class Simulation(object):
         :param is_save_psp_waveforms:
         :return: None
         """
+
         if len(self._fish_list) > 1:
             raise IOError('Simulation: Cannot save log to a hdf5 group. More than one fish in self._fish_list. '
                           'The save_log_to_h5_grp() function only designed to save log of simulation contain only '
