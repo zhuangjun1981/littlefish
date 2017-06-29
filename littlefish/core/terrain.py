@@ -131,8 +131,8 @@ class BinaryTerrain(object):
         :param food_map: 2-d binary array, 0: non-food, 1: food
         :param food_num: positive integer, number of food pixels after update
         :return: food_map: updated food map
-                 food_positions: 2d array, food_num x 2, _dtype: uint16, array of food pixel coordinates,
-                                each row is a food position, columns: [row, col]
+        :return: food_positions: 2d array, food_num x 2, _dtype: uint16, array of food pixel coordinates,
+                                 each row is a food position, columns: [row, col]
         """
 
         curr_food_pos_list = np.where(food_map == 1)

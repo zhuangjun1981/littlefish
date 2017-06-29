@@ -56,13 +56,11 @@ def get_random_number(distribution, shape):
     get a random number from given distribution
 
     :param distribution: tuple in the format, (distribution type, parameter1, parameter2, ...)
-                        supported: ('flat', mean, range)
-                                   ('gaussian, mean, sigma)
-                                   ('exponential', mean)
+                         supported: ('flat', mean, range), ('gaussian, mean, sigma), ('exponential', mean)
     :param shape: output shape
     :return: a random number
     """
-    
+
     if distribution is None:
         output = np.zeros(shape, dtype=np.float64)
     elif distribution[0] == 'flat':
@@ -85,7 +83,7 @@ def int2str(num,length=None):
     :param length: length of the string
     :return: string represetation of the integer
     """
-    
+
     rawstr = str(int(num))
     if length is None or length == len(rawstr):return rawstr
     elif length < len(rawstr): raise ValueError('Length of the number is longer then defined display length!')
@@ -98,7 +96,7 @@ def check_df_index(df):
 
     :return: bool
     """
-    
+
     return np.array_equal(df.index, np.arange(len(df)))
 
 
@@ -175,7 +173,7 @@ def plot_mask_borders(mask, plot_axis=None, color='#ff0000', border_width=2, clo
     plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
     as background, and non-zero, non-nan pixel will be considered in ROI.
     """
-    
+
     if not check_binary_2d_array(mask):
         raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains '
                           'only 0s and 1s.')
