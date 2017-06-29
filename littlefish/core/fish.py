@@ -1275,12 +1275,12 @@ class Fish(object):
     the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
     millisecond.
 
-    :attribute _brain: a brain.Brain object
-    :attribute _max_health: float, maximum health point a fish can have
-    :attribute _health_decay_rate: float, the constant rate of health reduction, health point / time unit
-    :attribute _land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
+    :attr _brain: a brain.Brain object
+    :attr _max_health: float, maximum health point a fish can have
+    :attr _health_decay_rate: float, the constant rate of health reduction, health point / time unit
+    :attr _land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
                                    the terrain map, health point / (pixel * time unit)
-    :attribute _food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+    :attri _food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
                            health point / pixel. the food after taken will disappear, so no health gaining is a
                            transient event
     """
