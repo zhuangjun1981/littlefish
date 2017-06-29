@@ -1130,13 +1130,6 @@ class Brain(object):
         return several numpy arrays each represent one parameter of all connections between a presynaptic layer and
         a postsynaptic layer, each row is a postsynaptic neuron, each column is a presynaptic neuron
 
-                      pre neuron 0,  pre neuron 1,  pre neuron 2,  ... ,  pre neuron m
-        post neuron 0
-        post neuron 1
-        post neuron 2
-        ...
-        post neuron n
-
         :param pre_layer: int, layer number of presynaptic layer
         :param post_layer: int, layer number of postsynaptic layer
         :return rows: list of ints, postsynaptic neuron inds for each row
