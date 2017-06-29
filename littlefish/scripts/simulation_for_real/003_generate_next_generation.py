@@ -12,7 +12,7 @@ import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
 
-gen_num = 60
+gen_num = 62
 hard_thr_ratio = 0.5
 soft_thr_ratio = 1.0
 reproducing_rate = 0.002  # 0.002

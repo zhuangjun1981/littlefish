@@ -30,7 +30,7 @@ def simulation_fish_multiprocessing(simulation_params):
 if __name__ == '__main__':
 
     data_folder = r"C:\little_fish_simulation_logs"
-    generation_num = 60
+    generation_num = 63
     process_num = 6
 
     gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation_num, 6))
