@@ -1,4 +1,0 @@
-'''
-viewer for a trial
-'''
-

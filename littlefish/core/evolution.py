@@ -41,22 +41,22 @@ def mutate_neuron(neuron, neuron_mutation):
 
     :param neuron: the initial little_fish.core.fish.Neuron object
     :param neuron_mutation: little_fish.core.evolution.NeuronMutation object
-    :return: a mutated little_fish.core.fish.Neuron object 
+    :return: a mutated little_fish.core.fish.Neuron object
     """
 
     mutated_neuron = neuron.copy()
-    
+
     mutated_baseline = neuron_mutation.get_mutated_baseline()
     if mutated_baseline is not None:
         mutated_neuron.set_baseline_rate(mutated_baseline)
-    
+
     mutated_refractory = neuron_mutation.get_mutated_refractory()
 
     if mutated_refractory is not None:
         mutated_neuron.set_refractory_period(mutated_refractory)
 
     return mutated_neuron
-    
+
 
 def mutate_connection(connection, connection_mutation):
     """
@@ -225,11 +225,11 @@ class UniformMutation(object):
 
     def get_value(self):
         """
-
-        :return: a random value follow a uniform distribution with a range defined by self._value_range, including the
-        start but excluding the end
         if self._dtype is 'int': uses random.randint() function
         if self._dtype is 'float': uses random.uniform() function
+
+        :return: a random value follow a uniform distribution with a range defined by self._value_range, including the
+                 start but excluding the end
         """
 
         if self._dtype == 'int':
@@ -330,13 +330,13 @@ class ConnectionMutation(object):
         else:
             raise ValueError('the amplitude_mutation should be None or '
                              'the dtype of amplitude_mutation should be "float".')
-        
+
         if rise_time_mutation is None or rise_time_mutation.get_dtype() == 'int':
             self.rise_time_mutation = rise_time_mutation
         else:
             raise ValueError('the rise_time_mutation should be None or '
                              'the dtype of rise_time_mutation should be "int".')
-        
+
         if decay_time_mutation is None or decay_time_mutation.get_dtype() == 'int':
             self.decay_time_mutation = decay_time_mutation
         else:
