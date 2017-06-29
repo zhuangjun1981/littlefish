@@ -22,6 +22,7 @@ class TerrainGenerator(object):
         :param size: size of world_map (height, width)
         :param sea_level: a simple threshold
         """
+
         self._size = size
         self._sea_level = sea_level
 
@@ -30,6 +31,7 @@ class TerrainGenerator(object):
 
         :return: size of world_map (height, width)
         """
+
         return self._size
 
     def get_sea_level(self):
@@ -37,6 +39,7 @@ class TerrainGenerator(object):
 
         :return: sea level
         """
+
         return self._sea_level
 
     def generate_float_map(self, sigma=0.):
@@ -46,6 +49,7 @@ class TerrainGenerator(object):
         :param sigma: filter sigma to filter the world_map
         :return:
         """
+
         float_map = np.random.random(self._size)
         float_map = ni.filters.gaussian_filter(float_map, sigma)
         float_map = util.array_nor(float_map)
@@ -59,6 +63,7 @@ class TerrainGenerator(object):
         :param is_plot: if True, pop a plot of binary world_map
         :return: a binary world_map with defined size, 0 means under water. 1 means above water
         """
+
         float_map = self.generate_float_map(sigma=sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)
         binary_map[float_map > self._sea_level] = 1
@@ -100,11 +105,12 @@ class BinaryTerrain(object):
     def generate_fish_starting_position(self, fish_num=1):
         """
         return randomized fish starting position. Note: fishes can be completely or partially overlapping
-        
+
         :param fish_num: positive integer, number of fish positions to return
-        :return: list of tuple, each tuple contains 2 positive integers (row, col) of a random position for a 3x3 fish, 
+        :return: list of tuple, each tuple contains 2 positive integers (row, col) of a random position for a 3x3 fish,
                  where its body will not cover 1s in self._terrain_map
         """
+
         position_maps = np.array(self._terrain_map)
         position_maps = ni.binary_dilation(position_maps, structure=[[1,1,1], [1,1,1], [1,1,1]])
         position_maps[:, 0] = 1
@@ -121,7 +127,7 @@ class BinaryTerrain(object):
         update the input food_map and food_pos_array, to generate new food map and food_pos_array so that the terrain
         contains food_num of food pixels (each food only occupies one pixel). If the number of food is less than
         food_num, new food will be added, if the number of food is more than food_num, extra food will be removed.
-        
+
         :param food_map: 2-d binary array, 0: non-food, 1: food
         :param food_num: positive integer, number of food pixels after update
         :return: food_map: updated food map

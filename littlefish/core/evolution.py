@@ -14,6 +14,7 @@ def choose_index_1d(indices, mutation_rate):
     :param mutation_rate: float, [0., 1.]
     :return: list of unsigned integers, a list of subset of the indices
     """
+
     mutate_num = int(np.ceil(len(indices) * float(mutation_rate)))
     return random.sample(indices, mutate_num)
 
@@ -28,6 +29,7 @@ def choose_index_2d(indices0, indices1, mutation_rate):
     :return: list of index pairs, each pair contains two elements [index0, index1] representing the coordinates of a
              randomly chosen location
     """
+
     all_coordinates = list(itertools.product(indices0, indices1))
     mutate_num = int(np.ceil(len(all_coordinates) * float(mutation_rate)))
     return random.sample(all_coordinates, mutate_num)
@@ -279,6 +281,7 @@ class NeuronMutation(object):
         """
         return a mutated baseline rate by self.baseline_mutation
         """
+
         if self.baseline_mutation is None:
             return None
         else:
@@ -288,6 +291,7 @@ class NeuronMutation(object):
         """
         return a mutated refractory period by self.refractory_mutation
         """
+
         if self.refractory_mutation is None:
             return None
         else:

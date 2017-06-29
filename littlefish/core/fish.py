@@ -11,7 +11,7 @@ import os
 import matplotlib.pyplot as plt
 
 # unnecessary global varible
-# 
+#
 # SIMULATION_LENGTH = 100000
 #
 # EYE_GAIN = 0.005
@@ -42,10 +42,10 @@ import matplotlib.pyplot as plt
 
 def generate_minimal_brain():
     """
-    
+
     :return: a Brain object with one eye, two neuron in hidden layer and one muscle
     """
-    
+
     eye = Eye(direction='east', input_filter=None, gain=0.05, input_type='terrain', baseline_rate=0.,
               refractory_period=1.2)
 
@@ -151,13 +151,13 @@ def generate_standard_fish():
 def get_eye_type(ind, dir_num=4):
     """
     given the neuron_ind in the eye layer return direction and input type of a specific eye
-    
+
     :param ind: non-negative int, index of the eye in eye layer
     :param dir_num: 4 or 8, if 4, eye directions iterate through 4 cardinal directions; if 8, eye directions will
                     iterate through 8 directions
     :return: two strings, (direction, type)
     """
-    
+
     if dir_num == 8:
         eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
     elif dir_num == 4:
@@ -174,10 +174,10 @@ def get_eye_type(ind, dir_num=4):
 def get_muscle_direction(ind):
     """
     given the neuron_ind in the muscle layer return direction of a specific muscle
-    
+
     :return: string, direction of the muscle
     """
-    
+
     muscle_directions = ['east', 'north', 'west', 'south']
     direction_num = len(muscle_directions)
     return muscle_directions[ind % direction_num]
@@ -191,23 +191,23 @@ class Neuron(object):
     def __init__(self, baseline_rate=0.001, refractory_period=1.2):
         """
         action is the equivalent of action potential in biology, and consider one time unit is 0.1 milisecond
-        
+
         :param baseline_rate: float, probablity of a action per time unit.
         :param refractory_period: float, refractory_period in time unit
         """
-        
+
         self._baseline_rate = float(baseline_rate)
         self._refractory_period = float(refractory_period)
 
     def __str__(self):
         return 'littlefish.brain.Neuron object'
-    
+
     def copy(self):
         """
-        
+
         :return: a copy of self for i.e. mutation
         """
-        
+
         return Neuron(baseline_rate=self.get_baseline_rate(), refractory_period=self.get_refractory_period())
 
     def get_baseline_rate(self):
@@ -218,17 +218,17 @@ class Neuron(object):
 
     def get_neuron_type(self):
         return 'neuron'
-    
+
     def set_baseline_rate(self, new_baseline_rate):
         self._baseline_rate = float(new_baseline_rate)
-        
+
     def set_refractory_period(self, new_refractory_period):
         self._refractory_period = new_refractory_period
 
     def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
         """
         evaluate if the neuron will fire at given time point
-        
+
         :param t_point: int, current time point as the index of time unit axis
         :param action_history: list of positive integers, list of time stamps of actions of this neuron,
                                should be monotonically increasing
@@ -238,7 +238,7 @@ class Neuron(object):
                                  random.random()
         :return: bool, True: fire; False: quite
         """
-        
+
         if probability_base is None:
             probability_base = random.random()
 
@@ -294,7 +294,7 @@ class Eye(Neuron):
         for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 4 pixels surrounding the
         central pixel in 4 cardinal direction. Each eye receives the inputs from the given direction in the environment.
         for example:
-        
+
         fish (1) in the environment(0):
         0 0 0 0 0 0 0
         0 0 0 0 0 0 0
@@ -303,7 +303,7 @@ class Eye(Neuron):
         0 0 1 1 1 0 0
         0 0 0 0 0 0 0
         0 0 0 0 0 0 0
-        
+
         eye (2) in the east direction is:
         0 0 0 0 0 0 0
         0 0 0 0 0 0 0
@@ -312,7 +312,7 @@ class Eye(Neuron):
         0 0 1 1 1 0 0
         0 0 0 0 0 0 0
         0 0 0 0 0 0 0
-        
+
         it receive inputs from pixels labelled as 3 in the environment:
         0 0 0 0 0 0 3
         0 0 0 0 0 3 3
@@ -321,11 +321,11 @@ class Eye(Neuron):
         0 0 0 0 3 3 3
         0 0 0 0 0 3 3
         0 0 0 0 0 0 3
-        
+
         the inputs from the environment (1x16 array) will be filtered by a array with same size, to generate
         a single value as the base of its input. this value will be multiplied by a float number gain to generate
         final input probability.
-        
+
         self._get_input_pixels will pick pixels within the eye's receptive field in the following order:
         0 0 0 0 0 0 10
         0 0 0 0 0 5 11
@@ -334,19 +334,19 @@ class Eye(Neuron):
         0 0 0 0 4 8 14
         0 0 0 0 0 9 15
         0 0 0 0 0 0 16
-        
+
         :param direction: str, the aim of the eye, should be one of the following, 'east', 'north', 'west' and 'south'
-        :param input_filter: 1d array, shape: (16,), filter to transform input pixel values to a single number. 
-                             analog of linear receptive field of a retinal ganglion cell. default input_filter is 
+        :param input_filter: 1d array, shape: (16,), filter to transform input pixel values to a single number.
+                             analog of linear receptive field of a retinal ganglion cell. default input_filter is
                              set as the following:
-                             
+
                              input_filter[pixel_i] = exp(-1 * cartesian_distance(pixel_i, pixel_body_center)
         :param baseline_rate: float, probablity of a action per time unit.
         :param refractory_period: float, refractory_period in time unit
         :param input_type: str, type of the input the eye receives, should be one of 'terrain', 'food', 'fish',
                default: 'terrain'
         """
-        
+
         self._direction = direction
         self._rf_positions = self._get_rf_positions()
         self._gain = float(gain)
@@ -370,26 +370,26 @@ class Eye(Neuron):
 
     def __str__(self):
         return 'littlefish.brain.Eye object'
-    
+
     def copy(self):
         """
-        
+
         :return: a copy of self for i.e. mutation
         """
-        
+
         return Eye(direction=self.get_direction(), input_filter=self.get_input_filter(), gain=self.get_gain(),
-                   input_type=self.get_input_type(), baseline_rate=self.get_baseline_rate(), 
+                   input_type=self.get_input_type(), baseline_rate=self.get_baseline_rate(),
                    refractory_period=self.get_refractory_period())
 
     def get_direction(self):
         return self._direction
-    
+
     def get_input_filter(self):
         return self._input_filter
-    
+
     def get_gain(self):
         return self._gain
-    
+
     def get_input_type(self):
         return self._input_type
 
@@ -399,11 +399,11 @@ class Eye(Neuron):
     def _get_rf_positions(self):
         """
         get pixel coordinate of receptive field
-        
+
         :return rf_positions: 2d array, shape: (16, 2), _dtype: int64. each row is a pixel in the receptive field,
                               [row, col] relative to the position of the body center pixel
         """
-        
+
         array1 = np.array([0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3], dtype=np.int64)
         array2 = np.array([0, -1, 0, 1, -2, -1, 0, 1, 2, -3, -2, -1, 0, 1, 2, 3], dtype=np.int64)
 
@@ -423,14 +423,14 @@ class Eye(Neuron):
     def _get_input_pixels(self, input_map, body_position, border_value=1):
         """
         get a 1d array of all pixels within the eye's receptive field
-        
+
         :param input_map: 2d array, the map the eye is looking
         :param body_position: list of two non-negative integers, [row, col] location of body center pixel
         :param border_value: float, values for pixels outside the border of input_map
         :return: the 1d array with the values of the 16 pixels in the eye's receptive field. pixels out of the
         input_map range will be returned as border_value
         """
-        
+
         body_pos = np.array(body_position, dtype=np.int64)
         input_pixels = np.zeros(16, dtype=np.float32)
 
@@ -448,10 +448,10 @@ class Eye(Neuron):
 
     def _get_input(self, input_map, body_position, border_value=1):
         """
-        
+
         :return: float, calculate real time input from the visual field
         """
-        
+
         input_pixels = self._get_input_pixels(input_map, body_position, border_value=border_value)
         probability_input = self._gain * np.sum(input_pixels * self._input_filter)
 
@@ -460,7 +460,7 @@ class Eye(Neuron):
     def act(self, t_point, body_position, input_map, action_history=[], border_value=1, probability_base=None):
         """
         evaluate if the eye neuron will fire at given time point
-        
+
         :param t_point: int, current time point as the index of time unit axis
         :param body_position: tuple of two ints, (row, col),  position of the body center pixel
         :param input_map: binary 2-d map, for now it should only contain 0s and 1s
@@ -470,7 +470,7 @@ class Eye(Neuron):
         :param probability_base
         :return: bool, True: fire; False: quite
         """
-        
+
         probability_input = self._get_input(input_map=input_map, body_position=body_position,
                                             border_value=border_value)
 
@@ -533,26 +533,26 @@ class Muscle(Neuron):
 
     def __str__(self):
         return 'littlefish.brain.Muscle object'
-    
+
     def copy(self):
         """
-        
+
         :return: a copy of self for i.e. mutation
         """
-        
+
         return Muscle(direction=self.get_direction(), baseline_rate=self.get_baseline_rate(),
                       refractory_period=self.get_refractory_period())
 
     def get_neuron_type(self):
         return 'muscle'
-    
+
     def get_direction(self):
         return self._direction
 
     def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
         """
         evaluate if the muscle will try to move the fish or not
-        
+
         :param t_point: int, current time point as the index of time unit axis
         :param probability_input: float, summed connection inputs, as add on to baseline_rate
         :param action_history: list of positive integers, list of time stamps of actions of this neuron,
@@ -563,7 +563,7 @@ class Muscle(Neuron):
         :return: no attempt: False
                  attempt: movement vector, 1d array with two ints, [row_update, col_update]
         """
-        
+
         is_act = super(Muscle, self).act(t_point, action_history=action_history, probability_input=probability_input,
                                          probability_base=probability_base)
 
@@ -600,7 +600,7 @@ class Connection(object):
 
     def __init__(self, latency=3, amplitude=0.001, rise_time=5, decay_time=10):
         """
-        
+
         :param latency: int, temporal latency from presynaptic neuron action to the postsynaptic effect onset, number
                         of time units
         :param amplitude: float, peak change of the firing rate in the postsynaptic neuron, probablity of a action per
@@ -608,7 +608,7 @@ class Connection(object):
         :param rise_time: int, temporal duration from onset to peak, number of time units
         :param decay_time: int, temporal duration from peak to baseline, number of time units
         """
-        
+
         if latency is not None:
             if not util.is_integer(latency):
                 raise ValueError('latency should be an integer.')
@@ -631,19 +631,19 @@ class Connection(object):
 
     def __str__(self):
         return 'littlefish.brain.Connection object'
-    
+
     def copy(self):
         """
-        
+
         :return: a copy of self for i.e. mutation
         """
-        
+
         return Connection(latency=self.get_latency(), amplitude=self.get_amplitude(), rise_time=self.get_rise_time(),
                           decay_time=self.get_decay_time())
 
     def get_latency(self):
         return self._latency
-    
+
     def set_latency(self, new_latency):
         if new_latency is not None:
             if not util.is_integer(new_latency):
@@ -653,7 +653,7 @@ class Connection(object):
 
     def get_amplitude(self):
         return self._amplitude
-    
+
     def set_ampletude(self, new_amplitude):
         if new_amplitude is not None:
             self._amplitude = float(new_amplitude)
@@ -661,7 +661,7 @@ class Connection(object):
 
     def get_rise_time(self):
         return self._rise_time
-    
+
     def set_rise_time(self, new_rise_time):
         if new_rise_time is not None:
             if not util.is_integer(new_rise_time):
@@ -671,7 +671,7 @@ class Connection(object):
 
     def get_decay_time(self):
         return self._decay_time
-    
+
     def set_decay_time(self, new_decay_time):
         if new_decay_time is not None:
             if not util.is_integer(new_decay_time):
@@ -681,10 +681,10 @@ class Connection(object):
 
     def _generate_psp(self):
         """
-        
+
         generate post synaptic probability wave form
         """
-        
+
         self._psp = np.zeros(self._latency + self._rise_time + self._decay_time)
         self._psp[self._latency: self._latency + self._rise_time] = self._amplitude * \
             (np.arange(self._rise_time) + 1).astype(np.float32) / float(self._rise_time)
@@ -698,13 +698,13 @@ class Connection(object):
     def set_params(self, latency=None, amplitude=None, rise_time=None, decay_time=None):
         """
         set new parameters and regenerate psp waveform
-        
+
         :param latency: int, number of time units for time delay
         :param amplitude: float, peak probability
         :param rise_time: int, number of time units to rise to peak
         :param decay_time: int, number of time units to decay to baseline
         """
-        
+
         changed = False
 
         if latency is not None:
@@ -738,14 +738,14 @@ class Connection(object):
         """
         if the presynaptic neuron fires at the 'time_point', a psp wave form will be generated and add to the
         input waveform of postsynaptic neuron defined by postsynaptic_index
-        
+
         :param t_point: int, current time point as the index of time unit axis
         :param postsynaptic_index: non-negative int, the index of postsynaptic neuron
         :param psp_waveforms: 2-d array, float 32, the psp waveforms of all neurons in the brain, neuron id x t-point,
                               the generated psp will be added to the postsynaptic_index th line of the array
         :return:
         """
-        
+
         psp_end = t_point + len(self._psp)
         if psp_end <= psp_waveforms.shape[1]:
             psp_waveforms[postsynaptic_index, t_point: psp_end] += self._psp
@@ -756,24 +756,24 @@ class Connection(object):
 class Brain(object):
     """
     brain class, the neural network from eye to muscle
-    
+
     a 'brain' has a couple of sets of 8 eyes (brain.Eye object, each at each border pixel of the body). each set of
     eyes are receiving inputs from different objects. i.e. one set of eyes will look at land/water, another set of eyes
     will look for food, another set of eyes will look for other fish.
-    
+
     a 'brain' has 4 invisible muscles (brain.Muscle object, each controlling the movement in each direction).
-    
+
     between eyes and muscles are a neural network consists of neurons (brain.Neuron object) and connections
     (brain.Connections object). Number of layers and number of neurons can be specified.
     """
-    
+
     def __init__(self, neurons=None, connections=None):
         """
-        
+
         :param neurons: pandas dataframe
         :param connections: dict
         """
-        
+
         print('\nBrain: Creating littlefish.core.fish.Brain object ...')
 
         if neurons is None and connections is None:
@@ -793,10 +793,10 @@ class Brain(object):
 
     def copy(self):
         """
-        
+
         :return: a copy of self for i.e. mutation
         """
-        
+
         return Brain(neurons=self.get_neurons().copy(), connections=dict(self.get_connections()))
 
     def get_neurons(self):
@@ -808,10 +808,10 @@ class Brain(object):
 
     def get_layer_type(self, layer):
         """
-        
+
         :return: layer type (str) given the layer number
         """
-        
+
         if not isinstance(layer, int):
             raise ValueError('Input layer number should be integer.')
 
@@ -827,13 +827,13 @@ class Brain(object):
     def get_neuron_type(self, ind):
         """
         return neuron type as a pair of strings given the index in self._neurons
-        
+
         :param ind: int
         :return: for eyes : ('eye', type + short of direction)
                  for hidden neurons: ('hidden', str(layer))
                  for muscles ('muscle', short of direction)
         """
-        
+
         # self.check_integrity_neurons()
 
         curr_row = self._neurons.loc[ind]
@@ -894,7 +894,7 @@ class Brain(object):
         """
         return a list of sorted neuron_indices of all neurons in a given layer
         """
-        
+
         inds = self._neurons[self._neurons['layer'] == layer].index.tolist()
         inds.sort()
         return inds
@@ -903,7 +903,7 @@ class Brain(object):
         """
         check integrity of object data structure
         """
-        
+
         if verbose:
             print('Brain: checking integrity of attrbitue data structure ...')
 
@@ -995,7 +995,7 @@ class Brain(object):
     def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_map=None,
             fish_map=None):
         """
-        
+
         :param t_point: int, current time stamp of time unit axis
         :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
                                  same order as self._neurons data frame, columns = ['action_history']
@@ -1005,13 +1005,13 @@ class Brain(object):
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
         :param fish_map: not fully implemented right now.
-        :return: movement_attempt: 2-d array, np.uint8, (row, col), representing the movement attempt, be careful, this 
-                                   may not represent the actual movement, it will be evaluated by the fish object 
-                                   (fish class) containing this brain to see if the movement is possible. if the fish 
+        :return: movement_attempt: 2-d array, np.uint8, (row, col), representing the movement attempt, be careful, this
+                                   may not represent the actual movement, it will be evaluated by the fish object
+                                   (fish class) containing this brain to see if the movement is possible. if the fish
                                    is hitting the edge the world map, then the it will not move out of the map
                                    None: no movement has been attempted,
         """
-        
+
         movement_attempt = np.array([0, 0], dtype=np.uint8)
 
         for i, neuron in self._neurons.iterrows():
@@ -1068,14 +1068,14 @@ class Brain(object):
     def neuron_fire(self, presynaptic_neuron_ind, t_point, psp_waveforms):
         """
         updata all corresponding psp waveforms when a presynaptic neuron (only in eye layer and hidden layer) fires
-        
+
         :param presynaptic_neuron_ind: int, the index of presynaptic neuron in self._neurons
         :param t_point: int, time point in time unit axis of the action
         :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
                               neuron in the same order as self._neurons data frame, each column represents a time point
         :return: None
         """
-        
+
         neuron_layer = int(round(self._neurons.loc[presynaptic_neuron_ind, 'layer']))
 
         # ========================= slower but better method =====================================================
@@ -1110,7 +1110,7 @@ class Brain(object):
         """
         get indices of all presynaptic neurons
         """
-        
+
         layer_num = int(max(self._neurons['layer'])) + 1
         ind = self._neurons[self._neurons['layer'] < layer_num - 1].index
         return ind.sort_values()
@@ -1119,7 +1119,7 @@ class Brain(object):
         """
         get indices of all postsynaptic neurons
         """
-        
+
         ind = self._neurons[self._neurons['layer'] > 0].index
         return ind.sort_values()
 
@@ -1127,14 +1127,14 @@ class Brain(object):
         """
         return several numpy arrays each represent one parameter of all connections between a presynaptic layer and
         a postsynaptic layer, each row is a postsynaptic neuron, each column is a presynaptic neuron
-        
+
                        pre neuron 0,  pre neuron 1,  pre neuron 2,  ... ,  pre neuron m
         post neuron 0
         post neuron 1
         post neuron 2
         ...
         post neuron n
-        
+
         :param pre_layer: int, layer number of presynaptic layer
         :param post_layer: int, layer number of postsynaptic layer
         :return: rows, list of ints, postsynaptic neuron inds for each row
@@ -1142,7 +1142,7 @@ class Brain(object):
                  latencies, amplitudes, rise_times, decay_times: matrices for each connection parameter as described
                  above
         """
-        
+
         # self.check_integrity_neurons()
         # self.check_integrity_connection()
 
@@ -1248,11 +1248,11 @@ class Brain(object):
 
     def generate_empty_action_histories(self):
         """
-        
+
         :return: a data frame with empty lists, each list is the action history of a particular neuron, in the same
         order as self._neurons data frame, columns = ['action_history']
         """
-        
+
         # the following code is very bad, it synchronize all the lists in the data frame
         # empty_action_histories = pd.DataFrame(index=self._neurons.index)
         # empty_action_histories['action_history'] = [[]] * len(empty_action_histories)
@@ -1268,25 +1268,25 @@ class Brain(object):
         :return: 2d-array of zeros, float32, psp waveforms of all neurons in the brain, each row represents one
                  neuron in the same order as self._neurons data frame, each column represents a time point
         """
-        
+
         return np.zeros((len(self._neurons), simulation_length), dtype=np.float32)
 
 
 class Fish(object):
     """
     the main fish class
-    
+
     a 'fish' has a body occupies a 3x3 space.
-    
+
     a 'fish' has health point (goes down over time and increases after eating a food). fish moves around in a 2d
     landscape (2-d binary map, 0 represents water, 1 represents land), when hits land, health point will go down
     quickly.
-    
+
     the purpose of simulation is to train the fish use its eyes, brain and muscles to avoid land and look for food.
-    
+
     the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
     millisecond.
-    
+
     self._brain: a brain.Brain object
     self._max_health: float, maximum health point a fish can have
     self._health_decay_rate: float, the constant rate of health reduction, health point / time unit
@@ -1300,12 +1300,12 @@ class Fish(object):
                              2, after simulation
     self._simulation_history: pandas dataframe, columns: ['t_point', 'row', 'column', 'health']
     """
-    
+
     def __init__(self, name=None, mother_name=None, brain=None, max_health=100., health_decay_rate=0.0001,
                  land_penalty_rate=0.005, food_rate=20.):
 
         """
-        
+
         :param brain: a brain.Brain object
         :param max_health: float, maximum health point a fish can have
         :param health_decay_rate: float, the constant rate of health reduction, health point / time unit
@@ -1315,7 +1315,7 @@ class Fish(object):
                           health point / pixel. the food after taken will disappear, so no health gaining is a
                           transient event
         """
-        
+
         print('\nFish: Creating littlefish.core.fish.Fish object.')
 
         if name is None:
@@ -1343,10 +1343,10 @@ class Fish(object):
 
     def copy(self):
         """
-        
+
         :return: a copy of self for i.e. mutation
         """
-        
+
         return Fish(name=self.get_name(), mother_name=self.get_mother_name(), brain=self.get_brain(),
                     max_health=self.get_max_health(), health_decay_rate=self.get_health_decay_rate(),
                     food_rate=self.get_food_rate())
@@ -1393,13 +1393,13 @@ class Fish(object):
             food_map=None, fish_map=None):
         """
         simulate the fish's action at a given time point
-        
+
         :param t_point: non-negative int, time point
-        :param curr_position: list or tuple of two non-negative integers, coordinates of fish center position, 
+        :param curr_position: list or tuple of two non-negative integers, coordinates of fish center position,
                               [row, col]
         :param curr_health: positive float, health point at the beginning of t_point
         :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
-                                 same order as self._neurons data frame, columns = ['action_history'], used by 
+                                 same order as self._neurons data frame, columns = ['action_history'], used by
                                  self._brain.act()
         :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
                               neuron in the same order as self._neurons data frame, each column represents a time point,
@@ -1411,7 +1411,7 @@ class Fish(object):
                 movement_attempt: list of two integers, the attempt the fish is trying to move [row_shift, col_shift].
                                   None if updated_health is below 0 (fish is dead).
         """
-        
+
         updated_health = float(curr_health)
 
         # evaluate food
@@ -1455,7 +1455,7 @@ class Fish(object):
         Evaluate the coverage of fish body on terrain map, return the sum of all terrain pixels that are covered by
         the fish body
         """
-        
+
         if terrain_map is None:
             raise ValueError('Fish: _eval_terrain failure. terrain_map is None.')
         else:
@@ -1468,12 +1468,12 @@ class Fish(object):
     def _eval_food(food_map, curr_position):
         """
         find out how many foods are covered by the fish body
-        
+
         :param food_map: 2d array, binary map of current food
         :param curr_position: tuple of two positive ints, (row, col) of current location of fish
         :return: non-negative int, number of food taken
         """
-        
+
         curr_body = food_map[curr_position[0] - 1: curr_position[0] + 2,
                     curr_position[1] - 1: curr_position[1] + 2]
         body_food_overlap = np.sum(curr_body.flat)
@@ -1483,14 +1483,14 @@ class Fish(object):
     @staticmethod
     def _eval_fish(self, fish_map):
         """currently not implemented"""
-        
+
         pass
 
     def _eat_food(self, body_food_overlap, curr_health):
         """
         count the number of food to be taken, add relevant HP to curr_health, but not exceed the maximum health
         """
-        
+
         if body_food_overlap == 0:
             return curr_health
         else:
@@ -1527,7 +1527,7 @@ class Fish(object):
                          food_rate=curr_food_rate)
 
         return curr_fish
-        
+
 
 if __name__ == '__main__':
 
