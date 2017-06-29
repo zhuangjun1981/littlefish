@@ -9,6 +9,7 @@ import littlefish.core.fish as fi
 def choose_index_1d(indices, mutation_rate):
     """
     randomly chooses a subset of indices from a list of indices based on the mutation_rate
+
     :param indices: list of unsigned integers, all indices to choose from
     :param mutation_rate: float, [0., 1.]
     :return: list of unsigned integers, a list of subset of the indices
@@ -20,6 +21,7 @@ def choose_index_1d(indices, mutation_rate):
 def choose_index_2d(indices0, indices1, mutation_rate):
     """
     randomly choose a subset of index pairs from a 2d grid based on the mutation rates
+
     :param indices0: 1d seq, list of indices along axis 0 (rows)
     :param indices1: 1d seq, list of indices along axis 1 (columns)
     :param mutation_rate: float, [0., 1.]
@@ -34,6 +36,7 @@ def choose_index_2d(indices0, indices1, mutation_rate):
 def mutate_neuron(neuron, neuron_mutation):
     """
     mutate a neuron, can be Eye, Neuron or Muscle
+
     :param neuron: the initial little_fish.core.fish.Neuron object
     :param neuron_mutation: little_fish.core.evolution.NeuronMutation object
     :return: a mutated little_fish.core.fish.Neuron object 
@@ -56,6 +59,7 @@ def mutate_neuron(neuron, neuron_mutation):
 def mutate_connection(connection, connection_mutation):
     """
     mutate a connection
+
     :param connection: the initial little_fish.core.fish.Connection object
     :param connection_mutation: little_fish.core.evolution.ConnectionMutation object
     :return: a mutated little_fish.core.fish.Connection object
@@ -190,6 +194,7 @@ class UniformMutation(object):
 
     def __init__(self, value_range, dtype):
         """
+
         :param value_range: tuple of two numbers, the two value should be different.
         :param dtype: str, 'int' or 'float'. if 'int' random value will be drawn by random.randint()
                                              if 'float' random value will be drawn by random.uniform()
@@ -218,7 +223,8 @@ class UniformMutation(object):
 
     def get_value(self):
         """
-        return: a random value follow a uniform distribution with a range defined by self._value_range, including the
+
+        :return: a random value follow a uniform distribution with a range defined by self._value_range, including the
         start but excluding the end
         if self._dtype is 'int': uses random.randint() function
         if self._dtype is 'float': uses random.uniform() function
@@ -248,6 +254,7 @@ class NeuronMutation(object):
 
     def __init__(self, baseline_mutation=None, refractory_mutation=None):
         """
+
         :param baseline_mutation: a UniformMutation object, dtype should be 'float',
                                   reasonable value_range will be (0., 0.1), if one time unit is equivalent to 1 ms,
                                   then this range represents (0, 100) spike per second
@@ -366,6 +373,7 @@ class BrainMutation(object):
                  muscle_mutation=NeuronMutation(), connection_mutation_rate=0.,
                  connection_mutation=ConnectionMutation()):
         """
+
         :param neuron_mutation_rate: float, [0, 1.], fraction of neurons (eyes, hidden neurons and muscles) to be
                                      mutated
         :param eye_mutation: littlefish.core.evolution.NeuronMutation object

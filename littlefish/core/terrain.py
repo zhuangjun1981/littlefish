@@ -12,36 +12,40 @@ import scipy.ndimage as ni
 plt.ioff()
 
 class TerrainGenerator(object):
-    '''
+    """
     terrain object, a square matrix containing altitude
-    '''
+    """
 
     def __init__(self, size=(128,128), sea_level=0.6):
-        '''
+        """
+
         :param size: size of world_map (height, width)
         :param sea_level: a simple threshold
-        '''
+        """
         self._size = size
         self._sea_level = sea_level
 
     def get_size(self):
-        '''
+        """
+
         :return: size of world_map (height, width)
-        '''
+        """
         return self._size
 
     def get_sea_level(self):
-        '''
+        """
+
         :return: sea level
-        '''
+        """
         return self._sea_level
 
     def generate_float_map(self, sigma=0.):
-        '''
+        """
         generate a world_map with floating point with elevation [0., 1.]
+
         :param sigma: filter sigma to filter the world_map
         :return:
-        '''
+        """
         float_map = np.random.random(self._size)
         float_map = ni.filters.gaussian_filter(float_map, sigma)
         float_map = util.array_nor(float_map)
@@ -49,11 +53,12 @@ class TerrainGenerator(object):
         return float_map
 
     def generate_binary_map(self, sigma=0.5, is_plot=False):
-        '''
+        """
+
         :param sigma: filter sigma to filter the world_map
         :param is_plot: if True, pop a plot of binary world_map
         :return: a binary world_map with defined size, 0 means under water. 1 means above water
-        '''
+        """
         float_map = self.generate_float_map(sigma=sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)
         binary_map[float_map > self._sea_level] = 1

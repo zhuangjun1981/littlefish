@@ -216,6 +216,7 @@ class Simulation(object):
         """
         check the health status of all the fish in the simulation at the time point, t_point.
         if the time point is not simulated (at least one fish position is [0, 0]), an error will raise.
+
         :param t_point: non-negative integer, time point to evaluate
         :param verbose: bool, if True, print the health_status
         :return: dataframe, with index = fish_name, column=['health']
@@ -240,6 +241,7 @@ class Simulation(object):
         """
         check if the health of all fish are no higher than 0. at t_point in the simulation
         if the time point is not simulated (at least one fish position is [0, 0]), an error will raise.
+
         :param t_point: non-negative integer, time point to evaluate
         :return: bool
         """
@@ -250,6 +252,7 @@ class Simulation(object):
         """
         check if the health of a single fish is no higher than 0. in the simulation
         if the time point is not simulated (at least one fish position is [0, 0]), an error will raise.
+
         :param fish_n: str, name of the fish
         :param t_point: non-negative integer, time point to evaluate
         :return: bool
@@ -433,6 +436,7 @@ class Simulation(object):
     def save_log(self, log_folder, is_save_psp_waveforms=False):
         """
         save simulation results into a hdf5 file
+
         :param log_folder: directory path to save save_log
         :param msg: str, print out string
         :param is_save_psp_waveforms: 
@@ -497,6 +501,7 @@ class Simulation(object):
     def save_log_to_h5_grp(self, h5_grp, is_save_psp_waveforms=False):
         """
         save simulation results into a hdf5 group
+
         :param h5_grp, hdf5 group object
         :param msg: str, print out string
         :param is_save_psp_waveforms:
