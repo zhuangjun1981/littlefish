@@ -3,7 +3,7 @@ import numpy as np
 import littlefish.core.utilities as util
 
 
-def plot_brain(input_brain, plot_axis=None, cmap='jet', bl_range=(-0.1, 0.1), ca_lw_cap=4., ca_range=(-1., 1.),
+def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1), ca_lw_cap=5., ca_range=(-1., 1.),
                neuron_kws=None, connection_kws=None, layer_label_kws=None, neuron_label_kws=None):
     """
     plot the neurons and connections of a given brain, neuron color indicates its baseline firing rate, connection

@@ -348,7 +348,7 @@ def get_color_str(r, g, b):
 
     if not ((0 <= r <= 255) and (0 <= g <= 255) and (0 <= b <= 255)):
         raise ValueError('Input r, g and b should between 0 and 255!')
-    return '#{:0<2}{:0<2}{:0<2}'.format(hex(r)[2:], hex(g)[2:], hex(b)[2:])
+    return '#{:0>2}{:0>2}{:0>2}'.format(hex(r)[2:], hex(g)[2:], hex(b)[2:])
 
 
 def value_2_rgb(value, cmap):
