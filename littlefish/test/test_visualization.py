@@ -4,8 +4,8 @@
 
 import os
 import unittest
-import littlefish.core.visualization as vis
-import numpy as np
+
+import littlefish.viewer.plotting_tools as vis
 
 
 class TestUtilities(unittest.TestCase):
