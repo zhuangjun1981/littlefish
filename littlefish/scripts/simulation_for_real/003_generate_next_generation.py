@@ -12,20 +12,20 @@ import littlefish.core.fish as fi
 
 data_folder = r"C:\little_fish_simulation_logs"
 
-gen_num = 62
+gen_num = 90
 hard_thr_ratio = 0.5
 soft_thr_ratio = 1.0
 reproducing_rate = 0.002  # 0.002
 random_seed = random.randrange(2 ** 32 - 1)
 
-neuron_mr = 0.001  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
-eye_bl_r = (0., 0.1)  # baseline rate range of eyes, 0 to 0.1 action per time unit (100 spk/sec)
+neuron_mr = 0.01  # mutation rate of all neurons (including all eyes, hidden neurons and muscles)
+eye_bl_r = (-0.1, 0.1)  # baseline rate range of eyes, 0 to 0.1 action per time unit (100 spk/sec)
 eye_rp_r = None  # refractory period range of eyes, not mutating right now
-neuron_bl_r = (0., 0.1)  # baseline rate range of hidden neurons, 0 to 0.1 action per time unit (100 spk/sec)
+neuron_bl_r = (-0.1, 0.1)  # baseline rate range of hidden neurons, 0 to 0.1 action per time unit (100 spk/sec)
 neuron_rp_r = None  # refractory period range of hidden neurons, not mutating right now
-muscle_bl_r = (0., 0.1)  # baseline rate range of muscles, 0 to 0.1 action per time unit (100 spk/sec)
+muscle_bl_r = (-0.1, 0.1)  # baseline rate range of muscles, 0 to 0.1 action per time unit (100 spk/sec)
 muscle_rp_r = None  # refractory period range of muscles, not mutating right now
-connection_mr = 0.001  # mutation rate of connections for each layer
+connection_mr = 0.01  # mutation rate of connections for each layer
 connection_l_r = None  # latency range of connections, not mutating right now
 connection_a_r = (-1.0, 1.0)  # amplitude range of connections, (-100~100 spk/sec)
 connection_rt_r = None  # rise time range of connections, not mutating right now
@@ -98,11 +98,11 @@ for mother_fish_ind, mother_fish_fn in enumerate(all_mother_fish_lst):
     for i in range(offspring_num):
         child_fish = evo.mutate_fish(fish=mother_fish, brain_mutation=brain_mutation)
 
-        # ========= set muscle refractory period to 25, and child fish food rate to 20 ==========
+        # ========= set muscle refractory period to 10, and child fish food rate to 20 ==========
         # curr_brain = child_fish.get_brain()
         # for neuron_ind in range(len(curr_brain.get_neurons())):
         #     if curr_brain.get_neurons().loc[neuron_ind, 'neuron'].get_neuron_type() == 'muscle':
-        #         curr_brain.get_neurons().loc[neuron_ind, 'neuron'].set_refractory_period(25)
+        #         curr_brain.get_neurons().loc[neuron_ind, 'neuron'].set_refractory_period(20)
         # child_fish.set_brain(brain=curr_brain)
         # child_fish.set_food_rate(food_rate=20.)
         # =======================================================================================

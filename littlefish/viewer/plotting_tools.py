@@ -38,7 +38,7 @@ def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1),
 
     if plot_axis is None:
         f = plt.figure(figsize=(10, 8), facecolor='#aaaaaa')
-        plot_axis = f.add_axes([0., 0., 1., 1.])
+        plot_axis = f.add_axes([0.05, 0.05, 0.9, 0.9])
 
     layer_num = input_brain.layer_num
     layer_x_pos = np.linspace(0.1, 0.9, layer_num, endpoint=True)
@@ -99,5 +99,6 @@ def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1),
     plot_axis.set_axis_off()
     plot_axis.set_xlim([0, 1])
     plot_axis.set_ylim([0, 1])
-    plt.show()
+
+    return plot_axis
 
