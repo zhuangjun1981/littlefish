@@ -11,7 +11,7 @@ SIMULATION_NUM = 3
 TERRAIN_SIZE = [128, 128]
 SEA_LEVEL = 0.5
 FOOD_NUM = 200
-HARD_THR = 1000
+HARD_THR = 5000
 
 
 def simulation_fish_multiprocessing(simulation_params):
@@ -30,8 +30,8 @@ def simulation_fish_multiprocessing(simulation_params):
 if __name__ == '__main__':
 
     data_folder = r"C:\little_fish_simulation_logs"
-    generation_num = 63
-    process_num = 6
+    generation_num = 91
+    process_num = 8
 
     gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation_num, 6))
     os.chdir(gen_folder)

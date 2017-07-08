@@ -17,6 +17,38 @@ def array_nor(arr):
     return (arr - np.amin(arr)) / (np.amax(arr) - np.amin(arr))
 
 
+def normalized_to_range(var, input_range=(0., 1.), output_range=(0., 1.)):
+    """
+    map a single value to the output_range according to it's position in the input_range.
+
+    :param var: int or float, input value
+    :param input_range: tuple of two floats, the reference range
+    :param output_range: tuple of two floats, the mapping range
+    :return: float, mapped value
+    """
+
+    if len(input_range) != 2:
+        raise ValueError('input_range should contain two and only two numbers.')
+
+    if input_range[1] <= input_range[0]:
+        raise ValueError('input_range[1] should be larger than range[0].')
+
+    if len(output_range) != 2:
+        raise ValueError('output_range should contain two and only two numbers.')
+
+    if output_range[1] <= output_range[0]:
+        raise ValueError('output_range[1] should be larger than range[0].')
+
+    var = float(var)
+    input_range = (float(input_range[0]), float(input_range[1]))
+    output_range = (float(output_range[0]), float(output_range[1]))
+    if var < input_range[0] or var > input_range[1]:
+        raise ValueError('input variable is out of the input range.')
+
+    return ((var - input_range[0]) / (input_range[1] - input_range[0])) * \
+           (output_range[1] - output_range[0]) + output_range[0]
+
+
 def discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-10., 20.), bin_width=1.):
     """
     generate crosscorrelogram between two timestamp train
@@ -153,19 +185,23 @@ def plot_spike_ticks(spike_history, y=0., plot_axis=None, color='#ff0000', **kwa
     plot_axis.plot(spike_history, [float(y)] * spk_num, '.', mfc=color, **kwargs)
 
 
-def short(str):
+def short(input_str):
     """
     retrun abbreviation of a string
     """
 
-    if str in ['north', 'south', 'east', 'west']:
-        return str[0] * 2
-    elif str in ['northwest', 'northeast', 'southwest', 'southeast']:
-        return str[0] + str[5]
-    elif str in ['hidden', 'eye', 'muscle']:
-        return str[0]
-    elif str in ['terrain', 'food', 'fish']:
-        return str[0:4]
+    if input_str in ['north', 'south', 'east', 'west']:
+        output_str =  input_str[0] * 2
+    elif input_str in ['northwest', 'northeast', 'southwest', 'southeast']:
+        output_str = input_str[0] + input_str[5]
+    elif input_str in ['neuron', 'hidden', 'eye', 'muscle']:
+        output_str = input_str[0]
+    elif input_str in ['terrain', 'food', 'fish']:
+        output_str = input_str[0:4]
+    else:
+        raise ValueError('littlefish.core.utilities.short(): do not understand input string.')
+
+    return output_str.upper()
 
 
 def plot_mask_borders(mask, plot_axis=None, color='#ff0000', border_width=2, closing_iteration=None, **kwargs):
@@ -294,6 +330,35 @@ def decode(str_like, code='UTF-8'):
         return str_like.decode(code)
     else:
         raise ValueError('Utility: decode function do not understand the input type. Should be "str" or "bytes".')
+
+
+def get_rgb(color_str):
+    """
+    get R,G,B int value from a hex color string
+    """
+    return int(color_str[1:3], 16), int(color_str[3:5], 16), int(color_str[5:7], 16)
+
+
+def get_color_str(r, g, b):
+    """
+    get hex color string from r,g,b value (integer with uint8 format)
+    """
+    if not (is_integer(r) and is_integer(g) and is_integer(b)):
+        raise TypeError('Input r, g and b should be integer!')
+
+    if not ((0 <= r <= 255) and (0 <= g <= 255) and (0 <= b <= 255)):
+        raise ValueError('Input r, g and b should between 0 and 255!')
+    return '#{:0>2}{:0>2}{:0>2}'.format(hex(r)[2:], hex(g)[2:], hex(b)[2:])
+
+
+def value_2_rgb(value, cmap):
+    """
+    get the RGB value as format as hex string from the decimal ratio of a given colormap (from 0 to 1)
+    """
+    cmap = plt.get_cmap(cmap)
+    color = cmap(value)[0:3]
+    color = [int(x * 255) for x in color]
+    return get_color_str(*color)
 
 
 if __name__ == '__main__':
