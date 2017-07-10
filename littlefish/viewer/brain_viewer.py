@@ -1,9 +1,10 @@
-import sys
 import os
+import sys
+
 import h5py
-import matplotlib.pyplot as plt
 import littlefish.core.fish as fi
-import littlefish.viewer.plotting_tools as pt
+import littlefish.core.plotting as pt
+import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QApplication
 from brain_viewer_ui import Ui_BrainViewerMainWindow
 

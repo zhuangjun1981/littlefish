@@ -1,17 +1,16 @@
 import sys
+
 import h5py
-import numpy as np
-import matplotlib.pyplot as plt
 import littlefish.core.fish as fi
-import littlefish.viewer.plotting_tools as pt
+import littlefish.core.plotting as pt
 import littlefish.core.utilities as util
-from littlefish.viewer.simulation_viewer_ui import Ui_SimulationViewer
-from PyQt5.QtWidgets import QFileDialog, QMainWindow, QApplication, QTableWidgetItem, QSizePolicy
+import matplotlib.pyplot as plt
+import numpy as np
 from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QFileDialog, QMainWindow, QApplication, QTableWidgetItem, QSizePolicy
+from littlefish.viewer.simulation_viewer_ui import Ui_SimulationViewer
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
-
 
 LAND_RGB = np.array([21, 174, 21], dtype=np.uint8)
 SEA_RGB = np.array([21, 174, 225], dtype=np.uint8)

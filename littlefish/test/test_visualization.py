@@ -5,7 +5,7 @@
 import os
 import unittest
 
-import littlefish.viewer.plotting_tools as vis
+import littlefish.core.plotting as vis
 
 
 class TestUtilities(unittest.TestCase):
