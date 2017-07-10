@@ -17,6 +17,7 @@ LAND_RGB = np.array([21, 174, 21], dtype=np.uint8)
 SEA_RGB = np.array([21, 174, 225], dtype=np.uint8)
 FISH_RGB = np.array([255, 255, 0], dtype=np.uint8)
 FOOD_RGB = np.array([153, 51, 0], dtype=np.uint8)
+PLOT_STEP = 10
 
 
 def get_terrain_map_rgb(terrain_map_binary):
@@ -94,6 +95,7 @@ class SimulationViewer(Ui_SimulationViewer):
         self.ClearFileButton.clicked.connect(self.clear_loaded_file)
         self.PlayPauseButton.clicked.connect(self._play_pause)
         self.PlayTimer.timeout.connect(self._show_next_frame)
+        self.PlaySlider.sliderMoved.connect(self._slide_to_t)
 
         self.clear_loaded_file()
 
@@ -193,11 +195,12 @@ class SimulationViewer(Ui_SimulationViewer):
             self._health_history = sim_grp['simulation_log/health'].value
             self._fish_pos_history =  sim_grp['simulation_log/position_history'].value
             self._food_pos_history = sim_grp['simulation_log/food_pos_history'].value
-            self._total_t_point = sim_grp['simulation_log/last_time_point'].value
+            self._total_t_point = sim_grp['simulation_log/last_time_point'].value - 1
             self.PlayPauseButton.setEnabled(True)
             self.PlaySlider.setEnabled(True)
             self.TimeTextBrowser.setEnabled(True)
             self.HealthTextBrowser.setEnabled(True)
+            self.PlaySlider.setRange(0, self._total_t_point)
             self._show_curr_map()
 
     def _show_curr_map(self):
@@ -213,9 +216,10 @@ class SimulationViewer(Ui_SimulationViewer):
         except Exception as e:
             print (e)
 
-    def _show_next_frame(self):
+    def _show_next_frame(self, step=PLOT_STEP):
         try:
-            self._curr_t_point = (self._curr_t_point + 1) % self._total_t_point
+            self._curr_t_point = (self._curr_t_point + step) % self._total_t_point
+            self.PlaySlider.setSliderPosition(self._curr_t_point)
             self._show_curr_map()
         except Exception as e:
             print(e)
@@ -224,11 +228,14 @@ class SimulationViewer(Ui_SimulationViewer):
         if not self._is_playing:
             self._is_playing = True
             self.PlayPauseButton.setText('Pause')
-            self.PlayTimer.start(10)
+            self.PlayTimer.start(40)
         else:
             self._is_playing = False
             self.PlayTimer.stop()
             self.PlayPauseButton.setText('Play')
+
+    def _slide_to_t(self):
+        self._curr_t_point = int(self.PlaySlider.value())
 
     def clear_loaded_file(self):
 
