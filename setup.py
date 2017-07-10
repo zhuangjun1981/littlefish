@@ -47,11 +47,11 @@ class PyTest(TestCommand):
 
 setup(
     name='littlefish',
-    version = '0.1.0',
+    version = '0.2.0',
     url='https://github.com/zhuangjun1981/littlefish',
     author='Jun Zhuang',
     tests_require=['pytest'],
-    install_requires=['numpy','scipy', 'matplotlib', 'pandas', 'h5py', 'pyqtgraph'],
+    install_requires=['numpy','scipy', 'matplotlib', 'pandas', 'h5py', 'pyqt'],
     cmdclass={'test': PyTest},
     author_email='wood_stocker@hotmail.com',
     description='little fish brain network simulation',
