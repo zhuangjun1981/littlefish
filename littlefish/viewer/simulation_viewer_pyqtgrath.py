@@ -1,6 +1,7 @@
 import sys
 import os
 import h5py
+import pyqtgraph as pg
 import matplotlib.pyplot as plt
 import littlefish.core.fish as fi
 import littlefish.viewer.plotting_tools as pt
@@ -15,12 +16,20 @@ class SimulationViewer(Ui_SimulationViewer):
 
         self.setupUi(dialog)
 
+        #===================== add pyqtgraph widget =====================
+        self.mov_plot = pg.GraphicsView()
+        self.MovieLayout.addWidget(self.mov_plot)
+        # ===================== add pyqtgraph widget =====================
+
+
         self._file = None
 
         self.ChooseFileButton.clicked.connect(self.get_file)
         self.SimulationComboBox.activated[str].connect(self._load_simulation)
-        self.PlotBrainButton.setEnabled(False)
         self.PlotBrainButton.clicked.connect(self._plot_brain)
+        self.ClearFileButton.clicked.connect(self.clear_loaded_file)
+
+        self.clear_loaded_file()
 
     def get_file(self):
         options = QFileDialog.Options()
@@ -120,14 +129,19 @@ class SimulationViewer(Ui_SimulationViewer):
             sim_grp = self._file[simulation_key]
             self._show_terrain_params(sim_grp)
             self._show_simulation_results(sim_grp)
+            self.PlayPauseButton.setEnabled(True)
+            self.PlaySlider.setEnabled(True)
 
     def clear_loaded_file(self):
-        self.PlotBrainButton.setEnabled(False)
-        self.FishTableWidget.clear()
+        self.PlayPauseButton.setEnabled(False)
+        self.PlaySlider.setEnabled(False)
+        self.SimulationComboBox.clear()
         self.TerrainTableWidget.clear()
         self.SimulationTableWidget.clear()
-        self.SimulationComboBox.clear()
-
+        self.FilePathBrowser.clear()
+        self.PlotBrainButton.setEnabled(False)
+        self.FishTableWidget.clear()
+        self.PlotBrainButton.setEnabled(False)
 
 
 if __name__ == '__main__':
