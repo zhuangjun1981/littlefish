@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 
-def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size, sea_level, food_num, hard_thr=0,
+def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size, sea_portion, food_num, hard_thr=0,
                       fish_ind=0, fish_num=0):
     """
     the function to simulate a fish's lives in multiple terrain maps. the simulation results will be saved in the same
@@ -24,7 +24,7 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size
     :param simulation_length: positive int, top length of each simulation in time unit.
     :param simulation_num: positive int, number of terrain maps to simulate
     :param terrain_size: tuple of two positive ints, pixel size if terrain maps, (row, col)
-    :param sea_level: float, (0., 1.), sea level to define terrain. lower see level will give fish a hard time.
+    :param sea_portion: float, (0., 1.), sea portion to define terrain. lower see portion will give fish a hard time.
     :param food_num: non-negative int, how many food pellet(s) are presented at any given time in terrain map.
     :param hard_thr: positive int, fish should have a life span longer than this threshold to be kept for simulation.
     :param fish_ind: non-negative int, the index of the current fish in the whole population (generation). just for
@@ -34,7 +34,7 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size
     :return: None
     """
 
-    tg = tr.TerrainGenerator(size=terrain_size, sea_level=sea_level)
+    tg = tr.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
 
     curr_fish_f = h5py.File(fish_path)
     curr_fish = fi.Fish.from_h5_group(curr_fish_f['fish'])
@@ -369,12 +369,10 @@ class Simulation(object):
                             new_pos, curr_msg = self._move_fish(curr_fish, curr_t, curr_position, curr_health,
                                                                 movement_attempt=movement_attempt)
 
-                            if curr_msg:
+                            if verbose > 1 and curr_msg:
                                 self._simulation_histories['message'] += ('\n' + curr_msg)
                                 self._simulation_histories[curr_fish.name]['total_moves'] += 1
-
-                                if verbose > 1:
-                                    print(curr_msg)
+                                print(curr_msg)
 
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_row'] = new_pos[0]
                             curr_fish_history['life_history'].loc[curr_t + 1, 'pos_col'] = new_pos[1]
