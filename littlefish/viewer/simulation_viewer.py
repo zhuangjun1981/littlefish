@@ -238,13 +238,16 @@ class SimulationViewer(Ui_SimulationViewer):
 
     def clear_loaded_file(self):
 
+        self._is_playing = False
+        self.PlayTimer.stop()
+        self.PlayPauseButton.setText('Play')
+
         self._file = None
         self._curr_t_point = None
         self._terrain_map_rgb = None
         self._fish_pos_history = None
         self._health_history = None
         self._food_pos_history = None
-        self._is_playing = False
         self._max_health = None
         self._total_t_point = None
 
