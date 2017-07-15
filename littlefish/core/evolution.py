@@ -5,7 +5,9 @@ import datetime
 import numpy as np
 import pandas as pd
 import itertools
+from multiprocessing import Pool
 import littlefish.core.fish as fi
+import littlefish.core.simulation as si
 import littlefish.core.utilities as util
 
 
@@ -189,6 +191,20 @@ def get_offspring_num(mother_life_spans, hard_thr, soft_thr, reproducing_rate=0.
             if reproducing_life > 0:
                 offspring_num += int(np.ceil((reproducing_life * reproducing_rate)))
     return offspring_num
+
+
+def simulation_fish_multiprocessing(simulation_params):
+
+    f_path, fish_ind, fish_num, simulation_length, terrain_size, sea_portion, food_num = simulation_params
+    si.simulate_one_fish(fish_path=f_path,
+                         simulation_length=simulation_length,
+                         simulation_num=1,
+                         terrain_size=terrain_size,
+                         sea_portion=sea_portion,
+                         food_num=food_num,
+                         hard_thr=0,
+                         fish_ind=fish_ind,
+                         fish_num=fish_num)
 
 
 class UniformMutation(object):
@@ -429,13 +445,13 @@ class PopulationEvolution(object):
         self._base_folder = base_folder
         self._generation_digits_num = generation_digits_num
 
-    def _calculate_offspring_num(self, generation_num, turnover_rate, simulation_ind=0, population_size=None):
+    def _calculate_offspring_num(self, generation_ind, turnover_rate=0.6, simulation_ind=0, population_size=None):
         """
         calculate number of offsprings for each fish in the current generation, the mother fish will go to next
         generation as well. The number of offsprings plus the number of mother fish precisely equal to the
         population_size
 
-        :param generation_num: non-negative integer, current generation number
+        :param generation_ind: non-negative integer, current generation number
         :param turnover_rate: float, (0., 1.), proportion of fish in current generation that will die out
         :param simulation_num: non-negative integer, the simulation index to extract life span
         :param population_size: positive integer, number of individuals of next generation, if None, it will be the
@@ -449,7 +465,7 @@ class PopulationEvolution(object):
         """
 
         curr_gen_dir = os.path.join(self._base_folder,
-                                    'generation_' + util.int2str(generation_num, self._generation_digits_num))
+                                    'generation_' + util.int2str(generation_ind, self._generation_digits_num))
 
         if not os.path.isdir(curr_gen_dir):
             raise LookupError('Evolution: The path to current generation population does not exist!')
@@ -497,13 +513,79 @@ class PopulationEvolution(object):
 
         return life_thr, fishes
 
-    def _run_simulation_multi_thread(self, generation_num):
-        pass
+    def _run_simulation_multi_thread(self, generation_ind, process_num=6, simulation_length=50000,
+                                     terrain_size=(64, 64), sea_portion=0.5, food_num=50):
 
-    def _generate_next_generation(self, curr_generation_num, fishes):
-        pass
+        print('\n======================================================================')
+        print('Population Evolution: start simulating generation: {}'.format(generation_ind))
+        print('======================================================================')
 
-    def run(self, start_generation, end_generation):
+        gen_folder = os.path.join(self._base_folder,
+                                  'generation_' + util.int2str(generation_ind, self._generation_digits_num))
+        fish_ns = [f for f in os.listdir(gen_folder) if f[:5] == 'fish_' and f[-5:] == '.hdf5']
+        fish_ns.sort()
+        fish_ps = [os.path.join(gen_folder, f) for f in fish_ns]
+
+        sim_params = []
+
+        for fish_ind, fish_p in enumerate(fish_ps):
+            sim_params.append((fish_p, fish_ind, len(fish_ps), simulation_length, terrain_size, sea_portion, food_num))
+
+        with Pool(process_num) as p:
+            p.map(simulation_fish_multiprocessing, sim_params)
+
+        print('\n======================================================================')
+        print('Population Evolution: simulation of generation: {} finished.'.format(generation_ind))
+        print('======================================================================')
+
+    def _generate_next_generation(self, curr_generation_ind, fishes, life_thr, brain_mutation):
+
+        print('\n======================================================================')
+        print('Population Evolution: generating fish for generation: {}'.format(curr_generation_ind + 1))
+        print('======================================================================')
+
+        curr_gen_folder = os.path.join(self._base_folder,
+                                       'generation_' + util.int2str(curr_generation_ind, self._generation_digits_num))
+        next_gen_folder = os.path.join(self._base_folder,
+                                       'generation_' + util.int2str(curr_generation_ind + 1,
+                                                                    self._generation_digits_num))
+        os.mkdir(next_gen_folder)
+
+        for fish_ind, fish_row in fishes.iterrows():
+            mother_fish_f = h5py.File(os.path.join(curr_gen_folder, fish_row['fish_name'] + '.hdf5'))
+            mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
+
+            children_lst = []
+
+            child_fish_f = h5py.File(os.path.join(next_gen_folder, mother_fish.name + '.hdf5'))
+            child_fish_grp = child_fish_f.create_group('fish')
+            mother_fish.to_h5_group(child_fish_grp)
+            child_fish_f.close()
+            children_lst.append(mother_fish.name)
+
+            for offspring_ind in range(fish_row['offspring_num']):
+                child_fish = mutate_fish(fish=mother_fish, brain_mutation=brain_mutation)
+                child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'))
+                child_fish_grp = child_fish_f.create_group('fish')
+                child_fish.to_h5_group(child_fish_grp)
+                child_fish_f['generation'] = curr_generation_ind + 1
+                child_fish_f.close()
+                children_lst.append(child_fish.name)
+
+            ng_grp = mother_fish_f.create_group('next_generation_' +
+                                                datetime.datetime.now().strftime('%y%m%d_%H_%M_%S'))
+            ng_grp['children_list'] = [c.encode('UTF-8') for c in children_lst]
+
+            mother_fish_f.close()
+
+            print('\n======================================================================')
+            print('Population Evolution: fish generation for generation: {} finished.'.
+                  format(curr_generation_ind + 1))
+            print('======================================================================')
+
+    def run(self, start_generation_ind, end_generation_ind, brain_mutation, population_size=10, process_num=6,
+            turnover_rate=0.6, simulation_length=50000, terrain_size=(64, 64), sea_portion=0.5, food_num=50, ):
+        # todo: finish this
         pass
 
 

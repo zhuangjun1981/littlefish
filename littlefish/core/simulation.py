@@ -60,6 +60,9 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size
         curr_sim_grp['ending_time'] = datetime.datetime.now().strftime('%y%m%d_%H_%M_%S')
         curr_sim_grp['random_seed'] = curr_seed
         curr_sim_grp['simulation_length'] = simulation_length
+        curr_sim_grp['terrain_size'] = terrain_size
+        curr_sim_grp['sea_portion'] = sea_portion
+        curr_sim_grp['food_num'] = food_num
         curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
         curr_simulation.save_log_to_h5_grp(curr_sim_grp, is_save_psp_waveforms=False)
 

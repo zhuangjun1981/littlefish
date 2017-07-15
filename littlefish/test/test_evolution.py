@@ -112,7 +112,7 @@ class TestEvolution(unittest.TestCase):
         import os
         import numpy as np
         pe = evo.PopulationEvolution(base_folder=os.path.dirname(os.path.realpath(__file__)), generation_digits_num=6)
-        life_thr, fishes = pe._calculate_offspring_num(generation_num=4, turnover_rate=0.7)
+        life_thr, fishes = pe._calculate_offspring_num(generation_ind=4, turnover_rate=0.7)
         assert (life_thr == 185)
         assert (fishes.loc[4, 'extra_life'] == 22)
         assert (fishes.loc[3, 'extra_life'] == 20)
