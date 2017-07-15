@@ -1,9 +1,12 @@
+import os
+import h5py
 import random
 import datetime
 import numpy as np
+import pandas as pd
 import itertools
 import littlefish.core.fish as fi
-
+import littlefish.core.utilities as util
 
 
 def choose_index_1d(indices, mutation_rate):
@@ -156,7 +159,7 @@ def mutate_fish(fish, brain_mutation):
 
     mutated_brain = mutate_brain(fish.get_brain(), brain_mutation)
     mother_name = fish.get_name()
-    name = 'fish_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S')
+    name = 'fish_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S.%f')
 
     mutated_fish = fi.Fish(name=name, mother_name=mother_name, brain=mutated_brain, max_health=fish.get_max_health(),
                            health_decay_rate=fish.get_health_decay_rate(),
@@ -411,5 +414,99 @@ class BrainMutation(object):
 
     def get_connection_mutation(self):
         return self._connection_mutation
+
+
+class PopulationEvolution(object):
+
+    def __init__(self, base_folder, generation_digits_num=7):
+        """
+
+        :param base_folder: str, path to the folder of simulation results
+        :param generation_digit_num: positive int, number of digits to represent generation number,
+                                     default: 7 (max generation num 10 million)
+        """
+
+        self._base_folder = base_folder
+        self._generation_digits_num = generation_digits_num
+
+    def _calculate_offspring_num(self, generation_num, turnover_rate, simulation_ind=0, population_size=None):
+        """
+        calculate number of offsprings for each fish in the current generation, the mother fish will go to next
+        generation as well. The number of offsprings plus the number of mother fish precisely equal to the
+        population_size
+
+        :param generation_num: non-negative integer, current generation number
+        :param turnover_rate: float, (0., 1.), proportion of fish in current generation that will die out
+        :param simulation_num: non-negative integer, the simulation index to extract life span
+        :param population_size: positive integer, number of individuals of next generation, if None, it will be the
+                                same as current generation.
+        :return: life_thr, positive integer, only fish with life span longer than this number will have chance to
+                           spawn offspring, the extra life (fish's life span - life_thr) determines the possibility
+                           of its offspring among other fish in the current generation
+                 fishes, pandas dataframe, rows: fish those will produce offspring, columns: ['fish_name', 'life_span',
+                         'extra_life', 'offspring_num']
+
+        """
+
+        curr_gen_dir = os.path.join(self._base_folder,
+                                    'generation_' + util.int2str(generation_num, self._generation_digits_num))
+
+        if not os.path.isdir(curr_gen_dir):
+            raise LookupError('Evolution: The path to current generation population does not exist!')
+
+        fish_ns = [f for f in os.listdir(curr_gen_dir) if f[-5:] == '.hdf5' and f[0:5] == 'fish_']
+
+        if len(fish_ns) == 0:
+            raise LookupError('Evolution: There is no fish in the current generation folder.')
+
+        fish_ns.sort()
+
+        if population_size is None:
+            population_size = len(fish_ns)
+
+        fish_ns = [os.path.splitext(f)[0] for f in fish_ns]
+        life_spans = []
+        for fish_n in fish_ns:
+            fish_f = h5py.File(os.path.join(curr_gen_dir, fish_n + '.hdf5'))
+
+            curr_sim_ns = [s for s in fish_f.keys() if s[:11] == 'simulation_']
+            if len(curr_sim_ns) == 0:
+                raise LookupError('Evolution: cannot find simulation results for fish: {}'.format(fish_n))
+
+            curr_sim_n = [s for s in curr_sim_ns if int(s.split('_')[1]) == simulation_ind]
+            if len(curr_sim_n) != 1:
+                raise LookupError('Evolution: there should one and only one simulation log matches the '
+                                  'specified simulation index: {} for fish: {}.'.format(simulation_ind, fish_n))
+            curr_sim_n = curr_sim_n[0]
+
+            life_spans.append(fish_f[curr_sim_n]['simulation_log/last_time_point'].value)
+            fish_f.close()
+
+        fishes = pd.DataFrame(list(zip(fish_ns, life_spans)), columns=['fish_name', 'life_span'])
+        fishes.sort_values(by='life_span', ascending=False, inplace=True)
+
+        retain_number = int(np.ceil(len(fish_ns) * (1. - turnover_rate)))  # number of fish to retain
+        life_thr = fishes.iloc[retain_number, 1]
+
+        fishes = fishes[0: retain_number]
+
+        fishes['extra_life'] = fishes['life_span'] - life_thr
+
+        new_fish_number = population_size - retain_number
+        fishes['offspring_num'] = util.distrube_number(fishes['extra_life'], new_fish_number)
+
+        return life_thr, fishes
+
+    def _run_simulation_multi_thread(self, generation_num):
+        pass
+
+    def _generate_next_generation(self, curr_generation_num, fishes):
+        pass
+
+    def run(self, start_generation, end_generation):
+        pass
+
+
+
 
 

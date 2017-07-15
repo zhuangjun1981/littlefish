@@ -54,6 +54,11 @@ class TestUtilities(unittest.TestCase):
     #     ax2.set_ylim([9.5, -0.5])
     #     plt.show()
 
+    def test_distrube_number(self):
+
+        buckets = util.distrube_number(possibilities=np.arange(1, 6), population_size=1500)
+        # print ('\n{}'.format(buckets))
+        assert (np.sum(buckets) == 1500)
 
 
 

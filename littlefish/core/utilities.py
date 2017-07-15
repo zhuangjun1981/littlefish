@@ -4,6 +4,7 @@
 
 import numpy as np
 import numbers
+import random
 import matplotlib.pyplot as plt
 import scipy.ndimage as ni
 
@@ -359,6 +360,42 @@ def value_2_rgb(value, cmap):
     color = cmap(value)[0:3]
     color = [int(x * 255) for x in color]
     return get_color_str(*color)
+
+
+def distrube_number(possibilities, population_size):
+    """
+    distribute a number of individuals into each bucket according to the given possibility distributions
+
+    :param possibilities: list of numbers, indicating the possibilities of each bucket, if not normalized, it will be
+                         normalized to have sum equals to one.
+    :param population_size: positive integer, total number of individuals to be distributed
+    :return: list of non-negative integers, sum of which should precisely equal to population_size
+    """
+
+    if not is_integer(population_size) or population_size < 1.:
+        raise ValueError('Utility: population_size sould be positive integer.')
+
+    if len(possibilities) == 1:
+        return [population_size]
+
+    # normalize possibilities
+    pos_nor = np.array(possibilities, dtype=np.float64)
+    pos_nor = np.hstack(([0.], pos_nor))
+    pos_nor = pos_nor / np.sum(pos_nor)
+    pos_cum = np.cumsum(pos_nor)
+    pos_buckets = list(zip(pos_cum[:-1], pos_cum[1:]))
+
+    buckets = np.zeros(len(possibilities), dtype=np.int)
+
+    for i in range(population_size):
+        curr_v = random.random()
+        for j, pos_rang in enumerate(pos_buckets):
+            if curr_v >= pos_rang[0] and curr_v < pos_rang[1]:
+                buckets[j] += 1
+                break
+
+    return buckets
+
 
 
 if __name__ == '__main__':

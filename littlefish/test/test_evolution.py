@@ -108,6 +108,16 @@ class TestEvolution(unittest.TestCase):
         assert (test_conn.get_rise_time() == 2)
         assert (test_conn.get_decay_time() == 5)
 
+    def test_populationevolution_calculate_offspring_num(self):
+        import os
+        import numpy as np
+        pe = evo.PopulationEvolution(base_folder=os.path.dirname(os.path.realpath(__file__)), generation_digits_num=6)
+        life_thr, fishes = pe._calculate_offspring_num(generation_num=4, turnover_rate=0.7)
+        assert (life_thr == 185)
+        assert (fishes.loc[4, 'extra_life'] == 22)
+        assert (fishes.loc[3, 'extra_life'] == 20)
+        assert (np.sum(fishes['offspring_num']) == 3)
+
 
 if __name__ == '__main__':
     te = TestEvolution()
