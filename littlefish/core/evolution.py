@@ -464,16 +464,15 @@ class PopulationEvolution(object):
 
         """
 
-        curr_gen_dir = os.path.join(self._base_folder,
-                                    'generation_' + util.int2str(generation_ind, self._generation_digits_num))
+        curr_gen_dir = os.path.join(self._base_folder, self._get_generation_name(generation_ind))
 
         if not os.path.isdir(curr_gen_dir):
-            raise LookupError('Evolution: The path to current generation population does not exist!')
+            raise LookupError('PopulationEvolution: The path to current generation population does not exist!')
 
         fish_ns = [f for f in os.listdir(curr_gen_dir) if f[-5:] == '.hdf5' and f[0:5] == 'fish_']
 
         if len(fish_ns) == 0:
-            raise LookupError('Evolution: There is no fish in the current generation folder.')
+            raise LookupError('PopulationEvolution: There is no fish in the current generation folder.')
 
         fish_ns.sort()
 
@@ -487,11 +486,11 @@ class PopulationEvolution(object):
 
             curr_sim_ns = [s for s in fish_f.keys() if s[:11] == 'simulation_']
             if len(curr_sim_ns) == 0:
-                raise LookupError('Evolution: cannot find simulation results for fish: {}'.format(fish_n))
+                raise LookupError('PopulationEvolution: cannot find simulation results for fish: {}'.format(fish_n))
 
             curr_sim_n = [s for s in curr_sim_ns if int(s.split('_')[1]) == simulation_ind]
             if len(curr_sim_n) != 1:
-                raise LookupError('Evolution: there should one and only one simulation log matches the '
+                raise LookupError('PopulationEvolution: there should one and only one simulation log matches the '
                                   'specified simulation index: {} for fish: {}.'.format(simulation_ind, fish_n))
             curr_sim_n = curr_sim_n[0]
 
@@ -511,17 +510,16 @@ class PopulationEvolution(object):
         new_fish_number = population_size - retain_number
         fishes['offspring_num'] = util.distrube_number(fishes['extra_life'], new_fish_number)
 
-        return life_thr, fishes
+        return life_thr, fishes, simulation_ind
 
     def _run_simulation_multi_thread(self, generation_ind, process_num=6, simulation_length=50000,
                                      terrain_size=(64, 64), sea_portion=0.5, food_num=50):
 
         print('\n======================================================================')
-        print('Population Evolution: start simulating generation: {}'.format(generation_ind))
+        print('PopulationEvolution: start simulating generation: {}'.format(generation_ind))
         print('======================================================================')
 
-        gen_folder = os.path.join(self._base_folder,
-                                  'generation_' + util.int2str(generation_ind, self._generation_digits_num))
+        gen_folder = os.path.join(self._base_folder, self._get_generation_name(generation_ind))
         fish_ns = [f for f in os.listdir(gen_folder) if f[:5] == 'fish_' and f[-5:] == '.hdf5']
         fish_ns.sort()
         fish_ps = [os.path.join(gen_folder, f) for f in fish_ns]
@@ -535,31 +533,30 @@ class PopulationEvolution(object):
             p.map(simulation_fish_multiprocessing, sim_params)
 
         print('\n======================================================================')
-        print('Population Evolution: simulation of generation: {} finished.'.format(generation_ind))
+        print('PopulationEvolution: simulation of generation: {} finished.'.format(generation_ind))
         print('======================================================================')
 
-    def _generate_next_generation(self, curr_generation_ind, fishes, life_thr, brain_mutation):
+    def _generate_next_generation(self, curr_generation_ind, fishes, life_thr, simulation_ind, brain_mutation):
 
         print('\n======================================================================')
-        print('Population Evolution: generating fish for generation: {}'.format(curr_generation_ind + 1))
+        print('PopulationEvolution: generating fish for generation: {}'.format(curr_generation_ind + 1))
         print('======================================================================')
 
-        curr_gen_folder = os.path.join(self._base_folder,
-                                       'generation_' + util.int2str(curr_generation_ind, self._generation_digits_num))
-        next_gen_folder = os.path.join(self._base_folder,
-                                       'generation_' + util.int2str(curr_generation_ind + 1,
-                                                                    self._generation_digits_num))
+        curr_gen_folder = os.path.join(self._base_folder, self._get_generation_name(curr_generation_ind))
+        next_gen_folder = os.path.join(self._base_folder, self._get_generation_name(curr_generation_ind + 1))
         os.mkdir(next_gen_folder)
 
         for fish_ind, fish_row in fishes.iterrows():
             mother_fish_f = h5py.File(os.path.join(curr_gen_folder, fish_row['fish_name'] + '.hdf5'))
             mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
+            mother_fish_gens = mother_fish_f['generations'].value
 
             children_lst = []
 
             child_fish_f = h5py.File(os.path.join(next_gen_folder, mother_fish.name + '.hdf5'))
             child_fish_grp = child_fish_f.create_group('fish')
             mother_fish.to_h5_group(child_fish_grp)
+            child_fish_f['generations'] = mother_fish_gens + [curr_generation_ind + 1]
             child_fish_f.close()
             children_lst.append(mother_fish.name)
 
@@ -568,25 +565,81 @@ class PopulationEvolution(object):
                 child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'))
                 child_fish_grp = child_fish_f.create_group('fish')
                 child_fish.to_h5_group(child_fish_grp)
-                child_fish_f['generation'] = curr_generation_ind + 1
+                child_fish_f['generations'] = [curr_generation_ind + 1]
                 child_fish_f.close()
                 children_lst.append(child_fish.name)
 
             ng_grp = mother_fish_f.create_group('next_generation_' +
                                                 datetime.datetime.now().strftime('%y%m%d_%H_%M_%S'))
             ng_grp['children_list'] = [c.encode('UTF-8') for c in children_lst]
+            ng_grp['life_threshold'] = life_thr
+            ng_grp['simulation_ind'] = simulation_ind
 
             mother_fish_f.close()
 
             print('\n======================================================================')
-            print('Population Evolution: fish generation for generation: {} finished.'.
+            print('PopulationEvolution: fish generation for generation: {} finished.'.
                   format(curr_generation_ind + 1))
             print('======================================================================')
 
+    def _get_generation_name(self, generation_ind):
+        return 'generation_' + util.int2str(generation_ind, self._generation_digits_num)
+
     def run(self, start_generation_ind, end_generation_ind, brain_mutation, population_size=10, process_num=6,
             turnover_rate=0.6, simulation_length=50000, terrain_size=(64, 64), sea_portion=0.5, food_num=50, ):
-        # todo: finish this
-        pass
+
+        # check generation indices
+        if not util.is_integer(start_generation_ind) or start_generation_ind < 0:
+            raise ValueError('PopulationEvolution: start_generation_ind should be a non-negative integer.')
+
+        if not util.is_integer(end_generation_ind) or end_generation_ind < 0:
+            raise ValueError('PopulationEvolution: end_generation_ind should be a non-negative integer.')
+
+        if start_generation_ind >= end_generation_ind:
+            raise ValueError('PopulationEvolution: start_generation_ind should be smaller than end_generation_ind.')
+
+        start_generation_folder = os.path.join(self._base_folder, self._get_generation_name(start_generation_ind))
+
+        # check and generate starting folder structure
+        if start_generation_ind == 0:
+
+            if not os.path.isdir(start_generation_folder):
+                os.makedirs(start_generation_folder)
+
+            if not os.listdir(start_generation_folder):
+                raise LookupError('PopulationEvolution: start generation folder ({}) is not empty.'
+                                  .format(os.path.realpath(start_generation_folder)))
+
+            for fish_ind in range(population_size):
+                # todo: generate random fish here
+                pass
+
+            self._run_simulation_multi_thread(generation_ind=0, process_num=process_num,
+                                              simulation_length=simulation_length, terrain_size=terrain_size,
+                                              sea_portion=sea_portion, food_num=food_num)
+
+        else:
+            if os.listdir(start_generation_folder):
+                raise LookupError('PopulationEvolution: start generation folder ({}) should not be empty.'
+                                  .format(os.path.realpath(start_generation_folder)))
+
+        # run simulation
+        curr_gen_ind = start_generation_ind
+        while curr_gen_ind <= end_generation_ind:
+
+            life_thr, fishes, simulation_ind = self._calculate_offspring_num(generation_ind=curr_gen_ind,
+                                                                             turnover_rate=turnover_rate,
+                                                                             simulation_ind=0,
+                                                                             population_size=population_size)
+
+            self._generate_next_generation(curr_generation_ind=curr_gen_ind, fishes=fishes, life_thr=life_thr,
+                                           simulation_ind=simulation_ind, brain_mutation=brain_mutation)
+
+            self._run_simulation_multi_thread(generation_ind=curr_gen_ind + 1, process_num=process_num,
+                                              simulation_length=simulation_length, terrain_size=terrain_size,
+                                              sea_portion=sea_portion, food_num=food_num)
+
+            curr_gen_ind += 1
 
 
 
