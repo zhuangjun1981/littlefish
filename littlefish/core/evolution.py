@@ -591,14 +591,15 @@ class PopulationEvolution(object):
         for fish_ind, fish_row in fishes.iterrows():
             mother_fish_f = h5py.File(os.path.join(curr_gen_folder, fish_row['fish_name'] + '.hdf5'))
             mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
-            mother_fish_gens = mother_fish_f['generations'].value
+            mother_fish_gens = list(mother_fish_f['generations'].value)
 
             children_lst = []
 
             child_fish_f = h5py.File(os.path.join(next_gen_folder, mother_fish.name + '.hdf5'))
             child_fish_grp = child_fish_f.create_group('fish')
             mother_fish.to_h5_group(child_fish_grp)
-            child_fish_f['generations'] = mother_fish_gens + [curr_generation_ind + 1]
+            mother_fish_gens.append(curr_generation_ind + 1)
+            child_fish_f['generations'] = mother_fish_gens
             child_fish_f.close()
             children_lst.append(mother_fish.name)
 
