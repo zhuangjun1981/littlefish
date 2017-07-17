@@ -199,6 +199,9 @@ class BinaryTerrain(object):
         # todo: finish this method
         pass
 
+    def get_sea_portion(self):
+        return float(np.sum(self._terrain_map.flat)) / float(len(self._terrain_map.flat))
+
 
 if __name__ == '__main__':
 

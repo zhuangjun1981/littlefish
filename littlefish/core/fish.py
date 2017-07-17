@@ -776,7 +776,7 @@ class Brain(object):
         :param connections: dict
         """
 
-        print('\nBrain: Creating littlefish.core.fish.Brain object ...')
+        # print('\nBrain: Creating littlefish.core.fish.Brain object ...')
 
         if neurons is None and connections is None:
             min_brain = generate_minimal_brain()
@@ -788,7 +788,7 @@ class Brain(object):
 
         self.check_integrity(verbose=False)
 
-        print('Brain: littlefish.core.fish.Brain created successfully.')
+        # print('Brain: littlefish.core.fish.Brain created successfully.')
 
     def __str__(self):
         return 'littlefish.brain.Brain object'
@@ -1300,7 +1300,7 @@ class Fish(object):
                           transient event
         """
 
-        print('\nFish: Creating littlefish.core.fish.Fish object.')
+        # print('\nFish: Creating littlefish.core.fish.Fish object.')
 
         if name is None:
             self._name = 'test_fish'
@@ -1323,7 +1323,7 @@ class Fish(object):
             brain.check_integrity(verbose=False)
             self._brain = brain
 
-        print('Fish: littlefish.core.fish.Fish object created successfully.')
+        # print('Fish: littlefish.core.fish.Fish object created successfully.')
 
     def copy(self):
         """

@@ -102,7 +102,7 @@ class SimulationViewer(Ui_SimulationViewer):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         f_path, _ = QFileDialog.getOpenFileName(caption="QFileDialog.getOpenFileName()",
-                                                directory="C:/little_fish_simulation_logs",
+                                                directory="C:/little_fish_simulation_logs_2",
                                                 filter="hdf Files (*.hdf5 *.h5);;")
         self.clear_loaded_file()
         self.PlotBrainButton.setEnabled(True)
