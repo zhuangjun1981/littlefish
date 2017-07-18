@@ -59,7 +59,7 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain, foo
         curr_sim_grp['terrain_size'] = terrain.get_terrain_shape()
         curr_sim_grp['sea_portion'] = terrain.get_sea_portion()
         curr_sim_grp['food_num'] = food_num
-        curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
+        # curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
         curr_simulation.save_log_to_h5_grp(curr_sim_grp, is_save_psp_waveforms=False)
 
         if verbose:
