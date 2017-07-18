@@ -13,7 +13,7 @@ class Ui_BrainViewerMainWindow(object):
         BrainViewerMainWindow.setObjectName("BrainViewerMainWindow")
         BrainViewerMainWindow.resize(351, 219)
         self.centralwidget = QtWidgets.QWidget(BrainViewerMainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+        self.centralwidget.setObjectName("ToolbarWidget")
         self.ChooseFileButton = QtWidgets.QPushButton(self.centralwidget)
         self.ChooseFileButton.setGeometry(QtCore.QRect(90, 140, 151, 41))
         font = QtGui.QFont()

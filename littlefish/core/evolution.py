@@ -676,7 +676,7 @@ class PopulationEvolution(object):
                                               food_num=food_num)
 
         else:
-            if os.listdir(start_generation_folder):
+            if not os.listdir(start_generation_folder):
                 raise LookupError('PopulationEvolution: start generation folder ({}) should not be empty.'
                                   .format(os.path.realpath(start_generation_folder)))
 
