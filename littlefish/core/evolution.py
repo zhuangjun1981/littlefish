@@ -619,6 +619,8 @@ class PopulationEvolution(object):
             ng_grp['children_list'] = [c.encode('UTF-8') for c in children_lst]
             ng_grp['life_threshold'] = life_thr
             ng_grp['simulation_ind'] = simulation_ind
+            ng_grp['neuron_mutation_rate'] = neuron_mutation_rate
+            ng_grp['connection_mutation_rate'] = connection_mutation_rate
 
             mother_fish_f.close()
 
