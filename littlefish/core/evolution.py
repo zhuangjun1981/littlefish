@@ -490,8 +490,11 @@ class PopulationEvolution(object):
     def _calculate_offspring_num(self, generation_ind, turnover_rate=0.6, simulation_ind=0, population_size=None):
         """
         calculate number of offsprings for each fish in the current generation, the mother fish will go to next
-        generation as well. The number of offsprings plus the number of mother fish precisely equal to the
-        population_size
+        generation as well. The number of offsprings a mother can produce is proportional to its extra life span
+        exceeding the life threshold (calculated by the 'get_offspring_num()' function). If several mother fish
+        has same life span, the ones with bigger generation numbers (which survived more generations) will have
+        higher priority to pass to next generation. The number of offsprings plus the number of mother fish
+        precisely equal to the population_size
 
         :param generation_ind: non-negative integer, current generation number
         :param turnover_rate: float, (0., 1.), proportion of fish in current generation that will die out
@@ -502,7 +505,7 @@ class PopulationEvolution(object):
                            spawn offspring, the extra life (fish's life span - life_thr) determines the possibility
                            of its offspring among other fish in the current generation
                  fishes, pandas dataframe, rows: fish those will produce offspring, columns: ['fish_name', 'life_span',
-                         'extra_life', 'offspring_num']
+                         'generation_num', 'extra_life', 'offspring_num']
 
         """
 
@@ -523,8 +526,11 @@ class PopulationEvolution(object):
 
         fish_ns = [os.path.splitext(f)[0] for f in fish_ns]
         life_spans = []
+        generation_nums = []
         for fish_n in fish_ns:
             fish_f = h5py.File(os.path.join(curr_gen_dir, fish_n + '.hdf5'))
+
+            generation_nums.append(fish_f['generations'].shape[0])
 
             curr_sim_ns = [s for s in fish_f.keys() if s[:11] == 'simulation_']
             if len(curr_sim_ns) == 0:
@@ -539,8 +545,9 @@ class PopulationEvolution(object):
             life_spans.append(fish_f[curr_sim_n]['simulation_log/last_time_point'].value)
             fish_f.close()
 
-        fishes = pd.DataFrame(list(zip(fish_ns, life_spans)), columns=['fish_name', 'life_span'])
-        fishes.sort_values(by='life_span', ascending=False, inplace=True)
+        fishes = pd.DataFrame(list(zip(fish_ns, life_spans, generation_nums)),
+                              columns=['fish_name', 'life_span', 'generation_num'])
+        fishes.sort_values(by=['life_span', 'generation_num'], ascending=False, inplace=True)
 
         retain_number = int(np.ceil(len(fish_ns) * (1. - turnover_rate)))  # number of fish to retain
         life_thr = fishes.iloc[retain_number, 1]

@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 LAND_RGB = np.array([46, 204, 113], dtype=np.uint8)
 SEA_RGB = np.array([52, 152, 219], dtype=np.uint8)
 FISH_RGB = np.array([241, 196, 15], dtype=np.uint8)
-FOOD_RGB = np.array([203, 67, 53], dtype=np.uint8)
+FOOD_RGB = np.array([157, 32, 45], dtype=np.uint8)
 PLOT_STEP = 10
 
 
@@ -119,7 +119,9 @@ class SimulationViewer(Ui_SimulationViewer):
         try:
             fish = fi.Fish.from_h5_group(self._file['fish'])
             fish_n = fish.name
-            ax = pt.plot_brain(fish.get_brain())
+            self._brain_figure = plt.figure(figsize=(10, 10))
+            ax = self._brain_figure.add_axes([0.05, 0.05, 0.9, 0.9])
+            ax = pt.plot_brain(fish.get_brain(), plot_axis=ax)
             ax.set_title(fish_n)
             plt.show()
         except Exception as e:
@@ -242,6 +244,8 @@ class SimulationViewer(Ui_SimulationViewer):
 
     def _slide_to_t(self):
         self._curr_t_point = int(self.PlaySlider.value())
+        if not self._is_playing:
+            self._show_curr_map()
 
     def clear_loaded_file(self):
 
@@ -257,6 +261,11 @@ class SimulationViewer(Ui_SimulationViewer):
         self._food_pos_history = None
         self._max_health = None
         self._total_t_point = None
+
+        if hasattr(self, '_brain_figure'):
+            if self._brain_figure is not None:
+                plt.close(self._brain_figure)
+        self._brain_figure = None
 
         self.MovieCanvas.clear()
 

@@ -37,8 +37,10 @@ def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1),
         connection_kws = {}
 
     if plot_axis is None:
-        f = plt.figure(figsize=(10, 8), facecolor='#aaaaaa')
+        f = plt.figure(figsize=(10, 8))
         plot_axis = f.add_axes([0.05, 0.05, 0.9, 0.9])
+
+    plot_axis.get_figure().set_facecolor('#839192')
 
     layer_num = input_brain.layer_num
     layer_x_pos = np.linspace(0.1, 0.9, layer_num, endpoint=True)
