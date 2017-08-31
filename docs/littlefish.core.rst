@@ -11,7 +11,6 @@ Subpackages
     littlefish.core.simulation
     littlefish.core.evolution
     littlefish.core.utilities
-    littlefish.core.visualization
 
 Module contents
 ---------------
