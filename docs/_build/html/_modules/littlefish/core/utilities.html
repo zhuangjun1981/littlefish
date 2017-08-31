@@ -1,0 +1,488 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>littlefish.core.utilities &#8212; littlefish 0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for littlefish.core.utilities</h1><div class="highlight"><pre>
+<span></span><span class="c1"># from __future__ import (absolute_import, division,</span>
+<span class="c1">#                         print_function, unicode_literals)</span>
+<span class="c1"># from builtins import *</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">scipy.ndimage</span> <span class="k">as</span> <span class="nn">ni</span>
+
+
+<div class="viewcode-block" id="is_integer"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.is_integer">[docs]</a><span class="k">def</span> <span class="nf">is_integer</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="array_nor"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.array_nor">[docs]</a><span class="k">def</span> <span class="nf">array_nor</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">arr</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="normalized_to_range"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.normalized_to_range">[docs]</a><span class="k">def</span> <span class="nf">normalized_to_range</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">input_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">),</span> <span class="n">output_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    map a single value to the output_range according to it&#39;s position in the input_range.</span>
+
+<span class="sd">    :param var: int or float, input value</span>
+<span class="sd">    :param input_range: tuple of two floats, the reference range</span>
+<span class="sd">    :param output_range: tuple of two floats, the mapping range</span>
+<span class="sd">    :return: float, mapped value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input_range should contain two and only two numbers.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">input_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">input_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input_range[1] should be larger than range[0].&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;output_range should contain two and only two numbers.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">output_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;output_range[1] should be larger than range[0].&#39;</span><span class="p">)</span>
+
+    <span class="n">var</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+    <span class="n">input_range</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">input_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">input_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">output_range</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">output_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">output_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="o">&lt;</span> <span class="n">input_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">var</span> <span class="o">&gt;</span> <span class="n">input_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;input variable is out of the input range.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">((</span><span class="n">var</span> <span class="o">-</span> <span class="n">input_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">input_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">input_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">*</span> \
+           <span class="p">(</span><span class="n">output_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">output_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">output_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="discreat_crosscorrelation"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.discreat_crosscorrelation">[docs]</a><span class="k">def</span> <span class="nf">discreat_crosscorrelation</span><span class="p">(</span><span class="n">ts_trigger</span><span class="p">,</span> <span class="n">ts_reference</span><span class="p">,</span> <span class="n">t_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">),</span> <span class="n">bin_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    generate crosscorrelogram between two timestamp train</span>
+
+<span class="sd">    :param ts_trigger: the triggering time stamps, 1d array, monotonically increasing</span>
+<span class="sd">    :param ts_reference: the reference time stamps, 1d array, monotonically increasing</span>
+<span class="sd">    :param t_range: para-trigger time range, tuple with two floats</span>
+<span class="sd">    :param bin_with: duration of a single bin</span>
+<span class="sd">    :return: crosscorrelogram of counts, 1-d array, int</span>
+<span class="sd">             t_axis, time axis of crosscorrelogram, 1-d array, float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ts_trigger</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="s1">&#39;ts_trigger should be a 1-d array.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ts_reference</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="s1">&#39;ts_reference should be a 1-d array.&#39;</span><span class="p">)</span>
+
+    <span class="n">t_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">t_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bin_width</span><span class="p">)</span>
+    <span class="n">ccg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">t_axis</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">trigger</span> <span class="ow">in</span> <span class="n">ts_trigger</span><span class="p">:</span>
+        <span class="c1"># get the chunk of ts_reference for this particular trigger</span>
+        <span class="n">ref_ts_chunk</span> <span class="o">=</span> <span class="n">ts_reference</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">ts_reference</span> <span class="o">&gt;=</span> <span class="n">trigger</span> <span class="o">+</span> <span class="n">t_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                   <span class="n">ts_reference</span> <span class="o">&lt;</span> <span class="n">trigger</span> <span class="o">+</span> <span class="n">t_axis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">bin_width</span><span class="p">)]</span>
+
+        <span class="c1"># calculate relative timing around the trigger</span>
+        <span class="n">ref_ts_chunk</span> <span class="o">=</span> <span class="n">ref_ts_chunk</span> <span class="o">-</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">trigger</span><span class="p">)</span> <span class="o">+</span> <span class="n">t_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">ref_ts</span> <span class="ow">in</span> <span class="n">ref_ts_chunk</span><span class="p">:</span>
+            <span class="n">ccg</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ref_ts</span><span class="o">//</span><span class="n">bin_width</span><span class="p">)]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">ccg</span><span class="p">,</span> <span class="n">t_axis</span></div>
+
+
+<div class="viewcode-block" id="get_random_number"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.get_random_number">[docs]</a><span class="k">def</span> <span class="nf">get_random_number</span><span class="p">(</span><span class="n">distribution</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    get a random number from given distribution</span>
+
+<span class="sd">    :param distribution: tuple in the format, (distribution type, parameter1, parameter2, ...)</span>
+<span class="sd">                         supported: (&#39;flat&#39;, mean, range), (&#39;gaussian, mean, sigma), (&#39;exponential&#39;, mean)</span>
+<span class="sd">    :param shape: output shape</span>
+<span class="sd">    :return: a random number</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">distribution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">distribution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;flat&#39;</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">distribution</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">distribution</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">distribution</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">distribution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;gaussian&#39;</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">distribution</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">distribution</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">distribution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;exponential&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">distribution</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="s1">&#39;The mean of the exponential distribution should be larger than 0!&#39;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">exponential</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">distribution</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="p">(</span><span class="ne">LookupError</span><span class="p">,</span> <span class="s1">&#39;the first element of &quot;noise&quot; should be &quot;gaussian&quot;, &quot;flat&quot; or &quot;exponential&quot;!&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="int2str"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.int2str">[docs]</a><span class="k">def</span> <span class="nf">int2str</span><span class="p">(</span><span class="n">num</span><span class="p">,</span><span class="n">length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    generate a string representation for a integer with a given length</span>
+
+<span class="sd">    :param num: input number</span>
+<span class="sd">    :param length: length of the string</span>
+<span class="sd">    :return: string represetation of the integer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rawstr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">length</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">rawstr</span><span class="p">):</span><span class="k">return</span> <span class="n">rawstr</span>
+    <span class="k">elif</span> <span class="n">length</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rawstr</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Length of the number is longer then defined display length!&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rawstr</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39;0&#39;</span><span class="o">*</span><span class="p">(</span><span class="n">length</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">rawstr</span><span class="p">))</span> <span class="o">+</span> <span class="n">rawstr</span></div>
+
+
+<div class="viewcode-block" id="check_df_index"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.check_df_index">[docs]</a><span class="k">def</span> <span class="nf">check_df_index</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    check if the indices of a pandas dataframe is a series in an ascending order with increment as 1 and starts at 0</span>
+
+<span class="sd">    :return: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="check_arithmetic_progression"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.check_arithmetic_progression">[docs]</a><span class="k">def</span> <span class="nf">check_arithmetic_progression</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    check a 1-d list of numbers is arithmetic progression sequence</span>
+
+<span class="sd">    :return bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span> <span class="o">*</span> <span class="n">step</span> <span class="o">+</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="check_binary_2d_array"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.check_binary_2d_array">[docs]</a><span class="k">def</span> <span class="nf">check_binary_2d_array</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    check if an array is 2 dimensional and _dtype is int and only contains 0s and 1s</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">array</span><span class="p">[:])</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">array</span><span class="p">[:])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="plot_spike_ticks"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.plot_spike_ticks">[docs]</a><span class="k">def</span> <span class="nf">plot_spike_ticks</span><span class="p">(</span><span class="n">spike_history</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">plot_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#ff0000&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    plot spike ticks as separate dots</span>
+
+<span class="sd">    :param spike_history: list of ints, spike timestamps on time unit axis</span>
+<span class="sd">    :param y: float, vertical locations of spike line</span>
+<span class="sd">    :param plot_axis: plotting axis, matplotlib.pyplot.axis object</span>
+<span class="sd">    :param color: plotting color</span>
+<span class="sd">    :param kwargs: other inputs to matplotlib.pyplot.plot function</span>
+<span class="sd">    :return: plot_axis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">plot_axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="n">plot_axis</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="n">spk_num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spike_history</span><span class="p">)</span>
+
+    <span class="n">plot_axis</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">spike_history</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="p">)]</span> <span class="o">*</span> <span class="n">spk_num</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">mfc</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="short"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.short">[docs]</a><span class="k">def</span> <span class="nf">short</span><span class="p">(</span><span class="n">input_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    retrun abbreviation of a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">input_str</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;north&#39;</span><span class="p">,</span> <span class="s1">&#39;south&#39;</span><span class="p">,</span> <span class="s1">&#39;east&#39;</span><span class="p">,</span> <span class="s1">&#39;west&#39;</span><span class="p">]:</span>
+        <span class="n">output_str</span> <span class="o">=</span>  <span class="n">input_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="n">input_str</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;northwest&#39;</span><span class="p">,</span> <span class="s1">&#39;northeast&#39;</span><span class="p">,</span> <span class="s1">&#39;southwest&#39;</span><span class="p">,</span> <span class="s1">&#39;southeast&#39;</span><span class="p">]:</span>
+        <span class="n">output_str</span> <span class="o">=</span> <span class="n">input_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">input_str</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">input_str</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;neuron&#39;</span><span class="p">,</span> <span class="s1">&#39;hidden&#39;</span><span class="p">,</span> <span class="s1">&#39;eye&#39;</span><span class="p">,</span> <span class="s1">&#39;muscle&#39;</span><span class="p">]:</span>
+        <span class="n">output_str</span> <span class="o">=</span> <span class="n">input_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">input_str</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;terrain&#39;</span><span class="p">,</span> <span class="s1">&#39;food&#39;</span><span class="p">,</span> <span class="s1">&#39;fish&#39;</span><span class="p">]:</span>
+        <span class="n">output_str</span> <span class="o">=</span> <span class="n">input_str</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;littlefish.core.utilities.short(): do not understand input string.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_str</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="plot_mask_borders"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.plot_mask_borders">[docs]</a><span class="k">def</span> <span class="nf">plot_mask_borders</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">plot_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#ff0000&#39;</span><span class="p">,</span> <span class="n">border_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">closing_iteration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered</span>
+<span class="sd">    as background, and non-zero, non-nan pixel will be considered in ROI.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">check_binary_2d_array</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+        <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="s1">&#39;input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains &#39;</span>
+                          <span class="s1">&#39;only 0s and 1s.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">plot_axis</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plot_axis</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">closing_iteration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ploting_mask</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">binary_closing</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">closing_iteration</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ploting_mask</span> <span class="o">=</span> <span class="n">mask</span>
+
+    <span class="n">currfig</span> <span class="o">=</span> <span class="n">plot_axis</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">ploting_mask</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">linewidths</span><span class="o">=</span><span class="n">border_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># put y axis in decreasing order</span>
+    <span class="n">y_lim</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">plot_axis</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">())</span>
+    <span class="n">y_lim</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">plot_axis</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">plot_axis</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">currfig</span></div>
+
+
+<div class="viewcode-block" id="plot_mask"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.plot_mask">[docs]</a><span class="k">def</span> <span class="nf">plot_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">plot_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#ff0000&#39;</span><span class="p">,</span> <span class="n">closing_iteration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered</span>
+<span class="sd">    as background, and non-zero, non-nan pixel will be considered in ROI.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">check_binary_2d_array</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+        <span class="k">raise</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="s1">&#39;input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains &#39;</span>
+                          <span class="s1">&#39;only 0s and 1s.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">plot_axis</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plot_axis</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">closing_iteration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ploting_mask</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">binary_closing</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">closing_iteration</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ploting_mask</span> <span class="o">=</span> <span class="n">mask</span>
+
+    <span class="n">currfig</span> <span class="o">=</span> <span class="n">plot_axis</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">ploting_mask</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># put y axis in decreasing order</span>
+    <span class="n">y_lim</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">plot_axis</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">())</span>
+    <span class="n">y_lim</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">plot_axis</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">plot_axis</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">currfig</span></div>
+
+
+<div class="viewcode-block" id="check_monotonicity"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.check_monotonicity">[docs]</a><span class="k">def</span> <span class="nf">check_monotonicity</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;increasing&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    check monotonicity of a 1-d array, usually a time series</span>
+
+<span class="sd">    :param arr: input array, should be 1 dimensional</span>
+<span class="sd">    :param direction: &#39;increasing&#39;, &#39;decreasing&#39;, &#39;non-increasing&#39;, &#39;non-decreasing&#39;</span>
+<span class="sd">    :return: True or False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input array should be one dimensional!&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input array should have at least two elements!&#39;</span><span class="p">)</span>
+
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">min_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+    <span class="n">max_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;increasing&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">min_diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;decreasing&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;non-increasing&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_diff</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;non-decreasing&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">min_diff</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="s1">&#39;direction should one of the following: &quot;increasing&quot;, &quot;decreasing&quot;, &#39;</span>
+                          <span class="s1">&#39;&quot;non-increasing&quot;, &quot;non-decreasing&quot;!&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="decode"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.decode">[docs]</a><span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="n">str_like</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    if a string like object is actually a &#39;bytes&#39; type, decode it by &#39;UTF-8&#39;, and return the string. This is to deal</span>
+<span class="sd">    with the hdf5 string format madness.</span>
+
+<span class="sd">    :param str_like:</span>
+<span class="sd">    :param code:</span>
+<span class="sd">    :return: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">str_like</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">str_like</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">str_like</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">str_like</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Utility: decode function do not understand the input type. Should be &quot;str&quot; or &quot;bytes&quot;.&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_rgb"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.get_rgb">[docs]</a><span class="k">def</span> <span class="nf">get_rgb</span><span class="p">(</span><span class="n">color_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    get R,G,B int value from a hex color string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">color_str</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">color_str</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">color_str</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_color_str"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.get_color_str">[docs]</a><span class="k">def</span> <span class="nf">get_color_str</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    get hex color string from r,g,b value (integer with uint8 format)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">is_integer</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="ow">and</span> <span class="n">is_integer</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="ow">and</span> <span class="n">is_integer</span><span class="p">(</span><span class="n">b</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input r, g and b should be integer!&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="mi">255</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">g</span> <span class="o">&lt;=</span> <span class="mi">255</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="mi">255</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input r, g and b should between 0 and 255!&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;#</span><span class="si">{:0&gt;2}{:0&gt;2}{:0&gt;2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">2</span><span class="p">:],</span> <span class="nb">hex</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="mi">2</span><span class="p">:],</span> <span class="nb">hex</span><span class="p">(</span><span class="n">b</span><span class="p">)[</span><span class="mi">2</span><span class="p">:])</span></div>
+
+
+<div class="viewcode-block" id="value_2_rgb"><a class="viewcode-back" href="../../../littlefish.core.utilities.html#littlefish.core.utilities.value_2_rgb">[docs]</a><span class="k">def</span> <span class="nf">value_2_rgb</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">cmap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    get the RGB value as format as hex string from the decimal ratio of a given colormap (from 0 to 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">value</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">color</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">get_color_str</span><span class="p">(</span><span class="o">*</span><span class="n">color</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1">#==================================================</span>
+    <span class="c1"># ts_trigger = np.arange(5)</span>
+    <span class="c1"># ts_reference = np.arange(5) + 0.1001</span>
+    <span class="c1">#</span>
+    <span class="c1"># ccg, t = discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-0.2, 0.5), bin_width=0.1)</span>
+    <span class="c1">#</span>
+    <span class="c1"># print(t)</span>
+    <span class="c1"># print(ccg)</span>
+    <span class="c1">#</span>
+    <span class="c1"># plt.plot(t, ccg)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="c1"># ==================================================</span>
+
+    <span class="c1"># ==================================================</span>
+    <span class="c1"># plot_spike_ticks(range(5))</span>
+    <span class="c1"># plt.show()</span>
+    <span class="c1"># ==================================================</span>
+
+    <span class="c1"># ==================================================</span>
+    <span class="c1"># array = np.zeros((100, 100), _dtype=np.uint8)</span>
+    <span class="c1"># array[35: 38, 40: 43] = 1</span>
+    <span class="c1"># array[35, 40] = 1</span>
+    <span class="c1"># plot_mask(array)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="c1"># ==================================================</span>
+
+    <span class="c1"># ==================================================</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">check_arithmetic_progression</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">check_arithmetic_progression</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)))</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+    <span class="n">seq</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.01</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">check_arithmetic_progression</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
+    <span class="c1"># ==================================================</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;for debug ...&#39;</span><span class="p">)</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jun Zhuang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

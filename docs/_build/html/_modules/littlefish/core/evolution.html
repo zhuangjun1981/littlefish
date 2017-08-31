@@ -1,0 +1,502 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>littlefish.core.evolution &#8212; littlefish 0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for littlefish.core.evolution</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">littlefish.core.fish</span> <span class="k">as</span> <span class="nn">fi</span>
+
+
+
+<div class="viewcode-block" id="choose_index_1d"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.choose_index_1d">[docs]</a><span class="k">def</span> <span class="nf">choose_index_1d</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    randomly chooses a subset of indices from a list of indices based on the mutation_rate</span>
+
+<span class="sd">    :param indices: list of unsigned integers, all indices to choose from</span>
+<span class="sd">    :param mutation_rate: float, [0., 1.]</span>
+<span class="sd">    :return: list of unsigned integers, a list of subset of the indices</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mutate_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">mutation_rate</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">mutate_num</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="choose_index_2d"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.choose_index_2d">[docs]</a><span class="k">def</span> <span class="nf">choose_index_2d</span><span class="p">(</span><span class="n">indices0</span><span class="p">,</span> <span class="n">indices1</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    randomly choose a subset of index pairs from a 2d grid based on the mutation rates</span>
+
+<span class="sd">    :param indices0: 1d seq, list of indices along axis 0 (rows)</span>
+<span class="sd">    :param indices1: 1d seq, list of indices along axis 1 (columns)</span>
+<span class="sd">    :param mutation_rate: float, [0., 1.]</span>
+<span class="sd">    :return: list of index pairs, each pair contains two elements [index0, index1] representing the coordinates of a</span>
+<span class="sd">             randomly chosen location</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">all_coordinates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">indices0</span><span class="p">,</span> <span class="n">indices1</span><span class="p">))</span>
+    <span class="n">mutate_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_coordinates</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">mutation_rate</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">all_coordinates</span><span class="p">,</span> <span class="n">mutate_num</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mutate_neuron"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.mutate_neuron">[docs]</a><span class="k">def</span> <span class="nf">mutate_neuron</span><span class="p">(</span><span class="n">neuron</span><span class="p">,</span> <span class="n">neuron_mutation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    mutate a neuron, can be Eye, Neuron or Muscle</span>
+
+<span class="sd">    :param neuron: the initial little_fish.core.fish.Neuron object</span>
+<span class="sd">    :param neuron_mutation: little_fish.core.evolution.NeuronMutation object</span>
+<span class="sd">    :return: a mutated little_fish.core.fish.Neuron object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mutated_neuron</span> <span class="o">=</span> <span class="n">neuron</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">mutated_baseline</span> <span class="o">=</span> <span class="n">neuron_mutation</span><span class="o">.</span><span class="n">get_mutated_baseline</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mutated_baseline</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mutated_neuron</span><span class="o">.</span><span class="n">set_baseline_rate</span><span class="p">(</span><span class="n">mutated_baseline</span><span class="p">)</span>
+
+    <span class="n">mutated_refractory</span> <span class="o">=</span> <span class="n">neuron_mutation</span><span class="o">.</span><span class="n">get_mutated_refractory</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">mutated_refractory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mutated_neuron</span><span class="o">.</span><span class="n">set_refractory_period</span><span class="p">(</span><span class="n">mutated_refractory</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mutated_neuron</span></div>
+
+
+<div class="viewcode-block" id="mutate_connection"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.mutate_connection">[docs]</a><span class="k">def</span> <span class="nf">mutate_connection</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">connection_mutation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    mutate a connection</span>
+
+<span class="sd">    :param connection: the initial little_fish.core.fish.Connection object</span>
+<span class="sd">    :param connection_mutation: little_fish.core.evolution.ConnectionMutation object</span>
+<span class="sd">    :return: a mutated little_fish.core.fish.Connection object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mutated_latency</span> <span class="o">=</span> <span class="n">connection_mutation</span><span class="o">.</span><span class="n">get_mutated_latency</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mutated_latency</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mutated_latency</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_latency</span><span class="p">()</span>
+
+    <span class="n">mutated_amplitude</span> <span class="o">=</span> <span class="n">connection_mutation</span><span class="o">.</span><span class="n">get_mutated_amplitude</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mutated_amplitude</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mutated_amplitude</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_amplitude</span><span class="p">()</span>
+
+    <span class="n">mutated_rise_time</span> <span class="o">=</span> <span class="n">connection_mutation</span><span class="o">.</span><span class="n">get_mutated_rise_time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mutated_rise_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mutated_rise_time</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_rise_time</span><span class="p">()</span>
+
+    <span class="n">mutated_decay_time</span> <span class="o">=</span> <span class="n">connection_mutation</span><span class="o">.</span><span class="n">get_mutated_decay_time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mutated_decay_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mutated_decay_time</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">get_decay_time</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fi</span><span class="o">.</span><span class="n">Connection</span><span class="p">(</span><span class="n">latency</span><span class="o">=</span><span class="n">mutated_latency</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="n">mutated_amplitude</span><span class="p">,</span> <span class="n">rise_time</span><span class="o">=</span><span class="n">mutated_rise_time</span><span class="p">,</span>
+                         <span class="n">decay_time</span><span class="o">=</span><span class="n">mutated_decay_time</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mutate_brain"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.mutate_brain">[docs]</a><span class="k">def</span> <span class="nf">mutate_brain</span><span class="p">(</span><span class="n">brain</span><span class="p">,</span> <span class="n">brain_mutation</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">mutating input brain ...&#39;</span><span class="p">)</span>
+
+    <span class="n">mutated_neurons</span> <span class="o">=</span> <span class="n">brain</span><span class="o">.</span><span class="n">get_neurons</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">mutated_connections</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">brain</span><span class="o">.</span><span class="n">get_connections</span><span class="p">())</span>
+
+    <span class="n">mutate_neuron_ind</span> <span class="o">=</span> <span class="n">choose_index_1d</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">mutated_neurons</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_neuron_mutation_rate</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">mutating neurons:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;total number of neurons: </span><span class="si">{}</span><span class="s1">. neuron mutation rate: </span><span class="si">{}</span><span class="s1">. number of neurons to be mutated: </span><span class="si">{}</span><span class="s1">.&#39;</span>
+              <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mutated_neurons</span><span class="p">),</span> <span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_neuron_mutation_rate</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">mutate_neuron_ind</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">mni</span> <span class="ow">in</span> <span class="n">mutate_neuron_ind</span><span class="p">:</span>
+        <span class="n">curr_neuron</span> <span class="o">=</span> <span class="n">mutated_neurons</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mni</span><span class="p">,</span> <span class="s1">&#39;neuron&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">curr_neuron</span><span class="o">.</span><span class="n">get_neuron_type</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;eye&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evolution: mutating eye. Index: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mni</span><span class="p">))</span>
+            <span class="n">curr_mutated_neuron</span> <span class="o">=</span> <span class="n">mutate_neuron</span><span class="p">(</span><span class="n">neuron</span><span class="o">=</span><span class="n">curr_neuron</span><span class="p">,</span> <span class="n">neuron_mutation</span><span class="o">=</span><span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_eye_mutation</span><span class="p">())</span>
+            <span class="n">mutated_neurons</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mni</span><span class="p">,</span> <span class="s1">&#39;neuron&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">curr_mutated_neuron</span>
+
+        <span class="k">elif</span> <span class="n">curr_neuron</span><span class="o">.</span><span class="n">get_neuron_type</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;neuron&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evolution: mutating hidden neuron. Index: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mni</span><span class="p">))</span>
+            <span class="n">curr_mutated_neuron</span> <span class="o">=</span> <span class="n">mutate_neuron</span><span class="p">(</span><span class="n">neuron</span><span class="o">=</span><span class="n">curr_neuron</span><span class="p">,</span>
+                                                <span class="n">neuron_mutation</span><span class="o">=</span><span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_neuron_mutation</span><span class="p">())</span>
+            <span class="n">mutated_neurons</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mni</span><span class="p">,</span> <span class="s1">&#39;neuron&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">curr_mutated_neuron</span>
+
+        <span class="k">elif</span> <span class="n">curr_neuron</span><span class="o">.</span><span class="n">get_neuron_type</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;muscle&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evolution: mutating muscle. Index: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mni</span><span class="p">))</span>
+            <span class="n">curr_mutated_neuron</span> <span class="o">=</span> <span class="n">mutate_neuron</span><span class="p">(</span><span class="n">neuron</span><span class="o">=</span><span class="n">curr_neuron</span><span class="p">,</span>
+                                                <span class="n">neuron_mutation</span><span class="o">=</span><span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_muscle_mutation</span><span class="p">())</span>
+            <span class="n">mutated_neurons</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mni</span><span class="p">,</span> <span class="s1">&#39;neuron&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">curr_mutated_neuron</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">mutating connections:&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">con_name</span><span class="p">,</span> <span class="n">con_df</span> <span class="ow">in</span> <span class="n">mutated_connections</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+        <span class="n">indices0</span> <span class="o">=</span> <span class="n">con_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">indices1</span> <span class="o">=</span> <span class="n">con_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="n">mutate_conn_coors</span> <span class="o">=</span> <span class="n">choose_index_2d</span><span class="p">(</span><span class="n">indices0</span><span class="o">=</span><span class="n">indices0</span><span class="p">,</span> <span class="n">indices1</span><span class="o">=</span><span class="n">indices1</span><span class="p">,</span>
+                                            <span class="n">mutation_rate</span><span class="o">=</span><span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_connection_mutation_rate</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;layer: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">con_name</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;total number of connections: </span><span class="si">{}</span><span class="s1">. connection mutation rate: </span><span class="si">{}</span><span class="s1">. &#39;</span>
+                  <span class="s1">&#39;number of connections to be mutated: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices0</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices1</span><span class="p">),</span>
+                                                                    <span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_connection_mutation_rate</span><span class="p">(),</span>
+                                                                    <span class="nb">len</span><span class="p">(</span><span class="n">mutate_conn_coors</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">mutate_coor</span> <span class="ow">in</span> <span class="n">mutate_conn_coors</span><span class="p">:</span>
+            <span class="n">curr_con</span> <span class="o">=</span> <span class="n">con_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mutate_coor</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mutate_coor</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="n">curr_mutated_con</span> <span class="o">=</span> <span class="n">mutate_connection</span><span class="p">(</span><span class="n">connection</span><span class="o">=</span><span class="n">curr_con</span><span class="p">,</span>
+                                                 <span class="n">connection_mutation</span><span class="o">=</span><span class="n">brain_mutation</span><span class="o">.</span><span class="n">get_connection_mutation</span><span class="p">())</span>
+            <span class="n">con_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mutate_coor</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mutate_coor</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">curr_mutated_con</span>
+
+    <span class="n">mutated_brain</span> <span class="o">=</span> <span class="n">fi</span><span class="o">.</span><span class="n">Brain</span><span class="p">(</span><span class="n">neurons</span><span class="o">=</span><span class="n">mutated_neurons</span><span class="p">,</span> <span class="n">connections</span><span class="o">=</span><span class="n">mutated_connections</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mutated_brain</span></div>
+
+
+<div class="viewcode-block" id="mutate_fish"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.mutate_fish">[docs]</a><span class="k">def</span> <span class="nf">mutate_fish</span><span class="p">(</span><span class="n">fish</span><span class="p">,</span> <span class="n">brain_mutation</span><span class="p">):</span>
+
+    <span class="n">mutated_brain</span> <span class="o">=</span> <span class="n">mutate_brain</span><span class="p">(</span><span class="n">fish</span><span class="o">.</span><span class="n">get_brain</span><span class="p">(),</span> <span class="n">brain_mutation</span><span class="p">)</span>
+    <span class="n">mother_name</span> <span class="o">=</span> <span class="n">fish</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;fish_&#39;</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%y%m</span><span class="si">%d</span><span class="s1">_%H_%M_%S&#39;</span><span class="p">)</span>
+
+    <span class="n">mutated_fish</span> <span class="o">=</span> <span class="n">fi</span><span class="o">.</span><span class="n">Fish</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">mother_name</span><span class="o">=</span><span class="n">mother_name</span><span class="p">,</span> <span class="n">brain</span><span class="o">=</span><span class="n">mutated_brain</span><span class="p">,</span> <span class="n">max_health</span><span class="o">=</span><span class="n">fish</span><span class="o">.</span><span class="n">get_max_health</span><span class="p">(),</span>
+                           <span class="n">health_decay_rate</span><span class="o">=</span><span class="n">fish</span><span class="o">.</span><span class="n">get_health_decay_rate</span><span class="p">(),</span>
+                           <span class="n">land_penalty_rate</span><span class="o">=</span><span class="n">fish</span><span class="o">.</span><span class="n">get_land_penalty_rate</span><span class="p">(),</span> <span class="n">food_rate</span><span class="o">=</span><span class="n">fish</span><span class="o">.</span><span class="n">get_food_rate</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">mutated_fish</span></div>
+
+
+<div class="viewcode-block" id="get_offspring_num"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.get_offspring_num">[docs]</a><span class="k">def</span> <span class="nf">get_offspring_num</span><span class="p">(</span><span class="n">mother_life_spans</span><span class="p">,</span> <span class="n">hard_thr</span><span class="p">,</span> <span class="n">soft_thr</span><span class="p">,</span> <span class="n">reproducing_rate</span><span class="o">=</span><span class="mf">0.0002</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    given a list of mother life spans in multiple simulations, return a number representing how many offsprings it</span>
+<span class="sd">    will produce.</span>
+
+<span class="sd">    :param mother_life_spans: list of non-negative int, mother&#39;s life spans in multiple simulation</span>
+<span class="sd">    :param hard_thr: non-negative int, mother will have chance to reproduce only if all life spans in</span>
+<span class="sd">                     mother_life_spans are no less than this threshold</span>
+<span class="sd">    :param soft_thr: non-negative int, each life span in mother_life_spans longer than this threshold will be used to</span>
+<span class="sd">                     calculated offspring number</span>
+<span class="sd">    :param reproducing_rate: positive float, this rate time the life spans that exceed soft_thr x soft_thr_ratio</span>
+<span class="sd">                             will be returned</span>
+<span class="sd">    :return: non-negative int, number of offsprings the mother fish wil produce</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">offspring_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">mother_life_spans</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">hard_thr</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">mother_life_span</span> <span class="ow">in</span> <span class="n">mother_life_spans</span><span class="p">:</span>
+            <span class="n">reproducing_life</span> <span class="o">=</span> <span class="n">mother_life_span</span> <span class="o">-</span> <span class="n">soft_thr</span>
+            <span class="k">if</span> <span class="n">reproducing_life</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">offspring_num</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">reproducing_life</span> <span class="o">*</span> <span class="n">reproducing_rate</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">offspring_num</span></div>
+
+
+<div class="viewcode-block" id="UniformMutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.UniformMutation">[docs]</a><span class="k">class</span> <span class="nc">UniformMutation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    definition of a single mutation of a single value, based on a uniform distribution of a value range. uses builtin</span>
+<span class="sd">    random module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_range</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param value_range: tuple of two numbers, the two value should be different.</span>
+<span class="sd">        :param dtype: str, &#39;int&#39; or &#39;float&#39;. if &#39;int&#39; random value will be drawn by random.randint()</span>
+<span class="sd">                                             if &#39;float&#39; random value will be drawn by random.uniform()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the input _value_range should be sequence with length of 2.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+            <span class="n">v0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">v1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="s1">&#39;int&#39;</span>
+        <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+            <span class="n">v0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">v1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="s1">&#39;float&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the _dtype shoule be either &quot;int&quot; or &quot;float&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">v0</span> <span class="o">==</span> <span class="n">v1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the two values in the input _value_range should be different.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">v0</span> <span class="o">&lt;</span> <span class="n">v1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UniformMutation.get_value"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.UniformMutation.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if self._dtype is &#39;int&#39;: uses random.randint() function</span>
+<span class="sd">        if self._dtype is &#39;float&#39;: uses random.uniform() function</span>
+
+<span class="sd">        :return: a random value follow a uniform distribution with a range defined by self._value_range, including the</span>
+<span class="sd">                 start but excluding the end</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="UniformMutation.get_dtype"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.UniformMutation.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span></div>
+
+<div class="viewcode-block" id="UniformMutation.get_value_range"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.UniformMutation.get_value_range">[docs]</a>    <span class="k">def</span> <span class="nf">get_value_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;littlefish.core.evolution.UniformMutation object. dtype:</span><span class="si">{}</span><span class="s1">; value_range:</span><span class="si">{}</span><span class="s1">&#39;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_range</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NeuronMutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.NeuronMutation">[docs]</a><span class="k">class</span> <span class="nc">NeuronMutation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    definition of a neuron mutation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseline_mutation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refractory_mutation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param baseline_mutation: a UniformMutation object, dtype should be &#39;float&#39;,</span>
+<span class="sd">                                  reasonable value_range will be (0., 0.1), if one time unit is equivalent to 1 ms,</span>
+<span class="sd">                                  then this range represents (0, 100) spike per second</span>
+<span class="sd">        :param refractory_mutation: a UniformMutation object, dtype should be &#39;float&#39;,</span>
+<span class="sd">                                    reasonable value_range will be (1., 3.), if one time unit is equivalent to 1 ms,</span>
+<span class="sd">                                    then this range represent (1., 3.) ms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">baseline_mutation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">baseline_mutation</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_mutation</span> <span class="o">=</span> <span class="n">baseline_mutation</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the baseline_mutation should be None or &#39;</span>
+                             <span class="s1">&#39;the dtype of baseline_mutation should be &quot;float&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">refractory_mutation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">refractory_mutation</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refractory_mutation</span> <span class="o">=</span> <span class="n">refractory_mutation</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the refractory_mutation should be None or &#39;</span>
+                             <span class="s1">&#39;the dtype of refractory_mutation should be &quot;float&quot;.&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NeuronMutation.get_mutated_baseline"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.NeuronMutation.get_mutated_baseline">[docs]</a>    <span class="k">def</span> <span class="nf">get_mutated_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return a mutated baseline rate by self.baseline_mutation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_mutation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_mutation</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="NeuronMutation.get_mutated_refractory"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.NeuronMutation.get_mutated_refractory">[docs]</a>    <span class="k">def</span> <span class="nf">get_mutated_refractory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return a mutated refractory period by self.refractory_mutation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refractory_mutation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">refractory_mutation</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ConnectionMutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.ConnectionMutation">[docs]</a><span class="k">class</span> <span class="nc">ConnectionMutation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    definition of a connection mutation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latency_mutation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amplitude_mutation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rise_time_mutation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">decay_time_mutation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param latency_mutation: a UniformMutation object, dtype should be &#39;int&#39;,</span>
+<span class="sd">                                 reasonable value_range will be (3, 10)</span>
+<span class="sd">        :param amplitude_mutation: a UniformMutation object, dtype should be &#39;float&#39;, this value can be wild!</span>
+<span class="sd">                                   reasonable value_range will be (-1., 1.), from totally inhibit postsynaptic neuron</span>
+<span class="sd">                                   to totally excite postsynaptic neuron</span>
+<span class="sd">        :param rise_time_mutation: a UniformMutation object, dtype should be &#39;int&#39;,</span>
+<span class="sd">                                   reasonable value_range will be (1, 5)</span>
+<span class="sd">        :param decay_time_mutation: a UniformMutation object, dtype should be &#39;int&#39;,</span>
+<span class="sd">                                    reasonable value_range will be (5, 20)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">latency_mutation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">latency_mutation</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">latency_mutation</span> <span class="o">=</span> <span class="n">latency_mutation</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the latency_mutation should be None or &#39;</span>
+                             <span class="s1">&#39;the dtype of latency_mutation should be &quot;int&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">amplitude_mutation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">amplitude_mutation</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_mutation</span> <span class="o">=</span> <span class="n">amplitude_mutation</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the amplitude_mutation should be None or &#39;</span>
+                             <span class="s1">&#39;the dtype of amplitude_mutation should be &quot;float&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rise_time_mutation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">rise_time_mutation</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rise_time_mutation</span> <span class="o">=</span> <span class="n">rise_time_mutation</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the rise_time_mutation should be None or &#39;</span>
+                             <span class="s1">&#39;the dtype of rise_time_mutation should be &quot;int&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">decay_time_mutation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">decay_time_mutation</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">decay_time_mutation</span> <span class="o">=</span> <span class="n">decay_time_mutation</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;the decay_time_mutation should be None or &#39;</span>
+                             <span class="s1">&#39;the dtype of decay_time_mutation should be &quot;int&quot;.&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConnectionMutation.get_mutated_latency"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.ConnectionMutation.get_mutated_latency">[docs]</a>    <span class="k">def</span> <span class="nf">get_mutated_latency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latency_mutation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">latency_mutation</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ConnectionMutation.get_mutated_amplitude"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.ConnectionMutation.get_mutated_amplitude">[docs]</a>    <span class="k">def</span> <span class="nf">get_mutated_amplitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_mutation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_mutation</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ConnectionMutation.get_mutated_rise_time"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.ConnectionMutation.get_mutated_rise_time">[docs]</a>    <span class="k">def</span> <span class="nf">get_mutated_rise_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rise_time_mutation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rise_time_mutation</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ConnectionMutation.get_mutated_decay_time"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.ConnectionMutation.get_mutated_decay_time">[docs]</a>    <span class="k">def</span> <span class="nf">get_mutated_decay_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">decay_time_mutation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decay_time_mutation</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="BrainMutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.BrainMutation">[docs]</a><span class="k">class</span> <span class="nc">BrainMutation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    definition of a brain mutation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neuron_mutation_rate</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">eye_mutation</span><span class="o">=</span><span class="n">NeuronMutation</span><span class="p">(),</span> <span class="n">neuron_mutation</span><span class="o">=</span><span class="n">NeuronMutation</span><span class="p">(),</span>
+                 <span class="n">muscle_mutation</span><span class="o">=</span><span class="n">NeuronMutation</span><span class="p">(),</span> <span class="n">connection_mutation_rate</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+                 <span class="n">connection_mutation</span><span class="o">=</span><span class="n">ConnectionMutation</span><span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param neuron_mutation_rate: float, [0, 1.], fraction of neurons (eyes, hidden neurons and muscles) to be</span>
+<span class="sd">                                     mutated</span>
+<span class="sd">        :param eye_mutation: littlefish.core.evolution.NeuronMutation object</span>
+<span class="sd">        :param neuron_mutation: littlefish.core.evolution.NeuronMutation object</span>
+<span class="sd">        :param muscle_mutation: littlefish.core.evolution.NeuronMutation object</span>
+<span class="sd">        :param connection_mutation_rate: float, [0, 1.], fraction of connections to be mutated for each layer</span>
+<span class="sd">        :param connection_mutation: littlefish.core.evolution.ConnectionMutation object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_mutation_rate</span> <span class="o">=</span> <span class="n">neuron_mutation_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eye_mutation</span> <span class="o">=</span> <span class="n">eye_mutation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_mutation</span> <span class="o">=</span> <span class="n">neuron_mutation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_muscle_mutation</span> <span class="o">=</span> <span class="n">muscle_mutation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connection_mutation_rate</span> <span class="o">=</span> <span class="n">connection_mutation_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connection_mutation</span> <span class="o">=</span> <span class="n">connection_mutation</span>
+
+<div class="viewcode-block" id="BrainMutation.get_neuron_mutation_rate"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.BrainMutation.get_neuron_mutation_rate">[docs]</a>    <span class="k">def</span> <span class="nf">get_neuron_mutation_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_mutation_rate</span></div>
+
+<div class="viewcode-block" id="BrainMutation.get_eye_mutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.BrainMutation.get_eye_mutation">[docs]</a>    <span class="k">def</span> <span class="nf">get_eye_mutation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eye_mutation</span></div>
+
+<div class="viewcode-block" id="BrainMutation.get_neuron_mutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.BrainMutation.get_neuron_mutation">[docs]</a>    <span class="k">def</span> <span class="nf">get_neuron_mutation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neuron_mutation</span></div>
+
+<div class="viewcode-block" id="BrainMutation.get_muscle_mutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.BrainMutation.get_muscle_mutation">[docs]</a>    <span class="k">def</span> <span class="nf">get_muscle_mutation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_muscle_mutation</span></div>
+
+<div class="viewcode-block" id="BrainMutation.get_connection_mutation_rate"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.BrainMutation.get_connection_mutation_rate">[docs]</a>    <span class="k">def</span> <span class="nf">get_connection_mutation_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_mutation_rate</span></div>
+
+<div class="viewcode-block" id="BrainMutation.get_connection_mutation"><a class="viewcode-back" href="../../../littlefish.core.evolution.html#littlefish.core.evolution.BrainMutation.get_connection_mutation">[docs]</a>    <span class="k">def</span> <span class="nf">get_connection_mutation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_mutation</span></div></div>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">littlefish 0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Jun Zhuang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>
