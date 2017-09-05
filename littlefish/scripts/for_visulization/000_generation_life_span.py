@@ -2,7 +2,7 @@ import os
 import h5py
 import matplotlib.pyplot as plt
 
-gen_folder = r"C:\little_fish_simulation_logs_2\generation_0000199"
+gen_folder = r"C:\little_fish_simulation_logs_2\generation_0000250"
 
 life_spans = []
 
