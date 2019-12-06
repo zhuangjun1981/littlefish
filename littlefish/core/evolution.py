@@ -542,7 +542,7 @@ class PopulationEvolution(object):
                                   'specified simulation index: {} for fish: {}.'.format(simulation_ind, fish_n))
             curr_sim_n = curr_sim_n[0]
 
-            life_spans.append(fish_f[curr_sim_n]['simulation_log/last_time_point'].value)
+            life_spans.append(fish_f[curr_sim_n]['simulation_log/last_time_point'][()])
             fish_f.close()
 
         fishes = pd.DataFrame(list(zip(fish_ns, life_spans, generation_nums)),
@@ -596,13 +596,13 @@ class PopulationEvolution(object):
         os.mkdir(next_gen_folder)
 
         for fish_ind, fish_row in fishes.iterrows():
-            mother_fish_f = h5py.File(os.path.join(curr_gen_folder, fish_row['fish_name'] + '.hdf5'))
+            mother_fish_f = h5py.File(os.path.join(curr_gen_folder, fish_row['fish_name'] + '.hdf5'), 'a')
             mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
-            mother_fish_gens = list(mother_fish_f['generations'].value)
+            mother_fish_gens = list(mother_fish_f['generations'][()])
 
             children_lst = []
 
-            child_fish_f = h5py.File(os.path.join(next_gen_folder, mother_fish.name + '.hdf5'))
+            child_fish_f = h5py.File(os.path.join(next_gen_folder, mother_fish.name + '.hdf5'), 'a')
             child_fish_grp = child_fish_f.create_group('fish')
             mother_fish.to_h5_group(child_fish_grp)
             mother_fish_gens.append(curr_generation_ind + 1)
@@ -614,7 +614,7 @@ class PopulationEvolution(object):
                 child_fish = mutate_fish(fish=mother_fish, brain_mutation=brain_mutation,
                                          neuron_mutation_rate=neuron_mutation_rate,
                                          connection_mutation_rate=connection_mutation_rate)
-                child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'))
+                child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'), 'a')
                 child_fish_grp = child_fish_f.create_group('fish')
                 child_fish.to_h5_group(child_fish_grp)
                 child_fish_f['generations'] = [curr_generation_ind + 1]

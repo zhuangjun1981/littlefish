@@ -33,7 +33,7 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain, foo
     :return: None
     """
 
-    curr_fish_f = h5py.File(fish_path)
+    curr_fish_f = h5py.File(fish_path, 'a')
     curr_fish = fi.Fish.from_h5_group(curr_fish_f['fish'])
 
     for sim_ind in range(simulation_num):
