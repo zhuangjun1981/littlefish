@@ -54,10 +54,9 @@ brain.plot_action_histories_scatter(plot_length=SIMULATION_LENGTH, ms=10, mec='n
 plt.show()
 
 dfile_path = r"D:\littlefish\test_folder\minimum_brain.hdf5"
-dfile = h5py.File(dfile_path, "a")
+dfile = h5py.File(dfile_path)
 group = dfile.create_group('brain')
 brain.to_h5_group(group)
-dfile.close()
 
 print('for debug ...')
 

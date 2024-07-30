@@ -15,7 +15,7 @@ if os.path.isfile(os.path.join(save_folder, save_name)):
     print('hdf5 file for default fish object already exists in the test folder. Abort saving ...')
 else:
     default_fish = fish.Fish(name='fish_default')
-    ff = h5py.File(os.path.join(save_folder, 'fish_default.hdf5'), "a")
+    ff = h5py.File(os.path.join(save_folder, 'fish_default.hdf5'))
     grp = ff.create_group('fish')
     default_fish.to_h5_group(grp)
     ff.close()

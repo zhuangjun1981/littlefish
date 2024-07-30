@@ -33,27 +33,32 @@ class TestUtilities(unittest.TestCase):
         assert (round(util.normalized_to_range(var=0.8, input_range=(0., 1.), output_range=(0., 2.)), 10) == 1.6)
         assert (round(util.normalized_to_range(var=0.8, input_range=(0., 1.), output_range=(1., 4.)), 10) == 3.4)
 
-    def test_value_2_rgb(self):
-        import matplotlib.pyplot as plt
-        import matplotlib
-        plt.ioff()
-        cmap = 'RdBu_r'
-        norm = matplotlib.colors.Normalize(vmin=0., vmax=99.)
-        f = plt.figure(figsize=(8, 4))
-        ax1 = f.add_subplot(121)
-        ax2 = f.add_subplot(122)
-        plot_arr = np.arange(100).reshape((10, 10))
-        ax1.imshow(plot_arr, vmin=0., vmax=99., cmap=cmap, interpolation='nearest')
-        for i in range(10):
-            for j in range(10):
-                # curr_c = util.normalized_to_range(plot_arr[i, j], (0., 99.), (0., 1.))
-                curr_c = norm(plot_arr[i, j])
-                curr_cstr = util.value_2_rgb(curr_c, cmap)
-                ax2.plot(j, i, 'o', mfc=curr_cstr, lw=0, mec='none', ms=20)
-        ax2.set_xlim([-0.5, 9.5])
-        ax2.set_ylim([9.5, -0.5])
-        plt.show()
+    # def test_value_2_rgb(self):
+    #     import matplotlib.pyplot as plt
+    #     import matplotlib
+    #     plt.ioff()
+    #     cmap = 'RdBu_r'
+    #     norm = matplotlib.colors.Normalize(vmin=0., vmax=99.)
+    #     f = plt.figure(figsize=(8, 4))
+    #     ax1 = f.add_subplot(121)
+    #     ax2 = f.add_subplot(122)
+    #     plot_arr = np.arange(100).reshape((10, 10))
+    #     ax1.imshow(plot_arr, vmin=0., vmax=99., cmap=cmap, interpolation='nearest')
+    #     for i in range(10):
+    #         for j in range(10):
+    #             # curr_c = util.normalized_to_range(plot_arr[i, j], (0., 99.), (0., 1.))
+    #             curr_c = norm(plot_arr[i, j])
+    #             curr_cstr = util.value_2_rgb(curr_c, cmap)
+    #             ax2.plot(j, i, 'o', mfc=curr_cstr, lw=0, mec='none', ms=20)
+    #     ax2.set_xlim([-0.5, 9.5])
+    #     ax2.set_ylim([9.5, -0.5])
+    #     plt.show()
 
+    def test_distrube_number(self):
+
+        buckets = util.distrube_number(possibilities=np.arange(1, 6), population_size=1500)
+        # print ('\n{}'.format(buckets))
+        assert (np.sum(buckets) == 1500)
 
 
 

@@ -203,7 +203,7 @@ class TestFish(unittest.TestCase):
 
     def test_load_brain(self):
         curr_folder = os.path.dirname(os.path.realpath(__file__))
-        example_log_f = h5py.File(os.path.join(curr_folder, 'example_simulation_log.hdf5'), "a")
+        example_log_f = h5py.File(os.path.join(curr_folder, 'example_simulation_log.hdf5'))
         brain_grp = example_log_f['fish_test_fish/brain']
         curr_brain = fi.Brain.from_h5_group(brain_grp)
         assert (curr_brain.get_neurons().loc[0, 'neuron']._gain == 0.005)
@@ -217,7 +217,7 @@ class TestFish(unittest.TestCase):
 
     def test_load_fish(self):
         curr_folder = os.path.dirname(os.path.realpath(__file__))
-        example_log_f = h5py.File(os.path.join(curr_folder, 'example_simulation_log.hdf5'), "a")
+        example_log_f = h5py.File(os.path.join(curr_folder, 'example_simulation_log.hdf5'))
         fish_grp = example_log_f['fish_test_fish']
         curr_fish = fi.Fish.from_h5_group(fish_grp)
         assert (curr_fish._food_rate == 10.)

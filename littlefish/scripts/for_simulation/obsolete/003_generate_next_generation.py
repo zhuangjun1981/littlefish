@@ -10,9 +10,9 @@ import littlefish.core.utilities as util
 import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
-data_folder = r"F:\little_fish_simulation_logs"
+data_folder = r"C:\little_fish_simulation_logs"
 
-gen_num = 0
+gen_num = 98
 hard_thr_ratio = 0.5
 soft_thr_ratio = 1.0
 reproducing_rate = 0.002  # 0.002
@@ -77,14 +77,14 @@ for mother_fish_ind, mother_fish_fn in enumerate(all_mother_fish_lst):
     print('\n=========================================================================')
     print('processing mother fish: {}. {} / {} '.format(mother_fish_fn, mother_fish_ind + 1, len(all_mother_fish_lst)))
 
-    mother_fish_f = h5py.File(os.path.join(curr_gen_folder, mother_fish_fn), "a")
+    mother_fish_f = h5py.File(os.path.join(curr_gen_folder, mother_fish_fn))
     mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
     mother_sim_ns = [sim for sim in mother_fish_f.keys() if sim[0:11] == 'simulation_']
     mother_life_spans = []
 
     for mother_sim_n in mother_sim_ns:
         curr_sim_log_grp = mother_fish_f[mother_sim_n]['simulation_log']
-        mother_life_spans.append(curr_sim_log_grp['last_time_point'][()])
+        mother_life_spans.append(curr_sim_log_grp['last_time_point'].value)
 
     default_life_span = int(mother_fish.get_max_health() / mother_fish.get_health_decay_rate())
     offspring_num = evo.get_offspring_num(mother_life_spans=mother_life_spans,
@@ -107,7 +107,7 @@ for mother_fish_ind, mother_fish_fn in enumerate(all_mother_fish_lst):
         # child_fish.set_food_rate(food_rate=20.)
         # =======================================================================================
 
-        child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'), "a")
+        child_fish_f = h5py.File(os.path.join(next_gen_folder, child_fish.name + '.hdf5'))
         child_fish_grp = child_fish_f.create_group('fish')
         child_fish.to_h5_group(child_fish_grp)
         child_fish_f['generation'] = gen_num + 1

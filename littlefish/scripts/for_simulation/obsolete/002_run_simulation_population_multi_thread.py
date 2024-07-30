@@ -1,15 +1,16 @@
 import os
 import sys
 import time
+sys.path.extend([r"C:\Users\woodstocker\PycharmProjects\littlefish"])
 from multiprocessing import Pool
 import littlefish.core.utilities as util
 import littlefish.core.simulation as si
 
 SIMULATION_LENGTH = 50000
 SIMULATION_NUM = 3
-TERRAIN_SIZE = [128, 128]
-SEA_LEVEL = 0.5
-FOOD_NUM = 200
+TERRAIN_SIZE = [64, 64]
+SEA_PORTION = 0.5
+FOOD_NUM = 50
 HARD_THR = 5000
 
 
@@ -19,7 +20,7 @@ def simulation_fish_multiprocessing(simulation_params):
                          simulation_length=SIMULATION_LENGTH,
                          simulation_num=SIMULATION_NUM,
                          terrain_size=TERRAIN_SIZE,
-                         sea_level=SEA_LEVEL,
+                         sea_portion=SEA_PORTION,
                          food_num=FOOD_NUM,
                          hard_thr=HARD_THR,
                          fish_ind=fish_ind,
@@ -28,8 +29,8 @@ def simulation_fish_multiprocessing(simulation_params):
 
 if __name__ == '__main__':
 
-    data_folder = r"F:\little_fish_simulation_logs"
-    generation_num = 0
+    data_folder = r"C:\little_fish_simulation_logs"
+    generation_num = 98
     process_num = 8
 
     gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation_num, 6))

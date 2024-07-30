@@ -29,7 +29,7 @@ class BrainViewer(Ui_BrainViewerMainWindow):
         f_path = self.get_file_path()
 
         try:
-            ff = h5py.File(f_path, "r")
+            ff = h5py.File(f_path)
             brain = fi.Brain.from_h5_group(ff['fish/brain'])
             ax = pt.plot_brain(brain)
             fish_n = os.path.splitext(os.path.split(f_path)[1])[0]

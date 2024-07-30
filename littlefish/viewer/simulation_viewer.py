@@ -9,13 +9,14 @@ import numpy as np
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QFileDialog, QMainWindow, QApplication, QTableWidgetItem, QSizePolicy
 from littlefish.viewer.simulation_viewer_ui import Ui_SimulationViewer
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, \
+                                               NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-LAND_RGB = np.array([21, 174, 21], dtype=np.uint8)
-SEA_RGB = np.array([21, 174, 225], dtype=np.uint8)
-FISH_RGB = np.array([255, 255, 0], dtype=np.uint8)
-FOOD_RGB = np.array([153, 51, 0], dtype=np.uint8)
+LAND_RGB = np.array([46, 204, 113], dtype=np.uint8)
+SEA_RGB = np.array([52, 152, 219], dtype=np.uint8)
+FISH_RGB = np.array([241, 196, 15], dtype=np.uint8)
+FOOD_RGB = np.array([157, 32, 45], dtype=np.uint8)
 PLOT_STEP = 10
 
 
@@ -59,6 +60,7 @@ class MatplotlibCavas(FigureCanvas):
         fig = Figure(dpi=100)
         self.axes = fig.add_axes([0., 0., 1., 1.])
         self.axes.set_aspect('equal')
+        self.axes.set_frame_on(False)
         self.axes.set_axis_off()
         FigureCanvas.__init__(self, fig)
         self.setParent(parent)
@@ -86,6 +88,7 @@ class SimulationViewer(Ui_SimulationViewer):
         self.setupUi(dialog)
         self.MovieCanvas = MatplotlibCavas()
         self.MovieLayout.addWidget(self.MovieCanvas)
+        self.MovieToolbar = NavigationToolbar(self.MovieCanvas, self.ToolbarWidget, coordinates=True)
         self.PlayTimer = QTimer(self.MovieCanvas)
 
         self.ChooseFileButton.clicked.connect(self.get_file)
@@ -102,7 +105,7 @@ class SimulationViewer(Ui_SimulationViewer):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         f_path, _ = QFileDialog.getOpenFileName(caption="QFileDialog.getOpenFileName()",
-                                                directory="C:/little_fish_simulation_logs",
+                                                directory="C:/little_fish_simulation_logs_2",
                                                 filter="hdf Files (*.hdf5 *.h5);;")
         self.clear_loaded_file()
         self.PlotBrainButton.setEnabled(True)
@@ -116,7 +119,9 @@ class SimulationViewer(Ui_SimulationViewer):
         try:
             fish = fi.Fish.from_h5_group(self._file['fish'])
             fish_n = fish.name
-            ax = pt.plot_brain(fish.get_brain())
+            self._brain_figure = plt.figure(figsize=(10, 10))
+            ax = self._brain_figure.add_axes([0.05, 0.05, 0.9, 0.9])
+            ax = pt.plot_brain(fish.get_brain(), plot_axis=ax)
             ax.set_title(fish_n)
             plt.show()
         except Exception as e:
@@ -130,12 +135,16 @@ class SimulationViewer(Ui_SimulationViewer):
             self.FishTableWidget.setItem(3, 0, QTableWidgetItem('food_rate'))
             self.FishTableWidget.setItem(4, 0, QTableWidgetItem('health_decay_rate'))
             self.FishTableWidget.setItem(5, 0, QTableWidgetItem('land_penalty_rate'))
+            self.FishTableWidget.setItem(6, 0, QTableWidgetItem('current_generation'))
+            self.FishTableWidget.setItem(7, 0, QTableWidgetItem('total_generation'))
             self.FishTableWidget.setItem(0, 1, QTableWidgetItem(util.decode(self._file['fish/name'][()])))
             self.FishTableWidget.setItem(1, 1, QTableWidgetItem(util.decode(self._file['fish/mother_name'][()])))
             self.FishTableWidget.setItem(2, 1, QTableWidgetItem(str(self._file['fish/max_health'][()])))
             self.FishTableWidget.setItem(3, 1, QTableWidgetItem(str(self._file['fish/food_rate_per_pixel'][()])))
             self.FishTableWidget.setItem(4, 1, QTableWidgetItem(str(self._file['fish/health_decay_rate_per_tu'][()])))
             self.FishTableWidget.setItem(5, 1, QTableWidgetItem(str(self._file['fish/land_penalty_rate_per_pixel_tu'][()])))
+            self.FishTableWidget.setItem(6, 1, QTableWidgetItem(str(self._file['generations'][-1])))
+            self.FishTableWidget.setItem(7, 1, QTableWidgetItem(str(self._file['generations'].shape[0])))
         except Exception as e:
             print(e)
 
@@ -171,13 +180,13 @@ class SimulationViewer(Ui_SimulationViewer):
             terr_shape = sim_grp['simulation_log/terrain_map'].shape
             food_num = sim_grp['simulation_log/food_pos_history'].shape[1]
             terrain_map = sim_grp['simulation_log/terrain_map'][()]
-            sea_portion = 1. - (np.sum(terrain_map.flat) / float(terrain_map.shape[0] * terrain_map.shape[1]))
+            sea_potion = 1. - (np.sum(terrain_map.flat) / float(terrain_map.shape[0] * terrain_map.shape[1]))
             self.TerrainTableWidget.setItem(0, 0, QTableWidgetItem('terrain_shape'))
             self.TerrainTableWidget.setItem(1, 0, QTableWidgetItem('food_number'))
-            self.TerrainTableWidget.setItem(2, 0, QTableWidgetItem('sea_portion'))
+            self.TerrainTableWidget.setItem(2, 0, QTableWidgetItem('sea_potion'))
             self.TerrainTableWidget.setItem(0, 1, QTableWidgetItem(str(terr_shape)))
             self.TerrainTableWidget.setItem(1, 1, QTableWidgetItem(str(food_num)))
-            self.TerrainTableWidget.setItem(2, 1, QTableWidgetItem(str(sea_portion)))
+            self.TerrainTableWidget.setItem(2, 1, QTableWidgetItem(str(sea_potion)))
         except Exception as e:
             print (e)
 
@@ -209,8 +218,8 @@ class SimulationViewer(Ui_SimulationViewer):
             curr_health = self._health_history[self._curr_t_point]
             curr_map_rgb = add_fish_rgb(terrain_map_rgb=self._terrain_map_rgb, body_position=curr_fish_pos)
             add_foods_rgb(show_map_rgb=curr_map_rgb, food_poss=curr_food_poss)
-            self.TimeTextBrowser.setText('{:7d} / {:7d}'.format(self._curr_t_point, self._total_t_point))
-            self.HealthTextBrowser.setText('{:5.2f} / {:5.2f}'.format(curr_health, self._max_health))
+            self.TimeTextBrowser.setText('Time: {:7d}'.format(self._curr_t_point))
+            self.HealthTextBrowser.setText('HP: {:5.2f}'.format(curr_health))
             self.MovieCanvas.plot_rgb(curr_map_rgb)
         except Exception as e:
             print (e)
@@ -235,8 +244,14 @@ class SimulationViewer(Ui_SimulationViewer):
 
     def _slide_to_t(self):
         self._curr_t_point = int(self.PlaySlider.value())
+        if not self._is_playing:
+            self._show_curr_map()
 
     def clear_loaded_file(self):
+
+        self._is_playing = False
+        self.PlayTimer.stop()
+        self.PlayPauseButton.setText('Play')
 
         self._file = None
         self._curr_t_point = None
@@ -244,9 +259,13 @@ class SimulationViewer(Ui_SimulationViewer):
         self._fish_pos_history = None
         self._health_history = None
         self._food_pos_history = None
-        self._is_playing = False
         self._max_health = None
         self._total_t_point = None
+
+        if hasattr(self, '_brain_figure'):
+            if self._brain_figure is not None:
+                plt.close(self._brain_figure)
+        self._brain_figure = None
 
         self.MovieCanvas.clear()
 

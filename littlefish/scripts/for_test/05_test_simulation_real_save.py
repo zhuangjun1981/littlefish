@@ -24,7 +24,7 @@ np.random.seed(np_random_seed)
 
 fish = fi.generate_standard_fish()
 save_name = 'fish_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S') + '.hdf5'
-save_f = h5py.File(save_name, "a")
+save_f = h5py.File(save_name)
 fish_grp = save_f.create_group('fish_' + fish.name)
 fish.to_h5_group(fish_grp)
 

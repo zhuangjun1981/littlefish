@@ -16,15 +16,20 @@ class TerrainGenerator(object):
     terrain object, a square matrix containing altitude
     """
 
-    def __init__(self, size=(128,128), sea_level=0.6):
+    def __init__(self, size=(128,128), sea_portion=0.6):
         """
 
         :param size: size of world_map (height, width)
-        :param sea_level: a simple threshold
+        :param sea_portion: float, (0, 1), the portion of sea in the generated maps
         """
 
         self._size = size
-        self._sea_level = sea_level
+
+        if sea_portion <= 0 or sea_portion >=1:
+            raise ValueError('TerrainGenerator: sea_potion should be larger than 0. and smaller than'
+                             '1.')
+
+        self._sea_portion = sea_portion
 
     def get_size(self):
         """
@@ -34,13 +39,13 @@ class TerrainGenerator(object):
 
         return self._size
 
-    def get_sea_level(self):
+    def get_sea_portion(self):
         """
 
         :return: sea level
         """
 
-        return self._sea_level
+        return self._sea_portion
 
     def generate_float_map(self, sigma=0.):
         """
@@ -56,18 +61,32 @@ class TerrainGenerator(object):
 
         return float_map
 
-    def generate_binary_map(self, sigma=0.5, is_plot=False):
+    def generate_binary_map(self, sigma=0.5, step_size=0.001, is_plot=False):
         """
+        generate binary map, 1: land, 0: sea, with the proportion of sea is roughly same as
+        self._sea_portion
 
-        :param sigma: filter sigma to filter the world_map
+        :param sigma: positive float, filter sigma to filter the world_map
+        :param step_size: positive float, (0, 1), step size to try different sea level to reach
+                          self._sea_portion
         :param is_plot: if True, pop a plot of binary world_map
         :return: a binary world_map with defined size, 0 means under water. 1 means above water
         """
 
         float_map = self.generate_float_map(sigma=sigma)
         binary_map = np.zeros(float_map.shape, dtype = np.bool)
-        binary_map[float_map > self._sea_level] = 1
-        # print(binary_map._dtype)
+
+        total_area = float(self._size[0] * self._size[1])
+
+        sea_level = step_size
+        binary_map[float_map >= sea_level] = 1
+        curr_sea_portion = 1 - (np.sum(binary_map[:]) / total_area)
+
+        while curr_sea_portion < self._sea_portion:
+            sea_level += step_size
+            binary_map[:] = 0
+            binary_map[float_map >= sea_level] = 1
+            curr_sea_portion = 1 - (np.sum(binary_map[:]) / total_area)
 
         if is_plot:
             f = plt.figure(figsize=(20, 8))
@@ -75,6 +94,7 @@ class TerrainGenerator(object):
             ax1.imshow(float_map, vmin=0, vmax=1, cmap='gray', interpolation='nearest')
             ax2 = f.add_subplot(122)
             ax2.imshow(binary_map, vmin=0, vmax=1, cmap='gray', interpolation='nearest')
+            ax2.set_title('sea level: {}; sea portion: {}'.format(sea_level, np.sum(binary_map.flat) / total_area))
             plt.show()
 
         return binary_map.astype(np.uint8)
@@ -178,6 +198,9 @@ class BinaryTerrain(object):
     def plot_terrain(self, plot_axis=None):
         # todo: finish this method
         pass
+
+    def get_sea_portion(self):
+        return float(np.sum(self._terrain_map.flat)) / float(len(self._terrain_map.flat))
 
 
 if __name__ == '__main__':

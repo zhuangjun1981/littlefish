@@ -13,6 +13,11 @@ class TestTerrain(unittest.TestCase):
     def setup(self):
         pass
 
+    def test_terrain_generator(self):
+        tr_gen = tr.TerrainGenerator(size=(64, 64), sea_portion=0.5)
+        bm = tr_gen.generate_binary_map(sigma=3, step_size=0.01, is_plot=False)
+        assert ((256. - np.sum(bm[:])) / 256. < 0.5)
+
     def test_update_food_map(self):
         food_map = np.zeros((5, 5), dtype=np.uint8)
         terrain_map = np.zeros((5, 5), dtype=np.uint8)
