@@ -36,7 +36,7 @@ def simulate_one_fish(fish_path, simulation_length, simulation_num, terrain_size
 
     tg = tr.TerrainGenerator(size=terrain_size, sea_level=sea_level)
 
-    curr_fish_f = h5py.File(fish_path)
+    curr_fish_f = h5py.File(fish_path, "a")
     curr_fish = fi.Fish.from_h5_group(curr_fish_f['fish'])
 
     for sim_ind in range(simulation_num):
@@ -449,7 +449,7 @@ class Simulation(object):
             save_name = 'simulation_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S') + '.hdf5'
             if not os.path.isdir(log_folder):
                 os.makedirs(log_folder)
-            log_f = h5py.File(os.path.join(log_folder, save_name))
+            log_f = h5py.File(os.path.join(log_folder, save_name), "a")
             log_f['terrain_map'] = self._terrain._terrain_map
             log_f['message'] = self._simulation_histories['message']
 

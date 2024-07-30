@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-sys.path.extend([r"C:\Users\woodstocker\PycharmProjects\littlefish"])
 from multiprocessing import Pool
 import littlefish.core.utilities as util
 import littlefish.core.simulation as si
@@ -29,8 +28,8 @@ def simulation_fish_multiprocessing(simulation_params):
 
 if __name__ == '__main__':
 
-    data_folder = r"C:\little_fish_simulation_logs"
-    generation_num = 91
+    data_folder = r"F:\little_fish_simulation_logs"
+    generation_num = 0
     process_num = 8
 
     gen_folder = os.path.join(data_folder, 'generation_' + util.int2str(generation_num, 6))

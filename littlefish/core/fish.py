@@ -278,8 +278,8 @@ class Neuron(object):
         if neuron_type != 'neuron':
             raise ValueError('Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".')
 
-        neuron = Neuron(baseline_rate=h5_group['baseline_rate'].value,
-                        refractory_period=h5_group['refractory_period'].value)
+        neuron = Neuron(baseline_rate=h5_group['baseline_rate'][()],
+                        refractory_period=h5_group['refractory_period'][()])
         return neuron
 
 
@@ -501,12 +501,12 @@ class Eye(Neuron):
         if util.decode(h5_group.attrs['neuron_type']) != 'eye':
             raise ValueError('Eye: loading from h5 file failed. "neuron_type" attribute should be "eye".')
 
-        direction = util.decode(h5_group['direction'].value)
-        input_type = util.decode(h5_group['input_type'].value)
+        direction = util.decode(h5_group['direction'][()])
+        input_type = util.decode(h5_group['input_type'][()])
 
-        eye = Eye(direction=direction, input_filter=h5_group['input_filter'].value, gain=h5_group['gain'].value,
-                  input_type=input_type, baseline_rate=h5_group['baseline_rate'].value,
-                  refractory_period=h5_group['refractory_period'].value)
+        eye = Eye(direction=direction, input_filter=h5_group['input_filter'][()], gain=h5_group['gain'][()],
+                  input_type=input_type, baseline_rate=h5_group['baseline_rate'][()],
+                  refractory_period=h5_group['refractory_period'][()])
         return eye
 
 
@@ -589,9 +589,9 @@ class Muscle(Neuron):
         if util.decode(h5_group.attrs['neuron_type']) != 'muscle':
             raise ValueError('Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".')
 
-        direction = util.decode(h5_group['direction'].value)
-        muscle = Muscle(direction=direction, baseline_rate=h5_group['baseline_rate'].value,
-                        refractory_period=h5_group['refractory_period'].value)
+        direction = util.decode(h5_group['direction'][()])
+        muscle = Muscle(direction=direction, baseline_rate=h5_group['baseline_rate'][()],
+                        refractory_period=h5_group['refractory_period'][()])
         return muscle
 
 
@@ -1219,10 +1219,10 @@ class Brain(object):
             curr_conn_group = connections_group[connections_name]
             curr_inds = curr_conn_group.attrs['rows']
             curr_cols = curr_conn_group.attrs['cols']
-            curr_amplitudes = curr_conn_group['amplitudes'].value
-            curr_decay_times = curr_conn_group['decay_times_tu'].value
-            curr_rise_times = curr_conn_group['rise_times_tu'].value
-            curr_latencies = curr_conn_group['latencies_tu'].value
+            curr_amplitudes = curr_conn_group['amplitudes'][()]
+            curr_decay_times = curr_conn_group['decay_times_tu'][()]
+            curr_rise_times = curr_conn_group['rise_times_tu'][()]
+            curr_latencies = curr_conn_group['latencies_tu'][()]
 
             curr_conn_df = pd.DataFrame(columns=curr_cols, index=curr_inds)
 
@@ -1499,12 +1499,12 @@ class Fish(object):
 
         brain_grp = h5_grp['brain']
         curr_brain = Brain.from_h5_group(brain_grp)
-        curr_name = util.decode(h5_grp['name'].value)
-        curr_mother_name = util.decode(h5_grp['mother_name'].value)
-        curr_max_health = h5_grp['max_health'].value
-        curr_health_decay_rate = h5_grp['health_decay_rate_per_tu'].value
-        curr_land_penalty_rate = h5_grp['land_penalty_rate_per_pixel_tu'].value
-        curr_food_rate = h5_grp['food_rate_per_pixel'].value
+        curr_name = util.decode(h5_grp['name'][()])
+        curr_mother_name = util.decode(h5_grp['mother_name'][()])
+        curr_max_health = h5_grp['max_health'][()]
+        curr_health_decay_rate = h5_grp['health_decay_rate_per_tu'][()]
+        curr_land_penalty_rate = h5_grp['land_penalty_rate_per_pixel_tu'][()]
+        curr_food_rate = h5_grp['food_rate_per_pixel'][()]
 
         curr_fish = Fish(name=curr_name, mother_name=curr_mother_name, brain=curr_brain, max_health=curr_max_health,
                          health_decay_rate=curr_health_decay_rate, land_penalty_rate=curr_land_penalty_rate,

@@ -22,7 +22,7 @@ simulation = si.Simulation(terrain=terrain, fish_list=[fish],
                            simulation_length=simulation_length, food_num=2)
 simulation.initiate_simulation()
 simulation.run(verbose=1)
-simulation.save_log(r'D:\little_fish')
+simulation.save_log(r'F:\little_fish')
 # simulation.save_log(r'C:\little_fish_test')
 
-print 'for debug ...'
+print('for debug ...')

@@ -42,8 +42,8 @@ class TestSimulation(unittest.TestCase):
         simulation.save_log(curr_folder)
         sim_his_fn = [f for f in os.listdir(curr_folder) if f[0: 11] == 'simulation_' and f[-5:] == '.hdf5'][0]
         sim_his_f = h5py.File(sim_his_fn, 'r')
-        assert (np.array_equal(sim_his_f['terrain_map'].value, terrain_map))
-        assert (np.array_equal(sim_his_f['food_pos_history'].value, np.array([[[3, 3], [1, 4]],
+        assert (np.array_equal(sim_his_f['terrain_map'][()], terrain_map))
+        assert (np.array_equal(sim_his_f['food_pos_history'][()], np.array([[[3, 3], [1, 4]],
                                                                               [[1, 4], [3, 3]],
                                                                               [[1, 4], [3, 3]],
                                                                               [[1, 4], [3, 3]],

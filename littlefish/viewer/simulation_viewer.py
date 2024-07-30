@@ -108,7 +108,7 @@ class SimulationViewer(Ui_SimulationViewer):
         self.PlotBrainButton.setEnabled(True)
         self.FilePathBrowser.setText(f_path)
         self._file = h5py.File(f_path, 'r')
-        self._max_health = self._file['fish/max_health'].value
+        self._max_health = self._file['fish/max_health'][()]
         self._show_fish_params()
         self._set_simulation_list()
 
@@ -130,12 +130,12 @@ class SimulationViewer(Ui_SimulationViewer):
             self.FishTableWidget.setItem(3, 0, QTableWidgetItem('food_rate'))
             self.FishTableWidget.setItem(4, 0, QTableWidgetItem('health_decay_rate'))
             self.FishTableWidget.setItem(5, 0, QTableWidgetItem('land_penalty_rate'))
-            self.FishTableWidget.setItem(0, 1, QTableWidgetItem(util.decode(self._file['fish/name'].value)))
-            self.FishTableWidget.setItem(1, 1, QTableWidgetItem(util.decode(self._file['fish/mother_name'].value)))
-            self.FishTableWidget.setItem(2, 1, QTableWidgetItem(str(self._file['fish/max_health'].value)))
-            self.FishTableWidget.setItem(3, 1, QTableWidgetItem(str(self._file['fish/food_rate_per_pixel'].value)))
-            self.FishTableWidget.setItem(4, 1, QTableWidgetItem(str(self._file['fish/health_decay_rate_per_tu'].value)))
-            self.FishTableWidget.setItem(5, 1, QTableWidgetItem(str(self._file['fish/land_penalty_rate_per_pixel_tu'].value)))
+            self.FishTableWidget.setItem(0, 1, QTableWidgetItem(util.decode(self._file['fish/name'][()])))
+            self.FishTableWidget.setItem(1, 1, QTableWidgetItem(util.decode(self._file['fish/mother_name'][()])))
+            self.FishTableWidget.setItem(2, 1, QTableWidgetItem(str(self._file['fish/max_health'][()])))
+            self.FishTableWidget.setItem(3, 1, QTableWidgetItem(str(self._file['fish/food_rate_per_pixel'][()])))
+            self.FishTableWidget.setItem(4, 1, QTableWidgetItem(str(self._file['fish/health_decay_rate_per_tu'][()])))
+            self.FishTableWidget.setItem(5, 1, QTableWidgetItem(str(self._file['fish/land_penalty_rate_per_pixel_tu'][()])))
         except Exception as e:
             print(e)
 
@@ -148,13 +148,13 @@ class SimulationViewer(Ui_SimulationViewer):
 
     def _show_simulation_results(self, sim_grp):
         try:
-            last_t = sim_grp['simulation_log/last_time_point'].value
+            last_t = sim_grp['simulation_log/last_time_point'][()]
             try:
-               total_move = sim_grp['simulation_log/total_moves'].value
+               total_move = sim_grp['simulation_log/total_moves'][()]
             except KeyError:
                 total_move = None
-            max_length = sim_grp['simulation_length'].value
-            ending_time = util.decode(sim_grp['ending_time'].value)
+            max_length = sim_grp['simulation_length'][()]
+            ending_time = util.decode(sim_grp['ending_time'][()])
             self.SimulationTableWidget.setItem(0, 0, QTableWidgetItem('last_time_point'))
             self.SimulationTableWidget.setItem(1, 0, QTableWidgetItem('total_moves'))
             self.SimulationTableWidget.setItem(2, 0, QTableWidgetItem('max_length'))
@@ -170,7 +170,7 @@ class SimulationViewer(Ui_SimulationViewer):
         try:
             terr_shape = sim_grp['simulation_log/terrain_map'].shape
             food_num = sim_grp['simulation_log/food_pos_history'].shape[1]
-            terrain_map = sim_grp['simulation_log/terrain_map'].value
+            terrain_map = sim_grp['simulation_log/terrain_map'][()]
             sea_potion = 1. - (np.sum(terrain_map.flat) / float(terrain_map.shape[0] * terrain_map.shape[1]))
             self.TerrainTableWidget.setItem(0, 0, QTableWidgetItem('terrain_shape'))
             self.TerrainTableWidget.setItem(1, 0, QTableWidgetItem('food_number'))
@@ -190,11 +190,11 @@ class SimulationViewer(Ui_SimulationViewer):
             sim_grp = self._file[simulation_key]
             self._show_terrain_params(sim_grp)
             self._show_simulation_results(sim_grp)
-            self._terrain_map_rgb = get_terrain_map_rgb(sim_grp['simulation_log/terrain_map'].value)
-            self._health_history = sim_grp['simulation_log/health'].value
-            self._fish_pos_history =  sim_grp['simulation_log/position_history'].value
-            self._food_pos_history = sim_grp['simulation_log/food_pos_history'].value
-            self._total_t_point = sim_grp['simulation_log/last_time_point'].value - 1
+            self._terrain_map_rgb = get_terrain_map_rgb(sim_grp['simulation_log/terrain_map'][()])
+            self._health_history = sim_grp['simulation_log/health'][()]
+            self._fish_pos_history =  sim_grp['simulation_log/position_history'][()]
+            self._food_pos_history = sim_grp['simulation_log/food_pos_history'][()]
+            self._total_t_point = sim_grp['simulation_log/last_time_point'][()] - 1
             self.PlayPauseButton.setEnabled(True)
             self.PlaySlider.setEnabled(True)
             self.TimeTextBrowser.setEnabled(True)
