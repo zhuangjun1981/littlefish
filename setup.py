@@ -56,7 +56,7 @@ def find_meta(f_path):
     return version, license, author, author_email, url, downloadUrl
 
 
-version, license, author, author_email, url, download = find_meta(os.path.join(here, '__init__.py'))
+version, license, author, author_email, url, download = find_meta(os.path.join(here, 'littlefish', '__init__.py'))
 
 
 class PyTest(TestCommand):

@@ -5,7 +5,7 @@ import littlefish.core.evolution as evo
 def run():
 
     start_generation_ind = 0
-    end_generation_ind = 5
+    end_generation_ind = 20
 
     random_seed = random.randrange(2 ** 32 - 1)
     random.seed(random_seed)
@@ -13,7 +13,7 @@ def run():
 
     data_folder = r"F:\little_fish_simulation_logs"
     population_size = 1000
-    process_num = 6
+    process_num = 10
     turnover_rate = 0.6
     simulation_length = 50000
     terrain_size = (64, 64)
