@@ -454,7 +454,7 @@ class Simulation(object):
             save_name = 'simulation_' + datetime.datetime.now().strftime('%y%m%d_%H_%M_%S') + '.hdf5'
             if not os.path.isdir(log_folder):
                 os.makedirs(log_folder)
-            log_f = h5py.File(os.path.join(log_folder, save_name))
+            log_f = h5py.File(os.path.join(log_folder, save_name), "a")
             log_f['terrain_map'] = self._terrain._terrain_map
             log_f['message'] = self._simulation_histories['message']
 

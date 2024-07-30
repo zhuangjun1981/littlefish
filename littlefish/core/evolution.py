@@ -528,7 +528,7 @@ class PopulationEvolution(object):
         life_spans = []
         generation_nums = []
         for fish_n in fish_ns:
-            fish_f = h5py.File(os.path.join(curr_gen_dir, fish_n + '.hdf5'))
+            fish_f = h5py.File(os.path.join(curr_gen_dir, fish_n + '.hdf5'), "a")
 
             generation_nums.append(fish_f['generations'].shape[0])
 
@@ -670,7 +670,7 @@ class PopulationEvolution(object):
                 curr_fish = fi.generate_standard_fish()
                 rand_fish = mutate_fish(curr_fish, brain_mutation=brain_mutation, neuron_mutation_rate=1.,
                                         connection_mutation_rate=1., verbose=False)
-                rand_fish_f = h5py.File(os.path.join(start_generation_folder, rand_fish.name + '.hdf5'))
+                rand_fish_f = h5py.File(os.path.join(start_generation_folder, rand_fish.name + '.hdf5'), "a")
                 rand_fish_grp = rand_fish_f.create_group('fish')
                 rand_fish.to_h5_group(rand_fish_grp)
                 rand_fish_f['generations'] = [0]
