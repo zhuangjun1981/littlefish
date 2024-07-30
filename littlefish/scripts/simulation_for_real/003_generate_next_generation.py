@@ -10,9 +10,9 @@ import littlefish.core.utilities as util
 import littlefish.core.evolution as evo
 import littlefish.core.fish as fi
 
-data_folder = r"C:\little_fish_simulation_logs"
+data_folder = r"F:\little_fish_simulation_logs"
 
-gen_num = 90
+gen_num = 0
 hard_thr_ratio = 0.5
 soft_thr_ratio = 1.0
 reproducing_rate = 0.002  # 0.002
@@ -77,7 +77,7 @@ for mother_fish_ind, mother_fish_fn in enumerate(all_mother_fish_lst):
     print('\n=========================================================================')
     print('processing mother fish: {}. {} / {} '.format(mother_fish_fn, mother_fish_ind + 1, len(all_mother_fish_lst)))
 
-    mother_fish_f = h5py.File(os.path.join(curr_gen_folder, mother_fish_fn), "r")
+    mother_fish_f = h5py.File(os.path.join(curr_gen_folder, mother_fish_fn), "a")
     mother_fish = fi.Fish.from_h5_group(mother_fish_f['fish'])
     mother_sim_ns = [sim for sim in mother_fish_f.keys() if sim[0:11] == 'simulation_']
     mother_life_spans = []
