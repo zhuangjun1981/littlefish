@@ -3,6 +3,8 @@ from setuptools.command.test import test as TestCommand
 import io
 import os
 import sys
+import codecs
+import re
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -15,7 +17,9 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
+
 long_description = read('README.md')
+
 
 def prepend_find_packages(*roots):
     '''
@@ -28,6 +32,18 @@ def prepend_find_packages(*roots):
         packages += [root + '.' + s for s in find_packages(root)]
 
     return packages
+
+
+# find version
+def find_version(f_path):
+    version_file = codecs.open(f_path, 'r').read()
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+version = find_version(os.path.join(here, 'little', '__init__.py'))
+
 
 class PyTest(TestCommand):
     def finalize_options(self):
@@ -45,9 +61,10 @@ class PyTest(TestCommand):
             errcode = pytest.main(self.test_args)
         sys.exit(errcode)
 
+
 setup(
     name='littlefish',
-    version = '0.2.0',
+    version = version,
     url='https://github.com/zhuangjun1981/littlefish',
     author='Jun Zhuang',
     tests_require=['pytest'],
