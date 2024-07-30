@@ -356,7 +356,7 @@ class Eye(Neuron):
                                            0.135335283, 0.106877926, 0.059105747, 0.014369596, 0.027172461, 0.04232922,
                                            0.049787068, 0.04232922, 0.027172461, 0.014369596])
         else:
-            self._input_filter = input_filter.astype(np.float)
+            self._input_filter = input_filter.astype(np.float32)
 
         if input_type in ['terrain', 'food', 'fish']:
             self._input_type = input_type
@@ -1142,7 +1142,7 @@ class Brain(object):
         cols = self.get_neuron_inds_in_layer(pre_layer)
 
         latencies = np.empty((len(rows), len(cols)), dtype=np.uint)
-        amplitudes = np.empty((len(rows), len(cols)), dtype=np.float)
+        amplitudes = np.empty((len(rows), len(cols)), dtype=np.float32)
         rise_times = np.empty((len(rows), len(cols)), dtype=np.uint)
         decay_times = np.empty((len(rows), len(cols)), dtype=np.uint)
 

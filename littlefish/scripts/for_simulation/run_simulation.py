@@ -11,7 +11,7 @@ def run():
     random.seed(random_seed)
     np.random.seed(random_seed)
 
-    data_folder = r"C:\little_fish_simulation_logs_2"
+    data_folder = r"F:\little_fish_simulation_logs"
     population_size = 1000
     process_num = 6
     turnover_rate = 0.6
