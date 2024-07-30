@@ -42,7 +42,7 @@ def find_version(f_path):
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
-version = find_version(os.path.join(here, 'little', '__init__.py'))
+version = find_version(os.path.join(here, 'littlefish', '__init__.py'))
 
 
 class PyTest(TestCommand):
