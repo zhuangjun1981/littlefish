@@ -69,7 +69,7 @@ def discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-10., 20.), bin
         raise(ValueError, 'ts_reference should be a 1-d array.')
 
     t_axis = np.arange(t_range[0], t_range[1], bin_width)
-    ccg = np.zeros(t_axis.shape, dtype=np.int)
+    ccg = np.zeros(t_axis.shape, dtype=np.int32)
     for trigger in ts_trigger:
         # get the chunk of ts_reference for this particular trigger
         ref_ts_chunk = ts_reference[np.logical_and(ts_reference >= trigger + t_axis[0],
@@ -385,7 +385,7 @@ def distrube_number(possibilities, population_size):
     pos_cum = np.cumsum(pos_nor)
     pos_buckets = list(zip(pos_cum[:-1], pos_cum[1:]))
 
-    buckets = np.zeros(len(possibilities), dtype=np.int)
+    buckets = np.zeros(len(possibilities), dtype=np.int32)
 
     for i in range(population_size):
         curr_v = random.random()

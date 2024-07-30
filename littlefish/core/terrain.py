@@ -114,7 +114,7 @@ class BinaryTerrain(object):
         if util.check_binary_2d_array(input_array):
             self._terrain_map = input_array
         else:
-            raise ValueError('BinaryTerrain: input array should be binary 2d numpy array, with _dtype np.int.')
+            raise ValueError('BinaryTerrain: input array should be binary 2d numpy array, with _dtype integer.')
 
     def get_terrain_shape(self):
         return self._terrain_map.shape

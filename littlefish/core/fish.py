@@ -404,8 +404,8 @@ class Eye(Neuron):
                               [row, col] relative to the position of the body center pixel
         """
 
-        array1 = np.array([0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3], dtype=np.int64)
-        array2 = np.array([0, -1, 0, 1, -2, -1, 0, 1, 2, -3, -2, -1, 0, 1, 2, 3], dtype=np.int64)
+        array1 = np.array([0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3], dtype=np.int32)
+        array2 = np.array([0, -1, 0, 1, -2, -1, 0, 1, 2, -3, -2, -1, 0, 1, 2, 3], dtype=np.int32)
 
         if self._direction == 'east':
             rf_pos = np.array([array2, array1]).transpose()
@@ -431,7 +431,7 @@ class Eye(Neuron):
         input_map range will be returned as border_value
         """
 
-        body_pos = np.array(body_position, dtype=np.int64)
+        body_pos = np.array(body_position, dtype=np.int32)
         input_pixels = np.zeros(16, dtype=np.float32)
 
         for ind, curr_pos in enumerate(self._rf_positions):
