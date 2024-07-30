@@ -34,15 +34,29 @@ def prepend_find_packages(*roots):
     return packages
 
 
-# find version
-def find_version(f_path):
-    version_file = codecs.open(f_path, 'r').read()
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
-version = find_version(os.path.join(here, 'littlefish', '__init__.py'))
+# find meta data
+def extract_meta(text, key_word):
+    match = re.search(rf"__{key_word}__\s*=\s*'([^']+)'", text)
+    if match:
+        return match.group(1)
+    raise RuntimeError(f"Unable to find {key_word} string.")
+
+
+def find_meta(f_path):
+    with open(f_path, "r") as f:
+        init_file = f.read()
+
+    version = extract_meta(init_file, "version")
+    license = extract_meta(init_file, "license")
+    author = extract_meta(init_file, "author")
+    author_email = extract_meta(init_file, "author_email")
+    url = extract_meta(init_file, "url")
+    downloadUrl = extract_meta(init_file, "downloadUrl")
+
+    return version, license, author, author_email, url, downloadUrl
+
+
+version, license, author, author_email, url, download = find_meta(os.path.join(here, '__init__.py'))
 
 
 class PyTest(TestCommand):
@@ -65,12 +79,12 @@ class PyTest(TestCommand):
 setup(
     name='littlefish',
     version = version,
-    url='https://github.com/zhuangjun1981/littlefish',
-    author='Jun Zhuang',
+    url=url,
+    author=author,
     tests_require=['pytest'],
     install_requires=['numpy','scipy', 'matplotlib', 'pandas', 'h5py', 'PyQt5'],
     cmdclass={'test': PyTest},
-    author_email='wood_stocker@hotmail.com',
+    author_email=author_email,
     description='little fish brain network simulation',
     long_description=long_description,
     packages=prepend_find_packages('littlefish'),
