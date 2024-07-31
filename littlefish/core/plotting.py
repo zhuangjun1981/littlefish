@@ -85,9 +85,9 @@ def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1),
                                       input_range=bl_range, output_range=(0., 1.))
         bl_c = util.value_2_rgb(value=bl, cmap=cmap)
         if neuron['neuron'].get_neuron_type() == 'neuron':
-            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#666666', **neuron_kws)
+            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#444444', **neuron_kws)
         elif neuron['neuron'].get_neuron_type() == 'muscle':
-            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#666666', **neuron_kws)
+            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#444444', **neuron_kws)
             plot_axis.text(neuron['plot_x'], neuron['plot_y'],
                            util.short(neuron['neuron'].get_direction()), **neuron_label_kws)
         elif neuron['neuron'].get_neuron_type() == 'eye':
