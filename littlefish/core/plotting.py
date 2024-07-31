@@ -40,7 +40,7 @@ def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1),
         f = plt.figure(figsize=(10, 8))
         plot_axis = f.add_axes([0.05, 0.05, 0.9, 0.9])
 
-    plot_axis.get_figure().set_facecolor('#839192')
+    plot_axis.get_figure().set_facecolor('#808080')
 
     layer_num = input_brain.layer_num
     layer_x_pos = np.linspace(0.1, 0.9, layer_num, endpoint=True)
@@ -85,16 +85,16 @@ def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1),
                                       input_range=bl_range, output_range=(0., 1.))
         bl_c = util.value_2_rgb(value=bl, cmap=cmap)
         if neuron['neuron'].get_neuron_type() == 'neuron':
-            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#222222', **neuron_kws)
+            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#666666', **neuron_kws)
         elif neuron['neuron'].get_neuron_type() == 'muscle':
-            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#222222', **neuron_kws)
+            plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#666666', **neuron_kws)
             plot_axis.text(neuron['plot_x'], neuron['plot_y'],
                            util.short(neuron['neuron'].get_direction()), **neuron_label_kws)
         elif neuron['neuron'].get_neuron_type() == 'eye':
             if neuron['neuron'].get_input_type() == 'terrain':
-                plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#006622', **neuron_kws)
+                plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#065535', **neuron_kws)
             elif neuron['neuron'].get_input_type() == 'food':
-                plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#660000', **neuron_kws)
+                plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#800000', **neuron_kws)
             plot_axis.text(neuron['plot_x'], neuron['plot_y'],
                            util.short(neuron['neuron'].get_direction()), **neuron_label_kws)
 
