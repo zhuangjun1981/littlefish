@@ -180,13 +180,13 @@ class SimulationViewer(Ui_SimulationViewer):
             terr_shape = sim_grp['simulation_log/terrain_map'].shape
             food_num = sim_grp['simulation_log/food_pos_history'].shape[1]
             terrain_map = sim_grp['simulation_log/terrain_map'][()]
-            sea_potion = 1. - (np.sum(terrain_map.flat) / float(terrain_map.shape[0] * terrain_map.shape[1]))
+            sea_portion = 1. - (np.sum(terrain_map.flat) / float(terrain_map.shape[0] * terrain_map.shape[1]))
             self.TerrainTableWidget.setItem(0, 0, QTableWidgetItem('terrain_shape'))
             self.TerrainTableWidget.setItem(1, 0, QTableWidgetItem('food_number'))
-            self.TerrainTableWidget.setItem(2, 0, QTableWidgetItem('sea_potion'))
+            self.TerrainTableWidget.setItem(2, 0, QTableWidgetItem('sea_portion'))
             self.TerrainTableWidget.setItem(0, 1, QTableWidgetItem(str(terr_shape)))
             self.TerrainTableWidget.setItem(1, 1, QTableWidgetItem(str(food_num)))
-            self.TerrainTableWidget.setItem(2, 1, QTableWidgetItem(str(sea_potion)))
+            self.TerrainTableWidget.setItem(2, 1, QTableWidgetItem(str(sea_portion)))
         except Exception as e:
             print (e)
 

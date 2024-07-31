@@ -26,7 +26,7 @@ class TerrainGenerator(object):
         self._size = size
 
         if sea_portion <= 0 or sea_portion >=1:
-            raise ValueError('TerrainGenerator: sea_potion should be larger than 0. and smaller than'
+            raise ValueError('TerrainGenerator: sea_portion should be larger than 0. and smaller than'
                              '1.')
 
         self._sea_portion = sea_portion
