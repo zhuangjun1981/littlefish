@@ -4,8 +4,8 @@ import littlefish.core.evolution as evo
 
 def run():
 
-    start_generation_ind = 12
-    end_generation_ind = 50
+    start_generation_ind = 50
+    end_generation_ind = 100
 
     random_seed = random.randrange(2 ** 32 - 1)
     random.seed(random_seed)

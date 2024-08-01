@@ -742,7 +742,7 @@ class Connection(object):
         input waveform of postsynaptic neuron defined by postsynaptic_index
 
         :param t_point: int, current time point as the index of time unit axis
-        :param postsynaptic_index: non-negative int, the index of postsynaptic neuron
+        :param postsynaptic_index: uint, the index of postsynaptic neuron
         :param psp_waveforms: 2-d array, float 32, the psp waveforms of all neurons in the brain, neuron id x t-point,
                               the generated psp will be added to the postsynaptic_index th line of the array
         :return:

@@ -25,4 +25,4 @@ simulation.run(verbose=1)
 simulation.save_log(r'D:\little_fish')
 # simulation.save_log(r'C:\little_fish_test')
 
-print 'for debug ...'
+print('for debug ...')

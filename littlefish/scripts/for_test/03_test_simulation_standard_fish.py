@@ -24,4 +24,4 @@ simulation.initiate_simulation()
 msg = simulation.run(verbose=1)
 simulation.save_log(r'C:\little_fish_simulation_logs', msg=msg, is_save_psp_waveforms=False)
 
-print 'for debug ...'
+print('for debug ...')
