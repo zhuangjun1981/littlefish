@@ -77,13 +77,14 @@ def plot_brain(input_brain, plot_axis=None, cmap='RdBu_r', bl_range=(-0.1, 0.1),
                 amp_c = util.value_2_rgb(value=amp_n, cmap=cmap)
                 amp_lw = util.normalized_to_range(var=abs(amp_raw), input_range=[0, max([abs(c) for c in ca_range])],
                                                   output_range=[0., ca_lw_cap])
-                plot_axis.plot([pre_x, post_x], [pre_y, post_y], color=amp_c, lw=amp_lw, **connection_kws)
+                # plot_axis.plot([pre_x, post_x], [pre_y, post_y], color=amp_c, lw=amp_lw, **connection_kws)
+                plot_axis.plot([pre_x, post_x], [pre_y, post_y], color=amp_c, lw=1.5, **connection_kws)
 
     # plotting neurons
     for neuron_ind, neuron in neurons_df.iterrows():
         bl = util.normalized_to_range(var=neuron['neuron'].get_baseline_rate(),
                                       input_range=bl_range, output_range=(0., 1.))
-        bl_c = util.value_2_rgb(value=bl, cmap=cmap)
+        bl_c = util.value_2_rgb(value=bl, cmap="cool")
         if neuron['neuron'].get_neuron_type() == 'neuron':
             plot_axis.plot(neuron['plot_x'], neuron['plot_y'], '.', mfc=bl_c, mec='#444444', **neuron_kws)
         elif neuron['neuron'].get_neuron_type() == 'muscle':
