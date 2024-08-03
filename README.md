@@ -20,5 +20,5 @@ Detailed description can be found in this webpage: [The Little Fish](https://sit
 ```
 python <repo directory>/littlefish/viewer/simulation_viewer.py
 ```
-！[image](https://github.com/zhuangjun1981/littlefish/blob/master/littlefish/scripts/for_webpage/media/brain.png)
+！[simulation viewer](littlefish/scripts/for_webpage/media/simulation_viewer.jpg)
 - Then pick any `.hdf5` file saved in the simulation log folder.
