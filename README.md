@@ -13,7 +13,8 @@ Detailed description can be found in this webpage: [The Little Fish](https://sit
 - first edit the `<repo directory>/littlefish/scripts/for_simulation/run_simulation.py`
   - modify `data_folder` to be a directory for saving simulation logs (can be several Gigs) 
   - if running from scratch, make sure `start_generation_ind = 0`
-- Then run the script in python: `python <repo directory>/littlefish/scripts/for_simulation/run_simulation.py`
+- Then run the script in python:
+  ```python <repo directory>/littlefish/scripts/for_simulation/run_simulation.py```
 
 ## View simulation
 - First start simulation viewer:
