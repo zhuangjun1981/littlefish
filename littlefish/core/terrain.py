@@ -11,12 +11,13 @@ import scipy.ndimage as ni
 
 plt.ioff()
 
+
 class TerrainGenerator(object):
     """
     terrain object, a square matrix containing altitude
     """
 
-    def __init__(self, size=(128,128), sea_portion=0.6):
+    def __init__(self, size=(128, 128), sea_portion=0.6):
         """
 
         :param size: size of world_map (height, width)
@@ -25,9 +26,11 @@ class TerrainGenerator(object):
 
         self._size = size
 
-        if sea_portion <= 0 or sea_portion >=1:
-            raise ValueError('TerrainGenerator: sea_portion should be larger than 0. and smaller than'
-                             '1.')
+        if sea_portion <= 0 or sea_portion >= 1:
+            raise ValueError(
+                "TerrainGenerator: sea_portion should be larger than 0. and smaller than"
+                "1."
+            )
 
         self._sea_portion = sea_portion
 
@@ -47,7 +50,7 @@ class TerrainGenerator(object):
 
         return self._sea_portion
 
-    def generate_float_map(self, sigma=0.):
+    def generate_float_map(self, sigma=0.0):
         """
         generate a world_map with floating point with elevation [0., 1.]
 
@@ -74,7 +77,7 @@ class TerrainGenerator(object):
         """
 
         float_map = self.generate_float_map(sigma=sigma)
-        binary_map = np.zeros(float_map.shape, dtype = np.bool)
+        binary_map = np.zeros(float_map.shape, dtype=np.bool)
 
         total_area = float(self._size[0] * self._size[1])
 
@@ -91,10 +94,14 @@ class TerrainGenerator(object):
         if is_plot:
             f = plt.figure(figsize=(20, 8))
             ax1 = f.add_subplot(121)
-            ax1.imshow(float_map, vmin=0, vmax=1, cmap='gray', interpolation='nearest')
+            ax1.imshow(float_map, vmin=0, vmax=1, cmap="gray", interpolation="nearest")
             ax2 = f.add_subplot(122)
-            ax2.imshow(binary_map, vmin=0, vmax=1, cmap='gray', interpolation='nearest')
-            ax2.set_title('sea level: {}; sea portion: {}'.format(sea_level, np.sum(binary_map.flat) / total_area))
+            ax2.imshow(binary_map, vmin=0, vmax=1, cmap="gray", interpolation="nearest")
+            ax2.set_title(
+                "sea level: {}; sea portion: {}".format(
+                    sea_level, np.sum(binary_map.flat) / total_area
+                )
+            )
             plt.show()
 
         return binary_map.astype(np.uint8)
@@ -114,7 +121,9 @@ class BinaryTerrain(object):
         if util.check_binary_2d_array(input_array):
             self._terrain_map = input_array
         else:
-            raise ValueError('BinaryTerrain: input array should be binary 2d numpy array, with _dtype integer.')
+            raise ValueError(
+                "BinaryTerrain: input array should be binary 2d numpy array, with _dtype integer."
+            )
 
     def get_terrain_shape(self):
         return self._terrain_map.shape
@@ -132,14 +141,19 @@ class BinaryTerrain(object):
         """
 
         position_maps = np.array(self._terrain_map)
-        position_maps = ni.binary_dilation(position_maps, structure=[[1,1,1], [1,1,1], [1,1,1]])
+        position_maps = ni.binary_dilation(
+            position_maps, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+        )
         position_maps[:, 0] = 1
         position_maps[:, -1] = 1
         position_maps[0, :] = 1
         position_maps[-1, :] = 1
         possible_positions = np.array(list(zip(*np.where(position_maps == 0))))
-        fish_positions = possible_positions[np.random.choice(range(len(possible_positions)), size=fish_num,
-                                                             replace=True)]
+        fish_positions = possible_positions[
+            np.random.choice(
+                range(len(possible_positions)), size=fish_num, replace=True
+            )
+        ]
         return [tuple(p) for p in fish_positions]
 
     def update_food_map(self, food_num, food_map):
@@ -161,36 +175,53 @@ class BinaryTerrain(object):
         if len(curr_food_pos_list) == food_num:  # current number of food equal food_num
             food_pos_list = curr_food_pos_list
 
-        elif len(curr_food_pos_list) > food_num:  # curren number of food more than food_num
-
+        elif (
+            len(curr_food_pos_list) > food_num
+        ):  # curren number of food more than food_num
             # get food positions to retain
-            food_retain_index = np.random.choice(range(len(curr_food_pos_list)), size=food_num,
-                                                 replace=False)
+            food_retain_index = np.random.choice(
+                range(len(curr_food_pos_list)), size=food_num, replace=False
+            )
             food_pos_list = [curr_food_pos_list[ind] for ind in food_retain_index]
 
             # get food positions to remove
-            food_remove_index = np.array(list(set(range(len(curr_food_pos_list))) - set(food_retain_index)))
+            food_remove_index = np.array(
+                list(set(range(len(curr_food_pos_list))) - set(food_retain_index))
+            )
             food_remove_list = [curr_food_pos_list[ind] for ind in food_remove_index]
 
             # update food_map
-            food_map[[pos[0] for pos in food_remove_list], [pos[1] for pos in food_remove_list]] = 0
+            food_map[
+                [pos[0] for pos in food_remove_list],
+                [pos[1] for pos in food_remove_list],
+            ] = 0
 
-        elif len(curr_food_pos_list) < food_num:  # current number of food less than food_num
-
+        elif (
+            len(curr_food_pos_list) < food_num
+        ):  # current number of food less than food_num
             # get positions to add food
-            possible_positions = list(zip(*np.where(np.logical_or(self._terrain_map, food_map) == 0)))
-            food_add_index = np.random.choice(range(len(possible_positions)), size=food_num - len(curr_food_pos_list),
-                                              replace=False)
+            possible_positions = list(
+                zip(*np.where(np.logical_or(self._terrain_map, food_map) == 0))
+            )
+            food_add_index = np.random.choice(
+                range(len(possible_positions)),
+                size=food_num - len(curr_food_pos_list),
+                replace=False,
+            )
             food_add_list = [possible_positions[ind] for ind in food_add_index]
 
             # update food_pos_array
             food_pos_list = curr_food_pos_list + food_add_list
 
             # update food_map
-            food_map[[pos[0] for pos in food_add_list], [pos[1] for pos in food_add_list]] = 1
+            food_map[
+                [pos[0] for pos in food_add_list], [pos[1] for pos in food_add_list]
+            ] = 1
 
         else:
-            raise ValueError("Terrain: cannot update food map. Do not understand current food position list.")
+            raise ValueError(
+                "Terrain: cannot update food map. Do not understand current food position list."
+            )
 
         food_positions = np.array([np.array(pos, np.uint16) for pos in food_pos_list])
         return food_positions
@@ -200,12 +231,13 @@ class BinaryTerrain(object):
         pass
 
     def get_sea_portion(self):
-        return float(np.sum(self._terrain_map.flat)) / float(len(self._terrain_map.flat))
+        return float(np.sum(self._terrain_map.flat)) / float(
+            len(self._terrain_map.flat)
+        )
 
 
-if __name__ == '__main__':
-
-    #=============================================================
+if __name__ == "__main__":
+    # =============================================================
     # terrain_generator = TerrainGenerator(sea_level=0.6)
     # terrain_map = terrain_generator.generate_binary_map(sigma=5., is_plot=True)
     # binary_terrain = BinaryTerrain(terrain_map)
@@ -220,8 +252,7 @@ if __name__ == '__main__':
     # ax.imshow(binary_terrain.get_terrain_map(), cmap='gray', vmin=0, vmax=1, interpolation='nearest')
     # util.plot_mask(fish_map, plot_axis=ax, color='#ff0000')
     # plt.show()
-    #=============================================================
-
+    # =============================================================
 
     # =============================================================
     # food_map = np.zeros((5, 5), _dtype=np.uint8)
@@ -277,4 +308,4 @@ if __name__ == '__main__':
     # assert (food_pos_array.shape == (5, 2))
     # =============================================================
 
-    print('for debug')
+    print("for debug")

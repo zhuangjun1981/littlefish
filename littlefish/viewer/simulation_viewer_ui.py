@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_SimulationViewer(object):
     def setupUi(self, SimulationViewer):
         SimulationViewer.setObjectName("SimulationViewer")
@@ -164,23 +165,27 @@ class Ui_SimulationViewer(object):
 
     def retranslateUi(self, SimulationViewer):
         _translate = QtCore.QCoreApplication.translate
-        SimulationViewer.setWindowTitle(_translate("SimulationViewer", "SimulationViewer"))
+        SimulationViewer.setWindowTitle(
+            _translate("SimulationViewer", "SimulationViewer")
+        )
         self.FishLabel.setText(_translate("SimulationViewer", "Fish:"))
         self.SimulationLabel.setText(_translate("SimulationViewer", "Simulation:"))
         self.ChooseFileButton.setText(_translate("SimulationViewer", "Choose File"))
         self.TerrainLabel.setText(_translate("SimulationViewer", "Terrain:"))
         self.PlayPauseButton.setText(_translate("SimulationViewer", "Play"))
-        self.SimulationParamsLabel.setText(_translate("SimulationViewer", "Simulation:"))
+        self.SimulationParamsLabel.setText(
+            _translate("SimulationViewer", "Simulation:")
+        )
         self.PlotBrainButton.setText(_translate("SimulationViewer", "Plot Brain"))
         self.ClearFileButton.setText(_translate("SimulationViewer", "Clear File"))
 
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     SimulationViewer = QtWidgets.QMainWindow()
     ui = Ui_SimulationViewer()
     ui.setupUi(SimulationViewer)
     SimulationViewer.show()
     sys.exit(app.exec_())
-

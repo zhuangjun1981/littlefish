@@ -9,14 +9,13 @@ import numpy as np
 
 
 class TestTerrain(unittest.TestCase):
-
     def setup(self):
         pass
 
     def test_terrain_generator(self):
         tr_gen = tr.TerrainGenerator(size=(64, 64), sea_portion=0.5)
         bm = tr_gen.generate_binary_map(sigma=3, step_size=0.01, is_plot=False)
-        assert ((256. - np.sum(bm[:])) / 256. < 0.5)
+        assert (256.0 - np.sum(bm[:])) / 256.0 < 0.5
 
     def test_update_food_map(self):
         food_map = np.zeros((5, 5), dtype=np.uint8)
@@ -33,9 +32,9 @@ class TestTerrain(unittest.TestCase):
         # ax2.set_title('food map')
         # plt.show()
         food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-        assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-        assert (np.sum(food_map.flat) == 5)
-        assert (food_pos_array.shape == (5, 2))
+        assert np.max(np.logical_and(terrain_map, food_map)) == 0
+        assert np.sum(food_map.flat) == 5
+        assert food_pos_array.shape == (5, 2)
 
         food_pos_list = terrain.update_food_map(food_num=3, food_map=food_map)
         # f = plt.figure(figsize=(10, 4))
@@ -47,9 +46,9 @@ class TestTerrain(unittest.TestCase):
         # ax2.set_title('food map')
         # plt.show()
         food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-        assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-        assert (np.sum(food_map.flat) == 3)
-        assert (food_pos_array.shape == (3, 2))
+        assert np.max(np.logical_and(terrain_map, food_map)) == 0
+        assert np.sum(food_map.flat) == 3
+        assert food_pos_array.shape == (3, 2)
 
         food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
         # f = plt.figure(figsize=(10, 4))
@@ -61,29 +60,35 @@ class TestTerrain(unittest.TestCase):
         # ax2.set_title('food map')
         # plt.show()
         food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-        assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-        assert (np.sum(food_map.flat) == 5)
-        assert (food_pos_array.shape == (5, 2))
+        assert np.max(np.logical_and(terrain_map, food_map)) == 0
+        assert np.sum(food_map.flat) == 5
+        assert food_pos_array.shape == (5, 2)
 
         food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
         food_pos_array = np.array([np.array(pos) for pos in food_pos_list])
-        assert (np.max(np.logical_and(terrain_map, food_map)) == 0)
-        assert (np.sum(food_map.flat) == 5)
-        assert (food_pos_array.shape == (5, 2))
+        assert np.max(np.logical_and(terrain_map, food_map)) == 0
+        assert np.sum(food_map.flat) == 5
+        assert food_pos_array.shape == (5, 2)
 
     def test_generate_fish_starting_position(self):
-
-        ter = tr.BinaryTerrain(np.array([[0, 0, 0, 1, 0],
-                                [0, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 1],
-                                [0, 0, 1, 0, 0],
-                                [0, 1, 0, 1, 0]], dtype=np.uint8))
+        ter = tr.BinaryTerrain(
+            np.array(
+                [
+                    [0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1],
+                    [0, 0, 1, 0, 0],
+                    [0, 1, 0, 1, 0],
+                ],
+                dtype=np.uint8,
+            )
+        )
         pos = ter.generate_fish_starting_position(2)
-        assert (pos[0] == (1, 1))
-        assert (pos[1] == (1, 1))
+        assert pos[0] == (1, 1)
+        assert pos[1] == (1, 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tu = TestTerrain()
     tu.test_update_food_map()
     tu.test_generate_fish_starting_position()

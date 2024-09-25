@@ -26,3 +26,4 @@ python <repo directory>/littlefish/viewer/simulation_viewer.py
 - Pick any `.hdf5` file saved in the simulation log folder.  
 
 <img src="littlefish/scripts/for_webpage/media/simulation_viewer_unloaded.jpg" alt="Simulation Viewer" width="474" height="450"> <img src="littlefish/scripts/for_webpage/media/simulation_viewer_loaded.jpg" alt="Simulation Viewer" width="474" height="450">  
+

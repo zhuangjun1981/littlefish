@@ -20,17 +20,20 @@ class BrainViewer(Ui_BrainViewerMainWindow):
     def get_file_path(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        f_path, _ = QFileDialog.getOpenFileName(caption="QFileDialog.getOpenFileName()", directory="",
-                                                filter="All Files (*);;hdf Files (*.hdf5, *.h5)", options=options)
+        f_path, _ = QFileDialog.getOpenFileName(
+            caption="QFileDialog.getOpenFileName()",
+            directory="",
+            filter="All Files (*);;hdf Files (*.hdf5, *.h5)",
+            options=options,
+        )
         return f_path
 
     def plot_brain(self):
-
         f_path = self.get_file_path()
 
         try:
             ff = h5py.File(f_path, "a")
-            brain = fi.Brain.from_h5_group(ff['fish/brain'])
+            brain = fi.Brain.from_h5_group(ff["fish/brain"])
             ax = pt.plot_brain(brain)
             fish_n = os.path.splitext(os.path.split(f_path)[1])[0]
             print(fish_n)
@@ -40,7 +43,7 @@ class BrainViewer(Ui_BrainViewerMainWindow):
             print(e)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     dialog = QMainWindow()
     prog = BrainViewer(dialog)

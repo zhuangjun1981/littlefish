@@ -40,42 +40,61 @@ import matplotlib.pyplot as plt
 # FISH_LAND_PENALTY_RATE = 0.005
 # FISH_FOOD_RATE = 20
 
+
 def generate_minimal_brain():
     """
 
     :return: a Brain object with one eye, two neuron in hidden layer and one muscle
     """
 
-    eye = Eye(direction='east', input_filter=None, gain=0.05, input_type='terrain', baseline_rate=0.,
-              refractory_period=1.2)
+    eye = Eye(
+        direction="east",
+        input_filter=None,
+        gain=0.05,
+        input_type="terrain",
+        baseline_rate=0.0,
+        refractory_period=1.2,
+    )
 
     hidden0 = Neuron(baseline_rate=0.005, refractory_period=1.2)
     hidden1 = Neuron(baseline_rate=0.005, refractory_period=1.2)
-    muscle = Muscle(direction='east', baseline_rate=0.1, refractory_period=500)
+    muscle = Muscle(direction="east", baseline_rate=0.1, refractory_period=500)
 
-    neurons = pd.DataFrame([[0, 0, eye],
-                            [1, 0, hidden0],
-                            [1, 1, hidden1],
-                            [2, 0, muscle]], columns=['layer', 'neuron_ind', 'neuron'])
+    neurons = pd.DataFrame(
+        [[0, 0, eye], [1, 0, hidden0], [1, 1, hidden1], [2, 0, muscle]],
+        columns=["layer", "neuron_ind", "neuron"],
+    )
 
-    connection_eye_hidden0 = Connection(latency=3, amplitude=0.01, rise_time=5, decay_time=10)
-    connection_eye_hidden1 = Connection(latency=3, amplitude=0.0001, rise_time=5, decay_time=10)
-    connection_hidden0_muscle = Connection(latency=3, amplitude=0.0001, rise_time=5, decay_time=10)
-    connection_hidden1_muscle = Connection(latency=3, amplitude=0.01, rise_time=5, decay_time=10)
+    connection_eye_hidden0 = Connection(
+        latency=3, amplitude=0.01, rise_time=5, decay_time=10
+    )
+    connection_eye_hidden1 = Connection(
+        latency=3, amplitude=0.0001, rise_time=5, decay_time=10
+    )
+    connection_hidden0_muscle = Connection(
+        latency=3, amplitude=0.0001, rise_time=5, decay_time=10
+    )
+    connection_hidden1_muscle = Connection(
+        latency=3, amplitude=0.01, rise_time=5, decay_time=10
+    )
 
-    conn_0_1 = pd.DataFrame([[connection_eye_hidden0], [connection_eye_hidden1]], columns=[0], index=[1, 2])
-    conn_1_2 = pd.DataFrame([[connection_hidden0_muscle, connection_hidden1_muscle]], columns=[1, 2], index=[3])
+    conn_0_1 = pd.DataFrame(
+        [[connection_eye_hidden0], [connection_eye_hidden1]], columns=[0], index=[1, 2]
+    )
+    conn_1_2 = pd.DataFrame(
+        [[connection_hidden0_muscle, connection_hidden1_muscle]],
+        columns=[1, 2],
+        index=[3],
+    )
 
-    connections = {'L000_L001': conn_0_1,
-                   'L001_L002': conn_1_2}
+    connections = {"L000_L001": conn_0_1, "L001_L002": conn_1_2}
 
     return Brain(neurons=neurons, connections=connections)
 
 
 def generate_standard_fish():
-
     # ================================== generate neurons =========================================
-    neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+    neurons = pd.DataFrame(columns=["layer", "neuron_ind", "neuron"])
 
     neuron_ind = 0
     layer_ind = 0
@@ -85,22 +104,29 @@ def generate_standard_fish():
     for eye_ind in range(eye_num):
         curr_eye_dir, curr_eye_input_type = get_eye_type(eye_ind, dir_num=4)
         # print curr_eye_dir, curr_eye_input_type
-        curr_eye = Eye(direction=curr_eye_dir, gain=0.005, input_type=curr_eye_input_type, baseline_rate=0.,
-                       refractory_period=1.2)
-        neurons.loc[neuron_ind, 'layer'] = 0
-        neurons.loc[neuron_ind, 'neuron_ind'] = eye_ind
-        neurons.loc[neuron_ind, 'neuron'] = curr_eye
+        curr_eye = Eye(
+            direction=curr_eye_dir,
+            gain=0.005,
+            input_type=curr_eye_input_type,
+            baseline_rate=0.0,
+            refractory_period=1.2,
+        )
+        neurons.loc[neuron_ind, "layer"] = 0
+        neurons.loc[neuron_ind, "neuron_ind"] = eye_ind
+        neurons.loc[neuron_ind, "neuron"] = curr_eye
         neuron_ind += 1
 
     # generate hidden layers
     layer_ind += 1
-    hid_nums = [8]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
+    hid_nums = [
+        8
+    ]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
     for hid_num in hid_nums:
         for hid_ind in range(hid_num):
             curr_neuron = Neuron(baseline_rate=0.005, refractory_period=1.2)
-            neurons.loc[neuron_ind, 'layer'] = layer_ind
-            neurons.loc[neuron_ind, 'neuron_ind'] = hid_ind
-            neurons.loc[neuron_ind, 'neuron'] = curr_neuron
+            neurons.loc[neuron_ind, "layer"] = layer_ind
+            neurons.loc[neuron_ind, "neuron_ind"] = hid_ind
+            neurons.loc[neuron_ind, "neuron"] = curr_neuron
             neuron_ind += 1
 
         layer_ind += 1
@@ -109,29 +135,35 @@ def generate_standard_fish():
     mus_num = 4
     for mus_ind in range(mus_num):
         curr_mus_dir = get_muscle_direction(mus_ind)
-        curr_muscle = Muscle(direction=curr_mus_dir, baseline_rate=0.0001, refractory_period=50.)
-        neurons.loc[neuron_ind, 'layer'] = layer_ind
-        neurons.loc[neuron_ind, 'neuron_ind'] = mus_ind
-        neurons.loc[neuron_ind, 'neuron'] = curr_muscle
+        curr_muscle = Muscle(
+            direction=curr_mus_dir, baseline_rate=0.0001, refractory_period=50.0
+        )
+        neurons.loc[neuron_ind, "layer"] = layer_ind
+        neurons.loc[neuron_ind, "neuron_ind"] = mus_ind
+        neurons.loc[neuron_ind, "neuron"] = curr_muscle
         neuron_ind += 1
     # ================================== generate neurons =========================================
 
     # ================================== generate connections =========================================
     connections = {}
 
-    default_connection = Connection(latency=3, amplitude=0.001, rise_time=2, decay_time=5)
-    layer_num = int(round(max(neurons['layer']))) + 1
+    default_connection = Connection(
+        latency=3, amplitude=0.001, rise_time=2, decay_time=5
+    )
+    layer_num = int(round(max(neurons["layer"]))) + 1
 
     for pre_layer in range(layer_num - 1):
         post_layer = pre_layer + 1
 
-        post_neuron_inds = neurons[neurons['layer'] == post_layer].index.tolist()
+        post_neuron_inds = neurons[neurons["layer"] == post_layer].index.tolist()
         post_neuron_inds.sort()
 
-        pre_neuron_inds = neurons[neurons['layer'] == pre_layer].index.tolist()
+        pre_neuron_inds = neurons[neurons["layer"] == pre_layer].index.tolist()
         pre_neuron_inds.sort()
 
-        curr_name = 'L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)
+        curr_name = (
+            "L" + util.int2str(pre_layer, 3) + "_L" + util.int2str(post_layer, 3)
+        )
         # curr_df = pd.DataFrame([[default_connection] * len(pre_neuron_inds)] * len(post_neuron_inds),
         #                        columns=pre_neuron_inds, index=post_neuron_inds)
         curr_conn_df = pd.DataFrame(columns=pre_neuron_inds, index=post_neuron_inds)
@@ -144,8 +176,14 @@ def generate_standard_fish():
     # generate standard brain
     standard_brain = Brain(neurons=neurons, connections=connections)
 
-    return Fish(mother_name=None, brain=standard_brain, max_health=100, health_decay_rate=0.01,
-                land_penalty_rate=1., food_rate=10.)
+    return Fish(
+        mother_name=None,
+        brain=standard_brain,
+        max_health=100,
+        health_decay_rate=0.01,
+        land_penalty_rate=1.0,
+        food_rate=10.0,
+    )
 
 
 def get_eye_type(ind, dir_num=4):
@@ -159,16 +197,28 @@ def get_eye_type(ind, dir_num=4):
     """
 
     if dir_num == 8:
-        eye_directions = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
+        eye_directions = [
+            "east",
+            "northeast",
+            "north",
+            "northwest",
+            "west",
+            "southwest",
+            "south",
+            "southeast",
+        ]
     elif dir_num == 4:
-        eye_directions = ['east', 'north', 'west', 'south']
+        eye_directions = ["east", "north", "west", "south"]
     else:
-        raise ValueError('cannot understand dir_num, should be 4 or 8.')
+        raise ValueError("cannot understand dir_num, should be 4 or 8.")
 
-    eye_types = ['terrain', 'food', 'fish']
+    eye_types = ["terrain", "food", "fish"]
     direction_num = len(eye_directions)
     type_num = len(eye_types)
-    return eye_directions[ind % direction_num], eye_types[(ind // direction_num) % type_num]
+    return (
+        eye_directions[ind % direction_num],
+        eye_types[(ind // direction_num) % type_num],
+    )
 
 
 def get_muscle_direction(ind):
@@ -178,7 +228,7 @@ def get_muscle_direction(ind):
     :return: string, direction of the muscle
     """
 
-    muscle_directions = ['east', 'north', 'west', 'south']
+    muscle_directions = ["east", "north", "west", "south"]
     direction_num = len(muscle_directions)
     return muscle_directions[ind % direction_num]
 
@@ -200,7 +250,7 @@ class Neuron(object):
         self._refractory_period = float(refractory_period)
 
     def __str__(self):
-        return 'littlefish.brain.Neuron object'
+        return "littlefish.brain.Neuron object"
 
     def copy(self):
         """
@@ -208,7 +258,10 @@ class Neuron(object):
         :return: a copy of self for i.e. mutation
         """
 
-        return Neuron(baseline_rate=self.get_baseline_rate(), refractory_period=self.get_refractory_period())
+        return Neuron(
+            baseline_rate=self.get_baseline_rate(),
+            refractory_period=self.get_refractory_period(),
+        )
 
     def get_baseline_rate(self):
         return self._baseline_rate
@@ -217,7 +270,7 @@ class Neuron(object):
         return self._refractory_period
 
     def get_neuron_type(self):
-        return 'neuron'
+        return "neuron"
 
     def set_baseline_rate(self, new_baseline_rate):
         self._baseline_rate = float(new_baseline_rate)
@@ -225,7 +278,9 @@ class Neuron(object):
     def set_refractory_period(self, new_refractory_period):
         self._refractory_period = new_refractory_period
 
-    def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
+    def act(
+        self, t_point, action_history=[], probability_input=0.0, probability_base=None
+    ):
         """
         evaluate if the neuron will fire at given time point
 
@@ -252,7 +307,10 @@ class Neuron(object):
         #     if not util.check_monotonicity(np.array(action_history), direction='increasing'):
         #         raise ValueError('Neuron: action history should be monotonically increasing.')
 
-        if len(action_history) > 0 and t_point - action_history[-1] < self._refractory_period:
+        if (
+            len(action_history) > 0
+            and t_point - action_history[-1] < self._refractory_period
+        ):
             return False
         else:
             curr_rate = self._baseline_rate + probability_input
@@ -263,23 +321,27 @@ class Neuron(object):
                 return False
 
     def to_h5_group(self, h5_group):
-
-        br_dset = h5_group.create_dataset('baseline_rate', data=self._baseline_rate)
-        br_dset.attrs['unit'] = 'action_per_time_unit'
-        rp_dset = h5_group.create_dataset('refractory_period', data=self._refractory_period)
-        rp_dset.attrs['unit'] = 'time_unit'
-        h5_group.attrs['neuron_type'] = 'neuron'
+        br_dset = h5_group.create_dataset("baseline_rate", data=self._baseline_rate)
+        br_dset.attrs["unit"] = "action_per_time_unit"
+        rp_dset = h5_group.create_dataset(
+            "refractory_period", data=self._refractory_period
+        )
+        rp_dset.attrs["unit"] = "time_unit"
+        h5_group.attrs["neuron_type"] = "neuron"
 
     @staticmethod
     def from_h5_group(h5_group):
+        neuron_type = util.decode(h5_group.attrs["neuron_type"])
 
-        neuron_type = util.decode(h5_group.attrs['neuron_type'])
+        if neuron_type != "neuron":
+            raise ValueError(
+                'Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".'
+            )
 
-        if neuron_type != 'neuron':
-            raise ValueError('Neuron: loading from h5 file failed. "neuron_type" attribute should be "neuron".')
-
-        neuron = Neuron(baseline_rate=h5_group['baseline_rate'][()],
-                        refractory_period=h5_group['refractory_period'][()])
+        neuron = Neuron(
+            baseline_rate=h5_group["baseline_rate"][()],
+            refractory_period=h5_group["refractory_period"][()],
+        )
         return neuron
 
 
@@ -288,8 +350,15 @@ class Eye(Neuron):
     Eye class to observe the environment and the inside of fish body, subclass of Neuron, has eye sight as 2 pixels
     """
 
-    def __init__(self, direction, input_filter=None, gain=0.001, input_type='terrain', baseline_rate=0.,
-                 refractory_period=1.2):
+    def __init__(
+        self,
+        direction,
+        input_filter=None,
+        gain=0.001,
+        input_type="terrain",
+        baseline_rate=0.0,
+        refractory_period=1.2,
+    ):
         """
         for a fish occupies 3x3 space, consider the eyes are in the outer rim of the body (the 4 pixels surrounding the
         central pixel in 4 cardinal direction. Each eye receives the inputs from the given direction in the environment.
@@ -352,24 +421,45 @@ class Eye(Neuron):
         self._gain = float(gain)
 
         if input_filter is None:
-            self._input_filter = np.array([1, 0.243116734, 0.367879441, 0.243116734, 0.059105747, 0.106877926,
-                                           0.135335283, 0.106877926, 0.059105747, 0.014369596, 0.027172461, 0.04232922,
-                                           0.049787068, 0.04232922, 0.027172461, 0.014369596])
+            self._input_filter = np.array(
+                [
+                    1,
+                    0.243116734,
+                    0.367879441,
+                    0.243116734,
+                    0.059105747,
+                    0.106877926,
+                    0.135335283,
+                    0.106877926,
+                    0.059105747,
+                    0.014369596,
+                    0.027172461,
+                    0.04232922,
+                    0.049787068,
+                    0.04232922,
+                    0.027172461,
+                    0.014369596,
+                ]
+            )
         else:
             self._input_filter = input_filter.astype(np.float32)
 
-        if input_type in ['terrain', 'food', 'fish']:
+        if input_type in ["terrain", "food", "fish"]:
             self._input_type = input_type
         else:
-            raise ValueError('Eye: type should be one of the following: "terrain", "food", "fish".')
+            raise ValueError(
+                'Eye: type should be one of the following: "terrain", "food", "fish".'
+            )
 
         curr_baseline_rate = float(baseline_rate)
         curr_refractory_period = float(refractory_period)
 
-        super(Eye, self).__init__(baseline_rate=curr_baseline_rate, refractory_period=curr_refractory_period)
+        super(Eye, self).__init__(
+            baseline_rate=curr_baseline_rate, refractory_period=curr_refractory_period
+        )
 
     def __str__(self):
-        return 'littlefish.brain.Eye object'
+        return "littlefish.brain.Eye object"
 
     def copy(self):
         """
@@ -377,9 +467,14 @@ class Eye(Neuron):
         :return: a copy of self for i.e. mutation
         """
 
-        return Eye(direction=self.get_direction(), input_filter=self.get_input_filter(), gain=self.get_gain(),
-                   input_type=self.get_input_type(), baseline_rate=self.get_baseline_rate(),
-                   refractory_period=self.get_refractory_period())
+        return Eye(
+            direction=self.get_direction(),
+            input_filter=self.get_input_filter(),
+            gain=self.get_gain(),
+            input_type=self.get_input_type(),
+            baseline_rate=self.get_baseline_rate(),
+            refractory_period=self.get_refractory_period(),
+        )
 
     def get_direction(self):
         return self._direction
@@ -394,7 +489,7 @@ class Eye(Neuron):
         return self._input_type
 
     def get_neuron_type(self):
-        return 'eye'
+        return "eye"
 
     def _get_rf_positions(self):
         """
@@ -404,19 +499,25 @@ class Eye(Neuron):
                               [row, col] relative to the position of the body center pixel
         """
 
-        array1 = np.array([0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3], dtype=np.int32)
-        array2 = np.array([0, -1, 0, 1, -2, -1, 0, 1, 2, -3, -2, -1, 0, 1, 2, 3], dtype=np.int32)
+        array1 = np.array(
+            [0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3], dtype=np.int32
+        )
+        array2 = np.array(
+            [0, -1, 0, 1, -2, -1, 0, 1, 2, -3, -2, -1, 0, 1, 2, 3], dtype=np.int32
+        )
 
-        if self._direction == 'east':
+        if self._direction == "east":
             rf_pos = np.array([array2, array1]).transpose()
-        elif self._direction == 'north':
+        elif self._direction == "north":
             rf_pos = np.array([array1 * -1, array2]).transpose()
-        elif self._direction == 'west':
+        elif self._direction == "west":
             rf_pos = np.array([array2, array1 * -1]).transpose()
-        elif self._direction == 'south':
+        elif self._direction == "south":
             rf_pos = np.array([array1, array2]).transpose()
         else:
-            raise ValueError("Eye: direction should be one of the following: ['east', 'north', 'west', 'south'].")
+            raise ValueError(
+                "Eye: direction should be one of the following: ['east', 'north', 'west', 'south']."
+            )
 
         return rf_pos
 
@@ -452,12 +553,22 @@ class Eye(Neuron):
         :return: float, calculate real time input from the visual field
         """
 
-        input_pixels = self._get_input_pixels(input_map, body_position, border_value=border_value)
+        input_pixels = self._get_input_pixels(
+            input_map, body_position, border_value=border_value
+        )
         probability_input = self._gain * np.sum(input_pixels * self._input_filter)
 
         return probability_input
 
-    def act(self, t_point, body_position, input_map, action_history=[], border_value=1, probability_base=None):
+    def act(
+        self,
+        t_point,
+        body_position,
+        input_map,
+        action_history=[],
+        border_value=1,
+        probability_base=None,
+    ):
         """
         evaluate if the eye neuron will fire at given time point
 
@@ -473,40 +584,54 @@ class Eye(Neuron):
         :return: bool, True: fire; False: quite
         """
 
-        probability_input = self._get_input(input_map=input_map, body_position=body_position,
-                                            border_value=border_value)
+        probability_input = self._get_input(
+            input_map=input_map, body_position=body_position, border_value=border_value
+        )
 
-        return super(Eye, self).act(t_point, action_history=action_history, probability_input=probability_input,
-                                    probability_base=probability_base)
+        return super(Eye, self).act(
+            t_point,
+            action_history=action_history,
+            probability_input=probability_input,
+            probability_base=probability_base,
+        )
 
     def to_h5_group(self, h5_group):
-
-        br_dset = h5_group.create_dataset('baseline_rate', data=self._baseline_rate)
-        br_dset.attrs['unit'] = 'action_per_time_unit'
-        rp_dset = h5_group.create_dataset('refractory_period', data=self._refractory_period)
-        rp_dset.attrs['unit'] = 'time_unit'
-        h5_group.create_dataset('direction', data=self._direction)
-        h5_group.create_dataset('input_filter', data=self._input_filter)
-        h5_group.create_dataset('gain', data=self._gain)
-        h5_group.create_dataset('input_type', data=self._input_type)
-        rf_pos_dset = h5_group.create_dataset('rf_positions', data=self._rf_positions)
-        rf_pos_dset.attrs['data_format'] = '16 (pixel_num) x 2 ([row, col])'
-        rf_pos_dset.attrs['description'] = "coordinates of each pixel of this eye's receptive field relative to body " \
-                                           "center position"
-        h5_group.attrs['neuron_type'] = 'eye'
+        br_dset = h5_group.create_dataset("baseline_rate", data=self._baseline_rate)
+        br_dset.attrs["unit"] = "action_per_time_unit"
+        rp_dset = h5_group.create_dataset(
+            "refractory_period", data=self._refractory_period
+        )
+        rp_dset.attrs["unit"] = "time_unit"
+        h5_group.create_dataset("direction", data=self._direction)
+        h5_group.create_dataset("input_filter", data=self._input_filter)
+        h5_group.create_dataset("gain", data=self._gain)
+        h5_group.create_dataset("input_type", data=self._input_type)
+        rf_pos_dset = h5_group.create_dataset("rf_positions", data=self._rf_positions)
+        rf_pos_dset.attrs["data_format"] = "16 (pixel_num) x 2 ([row, col])"
+        rf_pos_dset.attrs["description"] = (
+            "coordinates of each pixel of this eye's receptive field relative to body "
+            "center position"
+        )
+        h5_group.attrs["neuron_type"] = "eye"
 
     @staticmethod
     def from_h5_group(h5_group):
+        if util.decode(h5_group.attrs["neuron_type"]) != "eye":
+            raise ValueError(
+                'Eye: loading from h5 file failed. "neuron_type" attribute should be "eye".'
+            )
 
-        if util.decode(h5_group.attrs['neuron_type']) != 'eye':
-            raise ValueError('Eye: loading from h5 file failed. "neuron_type" attribute should be "eye".')
+        direction = util.decode(h5_group["direction"][()])
+        input_type = util.decode(h5_group["input_type"][()])
 
-        direction = util.decode(h5_group['direction'][()])
-        input_type = util.decode(h5_group['input_type'][()])
-
-        eye = Eye(direction=direction, input_filter=h5_group['input_filter'][()], gain=h5_group['gain'][()],
-                  input_type=input_type, baseline_rate=h5_group['baseline_rate'][()],
-                  refractory_period=h5_group['refractory_period'][()])
+        eye = Eye(
+            direction=direction,
+            input_filter=h5_group["input_filter"][()],
+            gain=h5_group["gain"][()],
+            input_type=input_type,
+            baseline_rate=h5_group["baseline_rate"][()],
+            refractory_period=h5_group["refractory_period"][()],
+        )
         return eye
 
 
@@ -515,26 +640,29 @@ class Muscle(Neuron):
     muscle class for determining the motion of the fish. Subclass of Neuron class
     """
 
-    def __init__(self, direction, baseline_rate=0.001, refractory_period=500.):
-
+    def __init__(self, direction, baseline_rate=0.001, refractory_period=500.0):
         self._direction = direction
 
-        if self._direction == 'east':
+        if self._direction == "east":
             self._step_motion = np.array([0, 1], dtype=np.int8)
-        elif self._direction == 'north':
+        elif self._direction == "north":
             self._step_motion = np.array([-1, 0], dtype=np.int8)
-        elif self._direction == 'west':
+        elif self._direction == "west":
             self._step_motion = np.array([0, -1], dtype=np.int8)
-        elif self._direction == 'south':
+        elif self._direction == "south":
             self._step_motion = np.array([1, 0], dtype=np.int8)
         else:
-            raise ValueError("self.direction should be one of the following: "
-                             "['east', 'north', 'west', 'south'].")
+            raise ValueError(
+                "self.direction should be one of the following: "
+                "['east', 'north', 'west', 'south']."
+            )
 
-        super(Muscle, self).__init__(baseline_rate=baseline_rate, refractory_period=refractory_period)
+        super(Muscle, self).__init__(
+            baseline_rate=baseline_rate, refractory_period=refractory_period
+        )
 
     def __str__(self):
-        return 'littlefish.brain.Muscle object'
+        return "littlefish.brain.Muscle object"
 
     def copy(self):
         """
@@ -542,16 +670,21 @@ class Muscle(Neuron):
         :return: a copy of self for i.e. mutation
         """
 
-        return Muscle(direction=self.get_direction(), baseline_rate=self.get_baseline_rate(),
-                      refractory_period=self.get_refractory_period())
+        return Muscle(
+            direction=self.get_direction(),
+            baseline_rate=self.get_baseline_rate(),
+            refractory_period=self.get_refractory_period(),
+        )
 
     def get_neuron_type(self):
-        return 'muscle'
+        return "muscle"
 
     def get_direction(self):
         return self._direction
 
-    def act(self, t_point, action_history=[], probability_input=0., probability_base=None):
+    def act(
+        self, t_point, action_history=[], probability_input=0.0, probability_base=None
+    ):
         """
         evaluate if the muscle will try to move the fish or not
 
@@ -566,8 +699,12 @@ class Muscle(Neuron):
                  attempt: movement vector, 1d array with two ints, [row_update, col_update]
         """
 
-        is_act = super(Muscle, self).act(t_point, action_history=action_history, probability_input=probability_input,
-                                         probability_base=probability_base)
+        is_act = super(Muscle, self).act(
+            t_point,
+            action_history=action_history,
+            probability_input=probability_input,
+            probability_base=probability_base,
+        )
 
         if is_act:
             return self._step_motion
@@ -575,23 +712,28 @@ class Muscle(Neuron):
             return is_act
 
     def to_h5_group(self, h5_group):
-
-        br_dset = h5_group.create_dataset('baseline_rate', data=self._baseline_rate)
-        br_dset.attrs['unit'] = 'action_per_time_unit'
-        rp_dset = h5_group.create_dataset('refractory_period', data=self._refractory_period)
-        rp_dset.attrs['unit'] = 'time_unit'
-        h5_group.create_dataset('direction', data=self._direction)
-        h5_group.attrs['neuron_type'] = 'muscle'
+        br_dset = h5_group.create_dataset("baseline_rate", data=self._baseline_rate)
+        br_dset.attrs["unit"] = "action_per_time_unit"
+        rp_dset = h5_group.create_dataset(
+            "refractory_period", data=self._refractory_period
+        )
+        rp_dset.attrs["unit"] = "time_unit"
+        h5_group.create_dataset("direction", data=self._direction)
+        h5_group.attrs["neuron_type"] = "muscle"
 
     @staticmethod
     def from_h5_group(h5_group):
+        if util.decode(h5_group.attrs["neuron_type"]) != "muscle":
+            raise ValueError(
+                'Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".'
+            )
 
-        if util.decode(h5_group.attrs['neuron_type']) != 'muscle':
-            raise ValueError('Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".')
-
-        direction = util.decode(h5_group['direction'][()])
-        muscle = Muscle(direction=direction, baseline_rate=h5_group['baseline_rate'][()],
-                        refractory_period=h5_group['refractory_period'][()])
+        direction = util.decode(h5_group["direction"][()])
+        muscle = Muscle(
+            direction=direction,
+            baseline_rate=h5_group["baseline_rate"][()],
+            refractory_period=h5_group["refractory_period"][()],
+        )
         return muscle
 
 
@@ -613,7 +755,7 @@ class Connection(object):
 
         if latency is not None:
             if not util.is_integer(latency):
-                raise ValueError('latency should be an integer.')
+                raise ValueError("latency should be an integer.")
             self._latency = int(latency)
 
         if amplitude is not None:
@@ -621,18 +763,18 @@ class Connection(object):
 
         if rise_time is not None:
             if not util.is_integer(rise_time):
-                raise ValueError('rise_time should be an integer.')
+                raise ValueError("rise_time should be an integer.")
             self._rise_time = int(rise_time)
 
         if decay_time is not None:
             if not util.is_integer(decay_time):
-                raise ValueError('decay_time should be an integer.')
+                raise ValueError("decay_time should be an integer.")
             self._decay_time = int(decay_time)
 
         self._generate_psp()
 
     def __str__(self):
-        return 'littlefish.brain.Connection object'
+        return "littlefish.brain.Connection object"
 
     def copy(self):
         """
@@ -640,8 +782,12 @@ class Connection(object):
         :return: a copy of self for i.e. mutation
         """
 
-        return Connection(latency=self.get_latency(), amplitude=self.get_amplitude(), rise_time=self.get_rise_time(),
-                          decay_time=self.get_decay_time())
+        return Connection(
+            latency=self.get_latency(),
+            amplitude=self.get_amplitude(),
+            rise_time=self.get_rise_time(),
+            decay_time=self.get_decay_time(),
+        )
 
     def get_latency(self):
         return self._latency
@@ -649,7 +795,7 @@ class Connection(object):
     def set_latency(self, new_latency):
         if new_latency is not None:
             if not util.is_integer(new_latency):
-                raise ValueError('new_latency should be an integer.')
+                raise ValueError("new_latency should be an integer.")
             self._latency = int(new_latency)
             self._generate_psp()
 
@@ -667,7 +813,7 @@ class Connection(object):
     def set_rise_time(self, new_rise_time):
         if new_rise_time is not None:
             if not util.is_integer(new_rise_time):
-                raise ValueError('new_rise should be an integer.')
+                raise ValueError("new_rise should be an integer.")
             self._rise_time = int(new_rise_time)
             self._generate_psp()
 
@@ -677,7 +823,7 @@ class Connection(object):
     def set_decay_time(self, new_decay_time):
         if new_decay_time is not None:
             if not util.is_integer(new_decay_time):
-                raise ValueError('new_decay should be an integer.')
+                raise ValueError("new_decay should be an integer.")
             self._decay_time = int(new_decay_time)
             self._generate_psp()
 
@@ -688,11 +834,17 @@ class Connection(object):
         """
 
         self._psp = np.zeros(self._latency + self._rise_time + self._decay_time)
-        self._psp[self._latency: self._latency + self._rise_time] = self._amplitude * \
-            (np.arange(self._rise_time) + 1).astype(np.float32) / float(self._rise_time)
+        self._psp[self._latency : self._latency + self._rise_time] = (
+            self._amplitude
+            * (np.arange(self._rise_time) + 1).astype(np.float32)
+            / float(self._rise_time)
+        )
 
-        self._psp[-self._decay_time:] = self._amplitude * \
-            (np.arange(self._decay_time, 0, -1) - 1).astype(np.float32) / float(self._decay_time)
+        self._psp[-self._decay_time :] = (
+            self._amplitude
+            * (np.arange(self._decay_time, 0, -1) - 1).astype(np.float32)
+            / float(self._decay_time)
+        )
 
     def get_psp(self):
         return self._psp
@@ -711,7 +863,7 @@ class Connection(object):
 
         if latency is not None:
             if not isinstance(latency, int):
-                raise ValueError('latency should be an integer.')
+                raise ValueError("latency should be an integer.")
             self._latency = latency
             changed = True
 
@@ -721,20 +873,20 @@ class Connection(object):
 
         if rise_time is not None:
             if not isinstance(rise_time, int):
-                raise ValueError('rise_time should be an integer.')
+                raise ValueError("rise_time should be an integer.")
             self._rise_time = rise_time
             changed = True
 
         if decay_time is not None:
             if not isinstance(decay_time, int):
-                raise ValueError('decay_time should be an integer.')
+                raise ValueError("decay_time should be an integer.")
             self._decay_time = decay_time
             changed = True
 
         if changed:
             self._generate_psp()
         else:
-            print('Brain.Connection: no parameter has been changed. Do nothing.')
+            print("Brain.Connection: no parameter has been changed. Do nothing.")
 
     def act(self, t_point, postsynaptic_index, psp_waveforms):
         """
@@ -750,9 +902,11 @@ class Connection(object):
 
         psp_end = t_point + len(self._psp)
         if psp_end <= psp_waveforms.shape[1]:
-            psp_waveforms[postsynaptic_index, t_point: psp_end] += self._psp
+            psp_waveforms[postsynaptic_index, t_point:psp_end] += self._psp
         else:
-            psp_waveforms[postsynaptic_index, t_point:] += self._psp[:psp_waveforms.shape[1] - t_point]
+            psp_waveforms[postsynaptic_index, t_point:] += self._psp[
+                : psp_waveforms.shape[1] - t_point
+            ]
 
 
 class Brain(object):
@@ -791,7 +945,7 @@ class Brain(object):
         # print('Brain: littlefish.core.fish.Brain created successfully.')
 
     def __str__(self):
-        return 'littlefish.brain.Brain object'
+        return "littlefish.brain.Brain object"
 
     def copy(self):
         """
@@ -799,14 +953,16 @@ class Brain(object):
         :return: a copy of self for i.e. mutation
         """
 
-        return Brain(neurons=self.get_neurons().copy(), connections=dict(self.get_connections()))
+        return Brain(
+            neurons=self.get_neurons().copy(), connections=dict(self.get_connections())
+        )
 
     def get_neurons(self):
         return self._neurons
 
     @property
     def layer_num(self):
-        return int(round(max(self._neurons['layer']))) + 1
+        return int(round(max(self._neurons["layer"]))) + 1
 
     def get_layer_type(self, layer):
         """
@@ -815,16 +971,16 @@ class Brain(object):
         """
 
         if not isinstance(layer, int):
-            raise ValueError('Input layer number should be integer.')
+            raise ValueError("Input layer number should be integer.")
 
         if layer == 0:
-            return 'eye'
+            return "eye"
         elif layer == self.layer_num - 1:
-            return 'muscle'
+            return "muscle"
         elif 0 < layer < self.layer_num - 1:
-            return 'hidden' + util.int2str(layer, 3)
+            return "hidden" + util.int2str(layer, 3)
         else:
-            raise ValueError('layer number out of range.')
+            raise ValueError("layer number out of range.")
 
     def get_neuron_type(self, ind):
         """
@@ -839,57 +995,71 @@ class Brain(object):
         # self.check_integrity_neurons()
 
         curr_row = self._neurons.loc[ind]
-        curr_layer = curr_row['layer']
+        curr_layer = curr_row["layer"]
         if curr_layer == 0:  # eye layer
-            curr_dir, curr_type = get_eye_type(curr_row['neuron_ind'])
-            return util.short('eye') + '_' + util.short(curr_type) + '_' + util.short(curr_dir)
+            curr_dir, curr_type = get_eye_type(curr_row["neuron_ind"])
+            return (
+                util.short("eye")
+                + "_"
+                + util.short(curr_type)
+                + "_"
+                + util.short(curr_dir)
+            )
         elif curr_layer == self.layer_num - 1:  # muscle layer
-            curr_dir = get_muscle_direction(curr_row['neuron_ind'])
-            return util.short('muscle') + '_' + util.short(curr_dir)
+            curr_dir = get_muscle_direction(curr_row["neuron_ind"])
+            return util.short("muscle") + "_" + util.short(curr_dir)
         elif 0 < curr_layer < self.layer_num - 1:
             curr_layer_num = util.int2str(curr_layer, 3)
-            curr_neuron_num = util.int2str(curr_row['neuron_ind'], 3)
-            return '_'.join([util.short('hidden'), curr_layer_num, curr_neuron_num])
+            curr_neuron_num = util.int2str(curr_row["neuron_ind"], 3)
+            return "_".join([util.short("hidden"), curr_layer_num, curr_neuron_num])
         else:
-            raise ValueError('layer number out of range.')
+            raise ValueError("layer number out of range.")
 
     def get_connections(self):
         return self._connections
 
     def get_postsynaptic_neuron_inds(self, neuron_ind):
-
-        neuron_layer = int(round(self._neurons.loc[neuron_ind, 'layer']))
+        neuron_layer = int(round(self._neurons.loc[neuron_ind, "layer"]))
         if neuron_layer < 0:
-            raise ValueError('Brain: invalid layer. less than 0.')
+            raise ValueError("Brain: invalid layer. less than 0.")
         elif neuron_layer == self.layer_num - 1:
-            print('Brain: cannot fine postsynaptic neuron of neurons in muscle layer.')
+            print("Brain: cannot fine postsynaptic neuron of neurons in muscle layer.")
         else:
-            postsynaptic_neuron_ind = self._neurons[self._neurons['layer'] == neuron_layer + 1].index.tolist()
+            postsynaptic_neuron_ind = self._neurons[
+                self._neurons["layer"] == neuron_layer + 1
+            ].index.tolist()
             postsynaptic_neuron_ind.sort()
             return postsynaptic_neuron_ind
 
     def get_presynaptic_neuron_inds(self, neuron_ind):
-
-        neuron_layer = int(round(self._neurons.loc[neuron_ind, 'layer']))
+        neuron_layer = int(round(self._neurons.loc[neuron_ind, "layer"]))
         if neuron_layer < 0:
-            raise ValueError('Brain: invalid layer. less than 0.')
+            raise ValueError("Brain: invalid layer. less than 0.")
         elif neuron_layer == 0:
-            print('Brain: cannot fine presynaptic neuron of neurons in eye layer.')
+            print("Brain: cannot fine presynaptic neuron of neurons in eye layer.")
         else:
-            presynaptic_neuron_ind = self._neurons[self._neurons['layer'] == neuron_layer - 1].index.tolist()
+            presynaptic_neuron_ind = self._neurons[
+                self._neurons["layer"] == neuron_layer - 1
+            ].index.tolist()
             presynaptic_neuron_ind.sort()
             return presynaptic_neuron_ind
 
     def get_single_connection(self, pre_neuron_ind, post_neuron_ind):
-
-        pre_layer = int(round(self._neurons.loc[pre_neuron_ind, 'layer']))
-        post_layer = int(round(self._neurons.loc[post_neuron_ind, 'layer']))
+        pre_layer = int(round(self._neurons.loc[pre_neuron_ind, "layer"]))
+        post_layer = int(round(self._neurons.loc[post_neuron_ind, "layer"]))
 
         if post_layer - pre_layer != 1:
-            raise LookupError('Brain: presynaptic layer' + str(pre_layer) + ' and postsynaptic layer' +
-                              str(post_layer) + ' do not form connections.')
+            raise LookupError(
+                "Brain: presynaptic layer"
+                + str(pre_layer)
+                + " and postsynaptic layer"
+                + str(post_layer)
+                + " do not form connections."
+            )
 
-        conn_df = self._connections['L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)]
+        conn_df = self._connections[
+            "L" + util.int2str(pre_layer, 3) + "_L" + util.int2str(post_layer, 3)
+        ]
         return conn_df.loc[post_neuron_ind, pre_neuron_ind]
 
     def get_neuron_inds_in_layer(self, layer):
@@ -897,7 +1067,7 @@ class Brain(object):
         return a list of sorted neuron_indices of all neurons in a given layer
         """
 
-        inds = self._neurons[self._neurons['layer'] == layer].index.tolist()
+        inds = self._neurons[self._neurons["layer"] == layer].index.tolist()
         inds.sort()
         return inds
 
@@ -907,95 +1077,131 @@ class Brain(object):
         """
 
         if verbose:
-            print('Brain: checking integrity of attrbitue data structure ...')
+            print("Brain: checking integrity of attrbitue data structure ...")
 
         self.check_integrity_neurons(verbose=verbose)
 
         self.check_integrity_connection(verbose=verbose)
 
         if verbose:
-            print('Brain: integrity checking finished. All pass.')
+            print("Brain: integrity checking finished. All pass.")
 
     def check_integrity_neurons(self, verbose=False):
-
         if not util.check_df_index(self._neurons):
-            raise ValueError('Brain: the indices of self._neurons are not starting at 0 and increasing with step 1.')
+            raise ValueError(
+                "Brain: the indices of self._neurons are not starting at 0 and increasing with step 1."
+            )
         else:
             if verbose:
-                print('Brain: the indices of self._neurons are starting at 0 and increasing with step 1. PASS.')
+                print(
+                    "Brain: the indices of self._neurons are starting at 0 and increasing with step 1. PASS."
+                )
             else:
                 pass
 
         layer = 0
         ind = -1
         for i, neuron in self._neurons.iterrows():
-            curr_layer = int(round(neuron['layer']))
-            curr_neuron_ind = neuron['neuron_ind']
+            curr_layer = int(round(neuron["layer"]))
+            curr_neuron_ind = neuron["neuron_ind"]
             if curr_layer < layer:
-                raise ValueError('Brain: the "layer" in self._neurons is not in ascending order.')
+                raise ValueError(
+                    'Brain: the "layer" in self._neurons is not in ascending order.'
+                )
             elif curr_layer == layer:
                 if curr_neuron_ind != ind + 1:
-                    raise ValueError('Brain: the "neuron_ind" in self._neurons is not in ascending by step 1 for'
-                                     ' each "layer"')
+                    raise ValueError(
+                        'Brain: the "neuron_ind" in self._neurons is not in ascending by step 1 for'
+                        ' each "layer"'
+                    )
                 else:
                     ind += 1
             else:
                 layer = curr_layer
                 if curr_neuron_ind != 0:
-                    raise ValueError('Brain: the "neuron_ind" in self._neurons does not start with 0 for each '
-                                     '"layer".')
+                    raise ValueError(
+                        'Brain: the "neuron_ind" in self._neurons does not start with 0 for each '
+                        '"layer".'
+                    )
                 ind = 0
 
             if curr_layer == 0:  # eye layer
-                if not (str(neuron['neuron']) == 'littlefish.brain.Eye object' or
-                        str(neuron['neuron']) == 'littlefish.brain.Eye2 object'):
-                    raise ValueError('Brain: non-eye object in eye layer.')
+                if not (
+                    str(neuron["neuron"]) == "littlefish.brain.Eye object"
+                    or str(neuron["neuron"]) == "littlefish.brain.Eye2 object"
+                ):
+                    raise ValueError("Brain: non-eye object in eye layer.")
             elif curr_layer == self.layer_num - 1:  # muscle layer
-                if not str(neuron['neuron']) == 'littlefish.brain.Muscle object':
-                    raise ValueError('Brain: non-muscle object in muscle layer.')
+                if not str(neuron["neuron"]) == "littlefish.brain.Muscle object":
+                    raise ValueError("Brain: non-muscle object in muscle layer.")
             else:  # hidden layer
-                if not str(neuron['neuron']) == 'littlefish.brain.Neuron object':
-                    raise ValueError('Brain: non-neuron object in hidden layer.')
+                if not str(neuron["neuron"]) == "littlefish.brain.Neuron object":
+                    raise ValueError("Brain: non-neuron object in hidden layer.")
 
         if verbose:
-            print('Brain: the "layer" of self._neurons is in a non-descending order. PASS')
-            print('Brain: the "neuron_ind" of self._neurons for each layer is ascending from 0 by step 1. PASS')
-            print('Brain: eyes in eye layer, muscles in muscle layer, neurons in hidden layer. PASS')
+            print(
+                'Brain: the "layer" of self._neurons is in a non-descending order. PASS'
+            )
+            print(
+                'Brain: the "neuron_ind" of self._neurons for each layer is ascending from 0 by step 1. PASS'
+            )
+            print(
+                "Brain: eyes in eye layer, muscles in muscle layer, neurons in hidden layer. PASS"
+            )
 
     def check_integrity_connection(self, verbose=False):
-
         matching_keys = []
         for i in range(self.layer_num - 1):
-            matching_keys.append('L' + util.int2str(i, 3) + '_L' + util.int2str(i+1, 3))
+            matching_keys.append(
+                "L" + util.int2str(i, 3) + "_L" + util.int2str(i + 1, 3)
+            )
         matching_keys.sort()
 
         conn_keys = list(self._connections.keys())
         conn_keys.sort()
 
         if not conn_keys == matching_keys:
-            raise ValueError('Brain: invalid keys in self._connections.')
+            raise ValueError("Brain: invalid keys in self._connections.")
         else:
             if verbose:
-                print('Brain: valid keys in self._connections. PASS')
+                print("Brain: valid keys in self._connections. PASS")
             else:
                 pass
 
         for key in conn_keys:
-            pre_layer = int(key[1: 4])
-            post_layer = int(key[6: 9])
+            pre_layer = int(key[1:4])
+            post_layer = int(key[6:9])
             curr_conn_df = self._connections[key]
             pre_neuron_ind = self.get_neuron_inds_in_layer(pre_layer)
             post_neuron_ind = self.get_neuron_inds_in_layer(post_layer)
             if not np.array_equal(pre_neuron_ind, curr_conn_df.columns.tolist()):
-                raise ValueError('Brain: connections dataframe ' + key + ' does not have valid column name.')
+                raise ValueError(
+                    "Brain: connections dataframe "
+                    + key
+                    + " does not have valid column name."
+                )
             if not np.array_equal(post_neuron_ind, curr_conn_df.index.tolist()):
-                raise ValueError('Brain: connections dataframe ' + key + ' does not have valid index name.')
+                raise ValueError(
+                    "Brain: connections dataframe "
+                    + key
+                    + " does not have valid index name."
+                )
 
         if verbose:
-            print('Brain: dataframes in self._connections have valid column and index names. PASS')
+            print(
+                "Brain: dataframes in self._connections have valid column and index names. PASS"
+            )
 
-    def act(self, t_point, action_histories, psp_waveforms, body_position, terrain_map, food_map=None,
-            fish_map=None):
+    def act(
+        self,
+        t_point,
+        action_histories,
+        psp_waveforms,
+        body_position,
+        terrain_map,
+        food_map=None,
+        fish_map=None,
+    ):
         """
 
         :param t_point: int, current time stamp of time unit axis
@@ -1017,53 +1223,79 @@ class Brain(object):
         movement_attempt = np.array([0, 0], dtype=np.uint8)
 
         for i, neuron in self._neurons.iterrows():
+            if neuron["layer"] == 0:  # eye layer
+                curr_eye = neuron["neuron"]
 
-            if neuron['layer'] == 0:  # eye layer
-                curr_eye = neuron['neuron']
-
-                if curr_eye.get_input_type() == 'terrain':
-                    is_fire = curr_eye.act(t_point=t_point, action_history=action_histories.iloc[i, 0],
-                                           body_position=body_position, input_map=terrain_map)
-                elif curr_eye.get_input_type() == 'food':
+                if curr_eye.get_input_type() == "terrain":
+                    is_fire = curr_eye.act(
+                        t_point=t_point,
+                        action_history=action_histories.iloc[i, 0],
+                        body_position=body_position,
+                        input_map=terrain_map,
+                    )
+                elif curr_eye.get_input_type() == "food":
                     if food_map is not None:
-                        is_fire = curr_eye.act(t_point=t_point,
-                                               action_history=action_histories.loc[i, 'action_history'],
-                                               body_position=body_position, input_map=food_map)
+                        is_fire = curr_eye.act(
+                            t_point=t_point,
+                            action_history=action_histories.loc[i, "action_history"],
+                            body_position=body_position,
+                            input_map=food_map,
+                        )
                     else:
                         is_fire = False
-                elif curr_eye.get_input_type() == 'fish':
+                elif curr_eye.get_input_type() == "fish":
                     if fish_map is not None:
-                        is_fire = curr_eye.act(t_point=t_point,
-                                               action_history=action_histories.loc[i, 'action_history'],
-                                               body_position=body_position, input_map=fish_map)
+                        is_fire = curr_eye.act(
+                            t_point=t_point,
+                            action_history=action_histories.loc[i, "action_history"],
+                            body_position=body_position,
+                            input_map=fish_map,
+                        )
                     else:
                         is_fire = False
                 else:
-                    raise ValueError('Brain: the input_type of eye should be one of the following:'
-                                     '"terrain", "food" or "fish".')
+                    raise ValueError(
+                        "Brain: the input_type of eye should be one of the following:"
+                        '"terrain", "food" or "fish".'
+                    )
 
                 if is_fire:  # the current eye fires
                     # print('eye spike')
-                    self.neuron_fire(presynaptic_neuron_ind=i, t_point=t_point, psp_waveforms=psp_waveforms)
+                    self.neuron_fire(
+                        presynaptic_neuron_ind=i,
+                        t_point=t_point,
+                        psp_waveforms=psp_waveforms,
+                    )
 
-            elif neuron['layer'] < self.layer_num - 1:  # hidden layer
-                curr_neuron = neuron['neuron']
-                is_fire = curr_neuron.act(t_point=t_point, action_history=action_histories.loc[i, 'action_history'],
-                                          probability_input=psp_waveforms[i, t_point])
+            elif neuron["layer"] < self.layer_num - 1:  # hidden layer
+                curr_neuron = neuron["neuron"]
+                is_fire = curr_neuron.act(
+                    t_point=t_point,
+                    action_history=action_histories.loc[i, "action_history"],
+                    probability_input=psp_waveforms[i, t_point],
+                )
                 if is_fire:
                     # print('neuron spike')
-                    self.neuron_fire(presynaptic_neuron_ind=i, t_point=t_point, psp_waveforms=psp_waveforms)
+                    self.neuron_fire(
+                        presynaptic_neuron_ind=i,
+                        t_point=t_point,
+                        psp_waveforms=psp_waveforms,
+                    )
 
-            elif neuron['layer'] == self.layer_num - 1:  # muscle layer
-                curr_muscle = neuron['neuron']
-                curr_movement_attempt = curr_muscle.act(t_point=t_point,
-                                                        action_history=action_histories.loc[i, 'action_history'],
-                                                        probability_input=psp_waveforms[i, t_point])
+            elif neuron["layer"] == self.layer_num - 1:  # muscle layer
+                curr_muscle = neuron["neuron"]
+                curr_movement_attempt = curr_muscle.act(
+                    t_point=t_point,
+                    action_history=action_histories.loc[i, "action_history"],
+                    probability_input=psp_waveforms[i, t_point],
+                )
                 if curr_movement_attempt is not False:
                     # print('muscle spike')
                     movement_attempt = movement_attempt + curr_movement_attempt
             else:
-                raise ValueError('Brain: neuron at index' + str(i) + ' has invalid layer location.')
+                raise ValueError(
+                    "Brain: neuron at index" + str(i) + " has invalid layer location."
+                )
 
         return movement_attempt
 
@@ -1078,7 +1310,7 @@ class Brain(object):
         :return: None
         """
 
-        neuron_layer = int(round(self._neurons.loc[presynaptic_neuron_ind, 'layer']))
+        neuron_layer = int(round(self._neurons.loc[presynaptic_neuron_ind, "layer"]))
 
         # ========================= slower but better method =====================================================
         # if 0 <= neuron_layer < self.layer_num - 1:  # eye layer or hidden layer
@@ -1098,14 +1330,25 @@ class Brain(object):
         # ========================= slower but better method =====================================================
 
         # ========================= faster but unsafe method =====================================================
-        curr_conn_df = self._connections['L' + util.int2str(neuron_layer, 3) +
-                                         '_L' + util.int2str(neuron_layer + 1, 3)]
-        postsynaptic_neuron_inds = self.get_postsynaptic_neuron_inds(neuron_ind=presynaptic_neuron_ind)
+        curr_conn_df = self._connections[
+            "L"
+            + util.int2str(neuron_layer, 3)
+            + "_L"
+            + util.int2str(neuron_layer + 1, 3)
+        ]
+        postsynaptic_neuron_inds = self.get_postsynaptic_neuron_inds(
+            neuron_ind=presynaptic_neuron_ind
+        )
 
         for postsynaptic_neuron_ind in postsynaptic_neuron_inds:
-            curr_connection = curr_conn_df.loc[postsynaptic_neuron_ind, presynaptic_neuron_ind]
-            curr_connection.act(t_point=t_point, postsynaptic_index=postsynaptic_neuron_ind,
-                                psp_waveforms=psp_waveforms)
+            curr_connection = curr_conn_df.loc[
+                postsynaptic_neuron_ind, presynaptic_neuron_ind
+            ]
+            curr_connection.act(
+                t_point=t_point,
+                postsynaptic_index=postsynaptic_neuron_ind,
+                psp_waveforms=psp_waveforms,
+            )
         # ========================= faster but unsafe method =====================================================
 
     def get_all_presynaptic_neuron_indices(self):
@@ -1113,8 +1356,8 @@ class Brain(object):
         get indices of all presynaptic neurons
         """
 
-        layer_num = int(max(self._neurons['layer'])) + 1
-        ind = self._neurons[self._neurons['layer'] < layer_num - 1].index
+        layer_num = int(max(self._neurons["layer"])) + 1
+        ind = self._neurons[self._neurons["layer"] < layer_num - 1].index
         return ind.sort_values()
 
     def get_all_postsynaptic_neuron_indices(self):
@@ -1122,7 +1365,7 @@ class Brain(object):
         get indices of all postsynaptic neurons
         """
 
-        ind = self._neurons[self._neurons['layer'] > 0].index
+        ind = self._neurons[self._neurons["layer"] > 0].index
         return ind.sort_values()
 
     def get_connection_matrices(self, pre_layer, post_layer):
@@ -1146,7 +1389,9 @@ class Brain(object):
         rise_times = np.empty((len(rows), len(cols)), dtype=np.uint)
         decay_times = np.empty((len(rows), len(cols)), dtype=np.uint)
 
-        conn_df = self._connections['L' + util.int2str(pre_layer, 3) + '_L' + util.int2str(post_layer, 3)]
+        conn_df = self._connections[
+            "L" + util.int2str(pre_layer, 3) + "_L" + util.int2str(post_layer, 3)
+        ]
 
         for i in range(conn_df.shape[0]):
             for j in range(conn_df.shape[1]):
@@ -1157,81 +1402,97 @@ class Brain(object):
         return rows, cols, latencies, amplitudes, rise_times, decay_times
 
     def to_h5_group(self, h5_group):
-
-        neuron_group = h5_group.create_group('neurons')
+        neuron_group = h5_group.create_group("neurons")
         for i, neuron_df in self._neurons.iterrows():
-            neuron_name = 'neuron_' + util.int2str(i, 4)
+            neuron_name = "neuron_" + util.int2str(i, 4)
             curr_neuron_group = neuron_group.create_group(neuron_name)
-            neuron_df['neuron'].to_h5_group(curr_neuron_group)
-            curr_neuron_group.attrs['ind'] = i
-            curr_neuron_group.attrs['layer'] = neuron_df['layer']
-            curr_neuron_group.attrs['neuron_ind'] = neuron_df['neuron_ind']
+            neuron_df["neuron"].to_h5_group(curr_neuron_group)
+            curr_neuron_group.attrs["ind"] = i
+            curr_neuron_group.attrs["layer"] = neuron_df["layer"]
+            curr_neuron_group.attrs["neuron_ind"] = neuron_df["neuron_ind"]
 
-        connection_group = h5_group.create_group('connections')
-        for pre_layer in range(self.layer_num-1):
+        connection_group = h5_group.create_group("connections")
+        for pre_layer in range(self.layer_num - 1):
             post_layer = pre_layer + 1
-            curr_connection_matrices = self.get_connection_matrices(pre_layer=pre_layer, post_layer=post_layer)
+            curr_connection_matrices = self.get_connection_matrices(
+                pre_layer=pre_layer, post_layer=post_layer
+            )
 
-            curr_layer_group = connection_group.create_group('L' + util.int2str(pre_layer, 3) +
-                                                             '_L' + util.int2str(post_layer, 3))
-            curr_layer_group.attrs['rows'] = curr_connection_matrices[0]
-            curr_layer_group.attrs['cols'] = curr_connection_matrices[1]
-            curr_layer_group.attrs['doc'] = 'rows: indices of postsynatpic neurons in the neuron group; ' \
-                                            'cols: indices of presynaptic neurons in the neuron group.'
-            curr_layer_group.create_dataset(name='latencies_tu', data=curr_connection_matrices[2])
-            curr_layer_group.create_dataset(name='amplitudes', data=curr_connection_matrices[3])
-            curr_layer_group.create_dataset(name='rise_times_tu', data=curr_connection_matrices[4])
-            curr_layer_group.create_dataset(name='decay_times_tu', data=curr_connection_matrices[5])
+            curr_layer_group = connection_group.create_group(
+                "L" + util.int2str(pre_layer, 3) + "_L" + util.int2str(post_layer, 3)
+            )
+            curr_layer_group.attrs["rows"] = curr_connection_matrices[0]
+            curr_layer_group.attrs["cols"] = curr_connection_matrices[1]
+            curr_layer_group.attrs["doc"] = (
+                "rows: indices of postsynatpic neurons in the neuron group; "
+                "cols: indices of presynaptic neurons in the neuron group."
+            )
+            curr_layer_group.create_dataset(
+                name="latencies_tu", data=curr_connection_matrices[2]
+            )
+            curr_layer_group.create_dataset(
+                name="amplitudes", data=curr_connection_matrices[3]
+            )
+            curr_layer_group.create_dataset(
+                name="rise_times_tu", data=curr_connection_matrices[4]
+            )
+            curr_layer_group.create_dataset(
+                name="decay_times_tu", data=curr_connection_matrices[5]
+            )
 
     @staticmethod
     def from_h5_group(h5_group):
-        neurons = pd.DataFrame(columns=['layer', 'neuron_ind', 'neuron'])
+        neurons = pd.DataFrame(columns=["layer", "neuron_ind", "neuron"])
 
-        neurons_group = h5_group['neurons']
+        neurons_group = h5_group["neurons"]
         neuron_names = list(neurons_group.keys())
         neuron_names.sort()
         for neuron_name in neuron_names:
             curr_neuron_group = neurons_group[neuron_name]
-            curr_layer = curr_neuron_group.attrs['layer']
-            curr_neuron_ind = curr_neuron_group.attrs['neuron_ind']
-            curr_ind = curr_neuron_group.attrs['ind']
+            curr_layer = curr_neuron_group.attrs["layer"]
+            curr_neuron_ind = curr_neuron_group.attrs["neuron_ind"]
+            curr_ind = curr_neuron_group.attrs["ind"]
 
-            curr_neuron_type = util.decode(curr_neuron_group.attrs['neuron_type'])
+            curr_neuron_type = util.decode(curr_neuron_group.attrs["neuron_type"])
 
-            if curr_neuron_type == 'neuron':
+            if curr_neuron_type == "neuron":
                 curr_neuron = Neuron.from_h5_group(curr_neuron_group)
-            elif curr_neuron_type == 'eye':
+            elif curr_neuron_type == "eye":
                 curr_neuron = Eye.from_h5_group(curr_neuron_group)
-            elif curr_neuron_type == 'muscle':
+            elif curr_neuron_type == "muscle":
                 curr_neuron = Muscle.from_h5_group(curr_neuron_group)
             else:
-                raise LookupError('Brain: fail to load neuron. "neuron_type" attribute should be one of the '
-                                  'following: "eye", "neuron" or "muscle".')
+                raise LookupError(
+                    'Brain: fail to load neuron. "neuron_type" attribute should be one of the '
+                    'following: "eye", "neuron" or "muscle".'
+                )
 
             neurons.loc[curr_ind] = [curr_layer, curr_neuron_ind, curr_neuron]
 
         connections = {}
 
-        connections_group = h5_group['connections']
+        connections_group = h5_group["connections"]
         connections_names = list(connections_group.keys())
         connections_names.sort()
         for connections_name in connections_names:
             curr_conn_group = connections_group[connections_name]
-            curr_inds = curr_conn_group.attrs['rows']
-            curr_cols = curr_conn_group.attrs['cols']
-            curr_amplitudes = curr_conn_group['amplitudes'][()]
-            curr_decay_times = curr_conn_group['decay_times_tu'][()]
-            curr_rise_times = curr_conn_group['rise_times_tu'][()]
-            curr_latencies = curr_conn_group['latencies_tu'][()]
+            curr_inds = curr_conn_group.attrs["rows"]
+            curr_cols = curr_conn_group.attrs["cols"]
+            curr_amplitudes = curr_conn_group["amplitudes"][()]
+            curr_decay_times = curr_conn_group["decay_times_tu"][()]
+            curr_rise_times = curr_conn_group["rise_times_tu"][()]
+            curr_latencies = curr_conn_group["latencies_tu"][()]
 
             curr_conn_df = pd.DataFrame(columns=curr_cols, index=curr_inds)
 
             for i in range(len(curr_inds)):
                 for j in range(len(curr_cols)):
-                    curr_conn_df.iloc[i, j] = Connection(latency=curr_latencies[i, j],
-                                                         amplitude=curr_amplitudes[i, j],
-                                                         rise_time=curr_rise_times[i, j],
-                                                         decay_time=curr_decay_times[i, j])
+                    curr_conn_df.iloc[i, j] = Connection(
+                        latency=curr_latencies[i, j],
+                        amplitude=curr_amplitudes[i, j],
+                        rise_time=curr_rise_times[i, j],
+                        decay_time=curr_decay_times[i, j],
+                    )
             connections.update({connections_name: curr_conn_df})
 
         loaded_brain = Brain(neurons=neurons, connections=connections)
@@ -1246,7 +1507,9 @@ class Brain(object):
         """
 
         empty_action_histories = pd.Series([[] for i in range(len(self._neurons))])
-        empty_action_histories = pd.DataFrame(empty_action_histories, columns=['action_history'])
+        empty_action_histories = pd.DataFrame(
+            empty_action_histories, columns=["action_history"]
+        )
         return empty_action_histories
 
     def generate_empty_psp_waveforms(self, simulation_length):
@@ -1285,9 +1548,16 @@ class Fish(object):
                            transient event
     """
 
-    def __init__(self, name=None, mother_name=None, brain=None, max_health=100., health_decay_rate=0.0001,
-                 land_penalty_rate=0.005, food_rate=20.):
-
+    def __init__(
+        self,
+        name=None,
+        mother_name=None,
+        brain=None,
+        max_health=100.0,
+        health_decay_rate=0.0001,
+        land_penalty_rate=0.005,
+        food_rate=20.0,
+    ):
         """
 
         :param brain: a brain.Brain object
@@ -1303,12 +1573,12 @@ class Fish(object):
         # print('\nFish: Creating littlefish.core.fish.Fish object.')
 
         if name is None:
-            self._name = 'test_fish'
+            self._name = "test_fish"
         else:
             self._name = name
 
         if mother_name is None:
-            self._mother_name = ''
+            self._mother_name = ""
         else:
             self._mother_name = mother_name
 
@@ -1331,9 +1601,14 @@ class Fish(object):
         :return: a copy of self for i.e. mutation
         """
 
-        return Fish(name=self.get_name(), mother_name=self.get_mother_name(), brain=self.get_brain(),
-                    max_health=self.get_max_health(), health_decay_rate=self.get_health_decay_rate(),
-                    food_rate=self.get_food_rate())
+        return Fish(
+            name=self.get_name(),
+            mother_name=self.get_mother_name(),
+            brain=self.get_brain(),
+            max_health=self.get_max_health(),
+            health_decay_rate=self.get_health_decay_rate(),
+            food_rate=self.get_food_rate(),
+        )
 
     def get_name(self):
         return self._name
@@ -1373,8 +1648,17 @@ class Fish(object):
     def set_health_decay_rate(self, health_decay_rate):
         self._health_decay_rate = health_decay_rate
 
-    def act(self, t_point, curr_position, curr_health, action_histories, psp_waveforms, terrain_map,
-            food_map=None, fish_map=None):
+    def act(
+        self,
+        t_point,
+        curr_position,
+        curr_health,
+        action_histories,
+        psp_waveforms,
+        terrain_map,
+        food_map=None,
+        fish_map=None,
+    ):
         """
         simulate the fish's action at a given time point
 
@@ -1400,17 +1684,26 @@ class Fish(object):
 
         # evaluate food
         if food_map is not None:
-            body_food_overlap = self._eval_food(food_map=food_map, curr_position=curr_position)
-            updated_health = self._eat_food(body_food_overlap=body_food_overlap, curr_health=updated_health)
+            body_food_overlap = self._eval_food(
+                food_map=food_map, curr_position=curr_position
+            )
+            updated_health = self._eat_food(
+                body_food_overlap=body_food_overlap, curr_health=updated_health
+            )
             food_eated = body_food_overlap
 
             # update food map
-            food_map[curr_position[0] - 1: curr_position[0] + 2, curr_position[1] - 1: curr_position[1] + 2] = 0
+            food_map[
+                curr_position[0] - 1 : curr_position[0] + 2,
+                curr_position[1] - 1 : curr_position[1] + 2,
+            ] = 0
         else:
             food_eated = 0
 
         # evaluate the extend of how much of the fish is on the land
-        body_land_overlap = self._eval_terrain(terrain_map=terrain_map, curr_position=curr_position)
+        body_land_overlap = self._eval_terrain(
+            terrain_map=terrain_map, curr_position=curr_position
+        )
 
         # update current health with land penalty
         updated_health -= body_land_overlap * self._land_penalty_rate
@@ -1424,10 +1717,15 @@ class Fish(object):
         updated_health = updated_health - self._health_decay_rate
 
         if updated_health > 0:  # still alive
-            movement_attempt = self._brain.act(t_point=t_point, action_histories=action_histories,
-                                               psp_waveforms=psp_waveforms, body_position=curr_position,
-                                               terrain_map=terrain_map, food_map=food_map,
-                                               fish_map=fish_map)
+            movement_attempt = self._brain.act(
+                t_point=t_point,
+                action_histories=action_histories,
+                psp_waveforms=psp_waveforms,
+                body_position=curr_position,
+                terrain_map=terrain_map,
+                food_map=food_map,
+                fish_map=fish_map,
+            )
         else:
             movement_attempt = None
 
@@ -1441,10 +1739,12 @@ class Fish(object):
         """
 
         if terrain_map is None:
-            raise ValueError('Fish: _eval_terrain failure. terrain_map is None.')
+            raise ValueError("Fish: _eval_terrain failure. terrain_map is None.")
         else:
-            curr_body = terrain_map[curr_position[0] - 1: curr_position[0] + 2,
-                        curr_position[1] - 1: curr_position[1] + 2]
+            curr_body = terrain_map[
+                curr_position[0] - 1 : curr_position[0] + 2,
+                curr_position[1] - 1 : curr_position[1] + 2,
+            ]
             body_land_overlap = np.sum(curr_body.flat)
         return body_land_overlap
 
@@ -1458,8 +1758,10 @@ class Fish(object):
         :return: non-negative int, number of food taken
         """
 
-        curr_body = food_map[curr_position[0] - 1: curr_position[0] + 2,
-                    curr_position[1] - 1: curr_position[1] + 2]
+        curr_body = food_map[
+            curr_position[0] - 1 : curr_position[0] + 2,
+            curr_position[1] - 1 : curr_position[1] + 2,
+        ]
         body_food_overlap = np.sum(curr_body.flat)
 
         return body_food_overlap
@@ -1484,37 +1786,42 @@ class Fish(object):
             return updated_health
 
     def to_h5_group(self, h5_grp):
-
-        h5_grp.create_dataset('name', data=self._name)
-        h5_grp.create_dataset('mother_name', data=self._mother_name)
-        h5_grp.create_dataset('max_health', data=self._max_health)
-        h5_grp.create_dataset('health_decay_rate_per_tu', data=self._health_decay_rate)
-        h5_grp.create_dataset('land_penalty_rate_per_pixel_tu', data=self._land_penalty_rate)
-        h5_grp.create_dataset('food_rate_per_pixel', data=self._food_rate)
-        brain_group = h5_grp.create_group('brain')
+        h5_grp.create_dataset("name", data=self._name)
+        h5_grp.create_dataset("mother_name", data=self._mother_name)
+        h5_grp.create_dataset("max_health", data=self._max_health)
+        h5_grp.create_dataset("health_decay_rate_per_tu", data=self._health_decay_rate)
+        h5_grp.create_dataset(
+            "land_penalty_rate_per_pixel_tu", data=self._land_penalty_rate
+        )
+        h5_grp.create_dataset("food_rate_per_pixel", data=self._food_rate)
+        brain_group = h5_grp.create_group("brain")
         self._brain.to_h5_group(brain_group)
 
     @staticmethod
     def from_h5_group(h5_grp):
-
-        brain_grp = h5_grp['brain']
+        brain_grp = h5_grp["brain"]
         curr_brain = Brain.from_h5_group(brain_grp)
-        curr_name = util.decode(h5_grp['name'][()])
-        curr_mother_name = util.decode(h5_grp['mother_name'][()])
-        curr_max_health = h5_grp['max_health'][()]
-        curr_health_decay_rate = h5_grp['health_decay_rate_per_tu'][()]
-        curr_land_penalty_rate = h5_grp['land_penalty_rate_per_pixel_tu'][()]
-        curr_food_rate = h5_grp['food_rate_per_pixel'][()]
+        curr_name = util.decode(h5_grp["name"][()])
+        curr_mother_name = util.decode(h5_grp["mother_name"][()])
+        curr_max_health = h5_grp["max_health"][()]
+        curr_health_decay_rate = h5_grp["health_decay_rate_per_tu"][()]
+        curr_land_penalty_rate = h5_grp["land_penalty_rate_per_pixel_tu"][()]
+        curr_food_rate = h5_grp["food_rate_per_pixel"][()]
 
-        curr_fish = Fish(name=curr_name, mother_name=curr_mother_name, brain=curr_brain, max_health=curr_max_health,
-                         health_decay_rate=curr_health_decay_rate, land_penalty_rate=curr_land_penalty_rate,
-                         food_rate=curr_food_rate)
+        curr_fish = Fish(
+            name=curr_name,
+            mother_name=curr_mother_name,
+            brain=curr_brain,
+            max_health=curr_max_health,
+            health_decay_rate=curr_health_decay_rate,
+            land_penalty_rate=curr_land_penalty_rate,
+            food_rate=curr_food_rate,
+        )
 
         return curr_fish
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # =========================================================================================
     # starting_position = (10, 10)
     # terrain_map = np.zeros((20, 20), _dtype=np.uint8)
@@ -1695,5 +2002,4 @@ if __name__ == '__main__':
     # generate_standard_fish()
     # =========================================================================================
 
-
-    print('\nfor debug ...')
+    print("\nfor debug ...")

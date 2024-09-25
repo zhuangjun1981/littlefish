@@ -18,7 +18,7 @@ def array_nor(arr):
     return (arr - np.amin(arr)) / (np.amax(arr) - np.amin(arr))
 
 
-def normalized_to_range(var, input_range=(0., 1.), output_range=(0., 1.)):
+def normalized_to_range(var, input_range=(0.0, 1.0), output_range=(0.0, 1.0)):
     """
     map a single value to the output_range according to it's position in the input_range.
 
@@ -29,28 +29,31 @@ def normalized_to_range(var, input_range=(0., 1.), output_range=(0., 1.)):
     """
 
     if len(input_range) != 2:
-        raise ValueError('input_range should contain two and only two numbers.')
+        raise ValueError("input_range should contain two and only two numbers.")
 
     if input_range[1] <= input_range[0]:
-        raise ValueError('input_range[1] should be larger than range[0].')
+        raise ValueError("input_range[1] should be larger than range[0].")
 
     if len(output_range) != 2:
-        raise ValueError('output_range should contain two and only two numbers.')
+        raise ValueError("output_range should contain two and only two numbers.")
 
     if output_range[1] <= output_range[0]:
-        raise ValueError('output_range[1] should be larger than range[0].')
+        raise ValueError("output_range[1] should be larger than range[0].")
 
     var = float(var)
     input_range = (float(input_range[0]), float(input_range[1]))
     output_range = (float(output_range[0]), float(output_range[1]))
     if var < input_range[0] or var > input_range[1]:
-        raise ValueError('input variable is out of the input range.')
+        raise ValueError("input variable is out of the input range.")
 
-    return ((var - input_range[0]) / (input_range[1] - input_range[0])) * \
-           (output_range[1] - output_range[0]) + output_range[0]
+    return ((var - input_range[0]) / (input_range[1] - input_range[0])) * (
+        output_range[1] - output_range[0]
+    ) + output_range[0]
 
 
-def discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-10., 20.), bin_width=1.):
+def discreat_crosscorrelation(
+    ts_trigger, ts_reference, t_range=(-10.0, 20.0), bin_width=1.0
+):
     """
     generate crosscorrelogram between two timestamp train
 
@@ -63,23 +66,27 @@ def discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-10., 20.), bin
     """
 
     if len(ts_trigger.shape) != 1:
-        raise(ValueError, 'ts_trigger should be a 1-d array.')
+        raise (ValueError, "ts_trigger should be a 1-d array.")
 
     if len(ts_reference.shape) != 1:
-        raise(ValueError, 'ts_reference should be a 1-d array.')
+        raise (ValueError, "ts_reference should be a 1-d array.")
 
     t_axis = np.arange(t_range[0], t_range[1], bin_width)
     ccg = np.zeros(t_axis.shape, dtype=np.int32)
     for trigger in ts_trigger:
         # get the chunk of ts_reference for this particular trigger
-        ref_ts_chunk = ts_reference[np.logical_and(ts_reference >= trigger + t_axis[0],
-                                                   ts_reference < trigger + t_axis[-1]+bin_width)]
+        ref_ts_chunk = ts_reference[
+            np.logical_and(
+                ts_reference >= trigger + t_axis[0],
+                ts_reference < trigger + t_axis[-1] + bin_width,
+            )
+        ]
 
         # calculate relative timing around the trigger
         ref_ts_chunk = ref_ts_chunk - (float(trigger) + t_range[0])
 
         for ref_ts in ref_ts_chunk:
-            ccg[int(ref_ts//bin_width)] += 1
+            ccg[int(ref_ts // bin_width)] += 1
 
     return ccg, t_axis
 
@@ -96,19 +103,31 @@ def get_random_number(distribution, shape):
 
     if distribution is None:
         output = np.zeros(shape, dtype=np.float64)
-    elif distribution[0] == 'flat':
-        output = np.random.rand(*shape) * float(distribution[2]) - 0.5 * distribution[2] + distribution[1]
-    elif distribution[0] == 'gaussian':
-        output = np.random.randn(*shape) * float(distribution[2]) + float(distribution[1])
-    elif distribution[0] == 'exponential':
+    elif distribution[0] == "flat":
+        output = (
+            np.random.rand(*shape) * float(distribution[2])
+            - 0.5 * distribution[2]
+            + distribution[1]
+        )
+    elif distribution[0] == "gaussian":
+        output = np.random.randn(*shape) * float(distribution[2]) + float(
+            distribution[1]
+        )
+    elif distribution[0] == "exponential":
         if distribution[1] <= 0:
-            raise(ValueError, 'The mean of the exponential distribution should be larger than 0!')
+            raise (
+                ValueError,
+                "The mean of the exponential distribution should be larger than 0!",
+            )
         output = np.random.exponential(float(distribution[1]), shape)
     else:
-        raise (LookupError, 'the first element of "noise" should be "gaussian", "flat" or "exponential"!')
+        raise (
+            LookupError,
+            'the first element of "noise" should be "gaussian", "flat" or "exponential"!',
+        )
 
 
-def int2str(num,length=None):
+def int2str(num, length=None):
     """
     generate a string representation for a integer with a given length
 
@@ -118,9 +137,12 @@ def int2str(num,length=None):
     """
 
     rawstr = str(int(num))
-    if length is None or length == len(rawstr):return rawstr
-    elif length < len(rawstr): raise ValueError('Length of the number is longer then defined display length!')
-    elif length > len(rawstr): return '0'*(length-len(rawstr)) + rawstr
+    if length is None or length == len(rawstr):
+        return rawstr
+    elif length < len(rawstr):
+        raise ValueError("Length of the number is longer then defined display length!")
+    elif length > len(rawstr):
+        return "0" * (length - len(rawstr)) + rawstr
 
 
 def check_df_index(df):
@@ -165,7 +187,7 @@ def check_binary_2d_array(array):
     return True
 
 
-def plot_spike_ticks(spike_history, y=0., plot_axis=None, color='#ff0000', **kwargs):
+def plot_spike_ticks(spike_history, y=0.0, plot_axis=None, color="#ff0000", **kwargs):
     """
     plot spike ticks as separate dots
 
@@ -183,7 +205,7 @@ def plot_spike_ticks(spike_history, y=0., plot_axis=None, color='#ff0000', **kwa
 
     spk_num = len(spike_history)
 
-    plot_axis.plot(spike_history, [float(y)] * spk_num, '.', mfc=color, **kwargs)
+    plot_axis.plot(spike_history, [float(y)] * spk_num, ".", mfc=color, **kwargs)
 
 
 def short(input_str):
@@ -191,67 +213,88 @@ def short(input_str):
     retrun abbreviation of a string
     """
 
-    if input_str in ['north', 'south', 'east', 'west']:
-        output_str =  input_str[0] * 2
-    elif input_str in ['northwest', 'northeast', 'southwest', 'southeast']:
+    if input_str in ["north", "south", "east", "west"]:
+        output_str = input_str[0] * 2
+    elif input_str in ["northwest", "northeast", "southwest", "southeast"]:
         output_str = input_str[0] + input_str[5]
-    elif input_str in ['neuron', 'hidden', 'eye', 'muscle']:
+    elif input_str in ["neuron", "hidden", "eye", "muscle"]:
         output_str = input_str[0]
-    elif input_str in ['terrain', 'food', 'fish']:
+    elif input_str in ["terrain", "food", "fish"]:
         output_str = input_str[0:4]
     else:
-        raise ValueError('littlefish.core.utilities.short(): do not understand input string.')
+        raise ValueError(
+            "littlefish.core.utilities.short(): do not understand input string."
+        )
 
     return output_str.upper()
 
 
-def plot_mask_borders(mask, plot_axis=None, color='#ff0000', border_width=2, closing_iteration=None, **kwargs):
+def plot_mask_borders(
+    mask,
+    plot_axis=None,
+    color="#ff0000",
+    border_width=2,
+    closing_iteration=None,
+    **kwargs
+):
     """
     plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
     as background, and non-zero, non-nan pixel will be considered in ROI.
     """
 
     if not check_binary_2d_array(mask):
-        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains '
-                          'only 0s and 1s.')
+        raise (
+            ValueError,
+            "input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains "
+            "only 0s and 1s.",
+        )
 
     if not plot_axis:
         f = plt.figure()
         plot_axis = f.add_subplot(111)
 
     if closing_iteration is not None:
-        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(np.uint8)
+        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(
+            np.uint8
+        )
     else:
         ploting_mask = mask
 
-    currfig = plot_axis.contour(ploting_mask, levels=[0.5], colors=color, linewidths=border_width, **kwargs)
+    currfig = plot_axis.contour(
+        ploting_mask, levels=[0.5], colors=color, linewidths=border_width, **kwargs
+    )
 
     # put y axis in decreasing order
     y_lim = list(plot_axis.get_ylim())
     y_lim.sort()
     plot_axis.set_ylim(y_lim[::-1])
 
-    plot_axis.set_aspect('equal')
+    plot_axis.set_aspect("equal")
 
     return currfig
 
 
-def plot_mask(mask, plot_axis=None, color='#ff0000', closing_iteration=None, **kwargs):
+def plot_mask(mask, plot_axis=None, color="#ff0000", closing_iteration=None, **kwargs):
     """
     plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
     as background, and non-zero, non-nan pixel will be considered in ROI.
     """
 
     if not check_binary_2d_array(mask):
-        raise(ValueError, 'input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains '
-                          'only 0s and 1s.')
+        raise (
+            ValueError,
+            "input mask should be a 2d binary numpy.ndarray with _dtype as integer and contains "
+            "only 0s and 1s.",
+        )
 
     if not plot_axis:
         f = plt.figure()
         plot_axis = f.add_subplot(111)
 
     if closing_iteration is not None:
-        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(np.uint8)
+        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(
+            np.uint8
+        )
     else:
         ploting_mask = mask
 
@@ -262,12 +305,12 @@ def plot_mask(mask, plot_axis=None, color='#ff0000', closing_iteration=None, **k
     y_lim.sort()
     plot_axis.set_ylim(y_lim[::-1])
 
-    plot_axis.set_aspect('equal')
+    plot_axis.set_aspect("equal")
 
     return currfig
 
 
-def check_monotonicity(arr, direction='increasing'):
+def check_monotonicity(arr, direction="increasing"):
     """
     check monotonicity of a 1-d array, usually a time series
 
@@ -277,45 +320,47 @@ def check_monotonicity(arr, direction='increasing'):
     """
 
     if len(arr.shape) != 1:
-        raise ValueError('Input array should be one dimensional!')
+        raise ValueError("Input array should be one dimensional!")
 
     if arr.shape[0] < 2:
-        raise ValueError('Input array should have at least two elements!')
+        raise ValueError("Input array should have at least two elements!")
 
     diff = np.diff(arr)
     min_diff = np.min(diff)
     max_diff = np.max(diff)
 
-    if direction == 'increasing':
+    if direction == "increasing":
         if min_diff > 0:
             return True
         else:
             return False
 
-    elif direction == 'decreasing':
+    elif direction == "decreasing":
         if max_diff < 0:
             return True
         else:
             return False
 
-    elif direction == 'non-increasing':
+    elif direction == "non-increasing":
         if max_diff <= 0:
             return True
         else:
             return False
 
-    elif direction == 'non-decreasing':
+    elif direction == "non-decreasing":
         if min_diff >= 0:
             return True
         else:
             return False
 
     else:
-        raise LookupError('direction should one of the following: "increasing", "decreasing", '
-                          '"non-increasing", "non-decreasing"!')
+        raise LookupError(
+            'direction should one of the following: "increasing", "decreasing", '
+            '"non-increasing", "non-decreasing"!'
+        )
 
 
-def decode(str_like, code='UTF-8'):
+def decode(str_like, code="UTF-8"):
     """
     if a string like object is actually a 'bytes' type, decode it by 'UTF-8', and return the string. This is to deal
     with the hdf5 string format madness.
@@ -330,7 +375,9 @@ def decode(str_like, code='UTF-8'):
     elif isinstance(str_like, bytes):
         return str_like.decode(code)
     else:
-        raise ValueError('Utility: decode function do not understand the input type. Should be "str" or "bytes".')
+        raise ValueError(
+            'Utility: decode function do not understand the input type. Should be "str" or "bytes".'
+        )
 
 
 def get_rgb(color_str):
@@ -345,11 +392,11 @@ def get_color_str(r, g, b):
     get hex color string from r,g,b value (integer with uint8 format)
     """
     if not (is_integer(r) and is_integer(g) and is_integer(b)):
-        raise TypeError('Input r, g and b should be integer!')
+        raise TypeError("Input r, g and b should be integer!")
 
     if not ((0 <= r <= 255) and (0 <= g <= 255) and (0 <= b <= 255)):
-        raise ValueError('Input r, g and b should between 0 and 255!')
-    return '#{:0>2}{:0>2}{:0>2}'.format(hex(r)[2:], hex(g)[2:], hex(b)[2:])
+        raise ValueError("Input r, g and b should between 0 and 255!")
+    return "#{:0>2}{:0>2}{:0>2}".format(hex(r)[2:], hex(g)[2:], hex(b)[2:])
 
 
 def value_2_rgb(value, cmap):
@@ -372,15 +419,15 @@ def distrube_number(possibilities, population_size):
     :return: list of non-negative integers, sum of which should precisely equal to population_size
     """
 
-    if not is_integer(population_size) or population_size < 1.:
-        raise ValueError('Utility: population_size sould be positive integer.')
+    if not is_integer(population_size) or population_size < 1.0:
+        raise ValueError("Utility: population_size sould be positive integer.")
 
     if len(possibilities) == 1:
         return [population_size]
 
     # normalize possibilities
     pos_nor = np.array(possibilities, dtype=np.float64)
-    pos_nor = np.hstack(([0.], pos_nor))
+    pos_nor = np.hstack(([0.0], pos_nor))
     pos_nor = pos_nor / np.sum(pos_nor)
     pos_cum = np.cumsum(pos_nor)
     pos_buckets = list(zip(pos_cum[:-1], pos_cum[1:]))
@@ -397,10 +444,8 @@ def distrube_number(possibilities, population_size):
     return buckets
 
 
-
-if __name__ == '__main__':
-
-    #==================================================
+if __name__ == "__main__":
+    # ==================================================
     # ts_trigger = np.arange(5)
     # ts_reference = np.arange(5) + 0.1001
     #
@@ -434,5 +479,4 @@ if __name__ == '__main__':
     print(check_arithmetic_progression(seq))
     # ==================================================
 
-    print('for debug ...')
-
+    print("for debug ...")
