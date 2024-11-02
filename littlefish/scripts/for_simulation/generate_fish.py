@@ -6,7 +6,7 @@ from littlefish.core import evolution as evo
 
 run_config = utils.get_default_config()
 run_config["simulation_config"]["data_folder"] = r"F:\little_fish_simulation_logs_2"
-run_config["simulation_config"]['process_num'] = 1
+run_config["simulation_config"]["process_num"] = 1
 run_config["evolution_config"]["population_size"] = 10
 
 
@@ -14,6 +14,3 @@ run_config["evolution_config"]["population_size"] = 10
 
 
 evo.run_evoluation(run_config)
-
-
-

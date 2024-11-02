@@ -261,17 +261,36 @@ def get_single_param_mutation(value_range, dtype):
 
 
 def get_brain_mutation_from_brain_mutation_config(brain_mutation_config):
-
-    eye_bl_mutation = get_single_param_mutation(brain_mutation_config["eye_bl_r"], "float")
-    eye_rp_mutation = get_single_param_mutation(brain_mutation_config["eye_rp_r"], "float")
-    neuron_bl_mutation = get_single_param_mutation(brain_mutation_config["neuron_bl_r"], "float")
-    neuron_rp_mutation = get_single_param_mutation(brain_mutation_config["neuron_rp_r"], "float")
-    muscle_bl_mutation = get_single_param_mutation(brain_mutation_config["muscle_bl_r"], "float")
-    muscle_rp_mutation = get_single_param_mutation(brain_mutation_config["muscle_rp_r"], "float")
-    connection_l_mutation = get_single_param_mutation(brain_mutation_config["connection_l_r"], "int")
-    connection_a_mutation = get_single_param_mutation(brain_mutation_config["connection_a_r"], "float")
-    connection_rt_mutation = get_single_param_mutation(brain_mutation_config["connection_rt_r"], "int")
-    connection_dt_mutation = get_single_param_mutation(brain_mutation_config["connection_dt_r"], "int")
+    eye_bl_mutation = get_single_param_mutation(
+        brain_mutation_config["eye_bl_r"], "float"
+    )
+    eye_rp_mutation = get_single_param_mutation(
+        brain_mutation_config["eye_rp_r"], "float"
+    )
+    neuron_bl_mutation = get_single_param_mutation(
+        brain_mutation_config["neuron_bl_r"], "float"
+    )
+    neuron_rp_mutation = get_single_param_mutation(
+        brain_mutation_config["neuron_rp_r"], "float"
+    )
+    muscle_bl_mutation = get_single_param_mutation(
+        brain_mutation_config["muscle_bl_r"], "float"
+    )
+    muscle_rp_mutation = get_single_param_mutation(
+        brain_mutation_config["muscle_rp_r"], "float"
+    )
+    connection_l_mutation = get_single_param_mutation(
+        brain_mutation_config["connection_l_r"], "int"
+    )
+    connection_a_mutation = get_single_param_mutation(
+        brain_mutation_config["connection_a_r"], "float"
+    )
+    connection_rt_mutation = get_single_param_mutation(
+        brain_mutation_config["connection_rt_r"], "int"
+    )
+    connection_dt_mutation = get_single_param_mutation(
+        brain_mutation_config["connection_dt_r"], "int"
+    )
 
     eye_mutation = NeuronMutation(
         baseline_mutation=eye_bl_mutation, refractory_mutation=eye_rp_mutation
@@ -921,30 +940,29 @@ class PopulationEvolution(object):
             curr_gen_ind += 1
 
 
-def run_evoluation(
-    run_config
-):
+def run_evoluation(run_config):
     # check generation indices
     start_generation_ind = run_config["simulation_config"]["start_generation_ind"]
     if not util.is_integer(start_generation_ind) or start_generation_ind < 0:
         raise ValueError(
             "PopulationEvolution: start_generation_ind should be a non-negative integer."
         )
-    
+
     end_generation_ind = run_config["simulation_config"]["end_generation_ind"]
     if not util.is_integer(end_generation_ind) or end_generation_ind < 0:
         raise ValueError(
             "PopulationEvolution: end_generation_ind should be a non-negative integer."
         )
-    
+
     if start_generation_ind >= end_generation_ind:
         raise ValueError(
             "PopulationEvolution: start_generation_ind should be smaller than end_generation_ind."
         )
-    
+
     pe = PopulationEvolution(
-        base_folder=run_config["simulation_config"]["data_folder"], 
-        generation_digits_num=run_config["simulation_config"]["generation_digits_num"])
+        base_folder=run_config["simulation_config"]["data_folder"],
+        generation_digits_num=run_config["simulation_config"]["generation_digits_num"],
+    )
     brain_mutation = get_brain_mutation_from_brain_mutation_config(
         run_config["brain_mutation_config"],
     )
@@ -964,7 +982,7 @@ def run_evoluation(
                     os.path.realpath(start_generation_folder)
                 )
             )
-        
+
         print(
             "\n======================================================================"
         )
@@ -976,8 +994,12 @@ def run_evoluation(
             rand_fish = mutate_fish(
                 curr_fish,
                 brain_mutation=brain_mutation,
-                neuron_mutation_rate=run_config["evolution_config"]["neuron_mutation_rate"],
-                connection_mutation_rate=run_config["evolution_config"]["connection_mutation_rate"],
+                neuron_mutation_rate=run_config["evolution_config"][
+                    "neuron_mutation_rate"
+                ],
+                connection_mutation_rate=run_config["evolution_config"][
+                    "connection_mutation_rate"
+                ],
                 verbose=False,
             )
             rand_fish_f = h5py.File(
@@ -989,9 +1011,7 @@ def run_evoluation(
             rand_fish_f.close()
 
         print("PopulationEvolution: fish generation for generation: 0 finished.")
-        print(
-            "======================================================================"
-        )
+        print("======================================================================")
 
         pe._run_simulation_multi_thread(
             generation_ind=0,
@@ -1002,7 +1022,7 @@ def run_evoluation(
             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
             food_num=run_config["terrain_config"]["food_num"],
         )
-    
+
     # else:
 
     #     if not os.listdir(start_generation_folder):
@@ -1011,7 +1031,7 @@ def run_evoluation(
     #                 os.path.realpath(start_generation_folder)
     #             )
     #         )
-        
+
     #     # run simulation
     #     curr_gen_ind = start_generation_ind
     #     while curr_gen_ind < end_generation_ind:

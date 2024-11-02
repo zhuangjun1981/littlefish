@@ -97,10 +97,7 @@ def generate_standard_fish():
 
     brain = genearte_brain_from_brain_config(default_config["brain_config"])
 
-    return Fish(
-        brain=brain,
-        **default_config["fish_config"]
-    )
+    return Fish(brain=brain, **default_config["fish_config"])
 
 
 def genearte_brain_from_brain_config(
@@ -129,12 +126,14 @@ def genearte_brain_from_brain_config(
 
     # generate hidden layers
     layer_ind += 1
-    hid_nums = brain_config["hidden_neuron_nums"]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
+    hid_nums = brain_config[
+        "hidden_neuron_nums"
+    ]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
     for hid_num in hid_nums:
         for hid_ind in range(hid_num):
             curr_neuron = Neuron(
-                baseline_rate=brain_config["neuron_baseline_rate"], 
-                refractory_period=brain_config["neuron_refractory_period"]
+                baseline_rate=brain_config["neuron_baseline_rate"],
+                refractory_period=brain_config["neuron_refractory_period"],
             )
             neurons.loc[neuron_ind, "layer"] = layer_ind
             neurons.loc[neuron_ind, "neuron_ind"] = hid_ind
@@ -148,9 +147,9 @@ def genearte_brain_from_brain_config(
     for mus_ind in range(mus_num):
         curr_mus_dir = get_muscle_direction(mus_ind)
         curr_muscle = Muscle(
-            direction=curr_mus_dir, 
-            baseline_rate=brain_config["muscle_baseline_rate"], 
-            refractory_period=brain_config["muscle_refractory_period"]
+            direction=curr_mus_dir,
+            baseline_rate=brain_config["muscle_baseline_rate"],
+            refractory_period=brain_config["muscle_refractory_period"],
         )
         neurons.loc[neuron_ind, "layer"] = layer_ind
         neurons.loc[neuron_ind, "neuron_ind"] = mus_ind
@@ -162,10 +161,10 @@ def genearte_brain_from_brain_config(
     connections = {}
 
     default_connection = Connection(
-        latency=brain_config["connection_latency"], 
-        amplitude=brain_config["connection_latency"], 
-        rise_time=brain_config["connection_rise_time"], 
-        decay_time=brain_config["connection_decay_time"]
+        latency=brain_config["connection_latency"],
+        amplitude=brain_config["connection_latency"],
+        rise_time=brain_config["connection_rise_time"],
+        decay_time=brain_config["connection_decay_time"],
     )
     layer_num = int(round(max(neurons["layer"]))) + 1
 
