@@ -93,7 +93,19 @@ def generate_minimal_brain():
 
 
 def generate_standard_fish():
-    # ================================== generate neurons =========================================
+    default_config = util.get_default_config()
+
+    brain = genearte_brain_from_brain_config(default_config["brain_config"])
+
+    return Fish(
+        brain=brain,
+        **default_config["fish_config"]
+    )
+
+
+def genearte_brain_from_brain_config(
+    brain_config,
+):
     neurons = pd.DataFrame(columns=["layer", "neuron_ind", "neuron"])
 
     neuron_ind = 0
@@ -103,13 +115,12 @@ def generate_standard_fish():
     eye_num = 8
     for eye_ind in range(eye_num):
         curr_eye_dir, curr_eye_input_type = get_eye_type(eye_ind, dir_num=4)
-        # print curr_eye_dir, curr_eye_input_type
         curr_eye = Eye(
             direction=curr_eye_dir,
-            gain=0.005,
+            gain=brain_config["eye_gain"],
             input_type=curr_eye_input_type,
-            baseline_rate=0.0,
-            refractory_period=1.2,
+            baseline_rate=brain_config["eye_baseline_rate"],
+            refractory_period=brain_config["eye_refractory_period"],
         )
         neurons.loc[neuron_ind, "layer"] = 0
         neurons.loc[neuron_ind, "neuron_ind"] = eye_ind
@@ -118,12 +129,13 @@ def generate_standard_fish():
 
     # generate hidden layers
     layer_ind += 1
-    hid_nums = [
-        8
-    ]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
+    hid_nums = brain_config["hidden_neuron_nums"]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
     for hid_num in hid_nums:
         for hid_ind in range(hid_num):
-            curr_neuron = Neuron(baseline_rate=0.005, refractory_period=1.2)
+            curr_neuron = Neuron(
+                baseline_rate=brain_config["neuron_baseline_rate"], 
+                refractory_period=brain_config["neuron_refractory_period"]
+            )
             neurons.loc[neuron_ind, "layer"] = layer_ind
             neurons.loc[neuron_ind, "neuron_ind"] = hid_ind
             neurons.loc[neuron_ind, "neuron"] = curr_neuron
@@ -136,7 +148,9 @@ def generate_standard_fish():
     for mus_ind in range(mus_num):
         curr_mus_dir = get_muscle_direction(mus_ind)
         curr_muscle = Muscle(
-            direction=curr_mus_dir, baseline_rate=0.0001, refractory_period=50.0
+            direction=curr_mus_dir, 
+            baseline_rate=brain_config["muscle_baseline_rate"], 
+            refractory_period=brain_config["muscle_refractory_period"]
         )
         neurons.loc[neuron_ind, "layer"] = layer_ind
         neurons.loc[neuron_ind, "neuron_ind"] = mus_ind
@@ -148,7 +162,10 @@ def generate_standard_fish():
     connections = {}
 
     default_connection = Connection(
-        latency=3, amplitude=0.001, rise_time=2, decay_time=5
+        latency=brain_config["connection_latency"], 
+        amplitude=brain_config["connection_latency"], 
+        rise_time=brain_config["connection_rise_time"], 
+        decay_time=brain_config["connection_decay_time"]
     )
     layer_num = int(round(max(neurons["layer"]))) + 1
 
@@ -169,21 +186,10 @@ def generate_standard_fish():
         curr_conn_df = pd.DataFrame(columns=pre_neuron_inds, index=post_neuron_inds)
         curr_conn_df[:] = default_connection
         connections.update({curr_name: curr_conn_df})
-
-    # print connections
     # ================================== generate connections =========================================
 
-    # generate standard brain
-    standard_brain = Brain(neurons=neurons, connections=connections)
-
-    return Fish(
-        mother_name=None,
-        brain=standard_brain,
-        max_health=100,
-        health_decay_rate=0.01,
-        land_penalty_rate=1.0,
-        food_rate=10.0,
-    )
+    # generate brain
+    return Brain(neurons=neurons, connections=connections)
 
 
 def get_eye_type(ind, dir_num=4):

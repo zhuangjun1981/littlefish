@@ -252,46 +252,26 @@ def simulation_fish_multiprocessing(simulation_params):
     )
 
 
-def get_default_brain_mutation():
-    eye_bl_r = (
-        -0.1,
-        0.1,
-    )  # baseline rate range of eyes, 0 to 0.1 action per time unit (100 spk/sec)
-    eye_rp_r = None  # refractory period range of eyes, not mutating right now
-    neuron_bl_r = (
-        -0.1,
-        0.1,
-    )  # baseline rate range of hidden neurons, 0 to 0.1 action per time unit (100 spk/sec)
-    neuron_rp_r = (
-        None  # refractory period range of hidden neurons, not mutating right now
-    )
-    muscle_bl_r = (
-        -0.1,
-        0.1,
-    )  # baseline rate range of muscles, 0 to 0.1 action per time unit (100 spk/sec)
-    muscle_rp_r = None  # refractory period range of muscles, not mutating right now
-    connection_l_r = None  # latency range of connections, not mutating right now
-    connection_a_r = (-1.0, 1.0)  # amplitude range of connections, (-100~100 spk/sec)
-    connection_rt_r = None  # rise time range of connections, not mutating right now
-    connection_dt_r = None  # decay time range of connections, not mutating right now
+def get_single_param_mutation(value_range, dtype):
+    if value_range is None:
+        mutation = None
+    else:
+        mutation = UniformMutation(value_range=value_range, dtype=dtype)
+    return mutation
 
-    def get_single_param_mutation(value_range, dtype):
-        if value_range is None:
-            mutation = None
-        else:
-            mutation = UniformMutation(value_range=value_range, dtype=dtype)
-        return mutation
 
-    eye_bl_mutation = get_single_param_mutation(eye_bl_r, "float")
-    eye_rp_mutation = get_single_param_mutation(eye_rp_r, "float")
-    neuron_bl_mutation = get_single_param_mutation(neuron_bl_r, "float")
-    neuron_rp_mutation = get_single_param_mutation(neuron_rp_r, "float")
-    muscle_bl_mutation = get_single_param_mutation(muscle_bl_r, "float")
-    muscle_rp_mutation = get_single_param_mutation(muscle_rp_r, "float")
-    connection_l_mutation = get_single_param_mutation(connection_l_r, "int")
-    connection_a_mutation = get_single_param_mutation(connection_a_r, "float")
-    connection_rt_mutation = get_single_param_mutation(connection_rt_r, "int")
-    connection_dt_mutation = get_single_param_mutation(connection_dt_r, "int")
+def get_brain_mutation_from_brain_mutation_config(brain_mutation_config):
+
+    eye_bl_mutation = get_single_param_mutation(brain_mutation_config["eye_bl_r"], "float")
+    eye_rp_mutation = get_single_param_mutation(brain_mutation_config["eye_rp_r"], "float")
+    neuron_bl_mutation = get_single_param_mutation(brain_mutation_config["neuron_bl_r"], "float")
+    neuron_rp_mutation = get_single_param_mutation(brain_mutation_config["neuron_rp_r"], "float")
+    muscle_bl_mutation = get_single_param_mutation(brain_mutation_config["muscle_bl_r"], "float")
+    muscle_rp_mutation = get_single_param_mutation(brain_mutation_config["muscle_rp_r"], "float")
+    connection_l_mutation = get_single_param_mutation(brain_mutation_config["connection_l_r"], "int")
+    connection_a_mutation = get_single_param_mutation(brain_mutation_config["connection_a_r"], "float")
+    connection_rt_mutation = get_single_param_mutation(brain_mutation_config["connection_rt_r"], "int")
+    connection_dt_mutation = get_single_param_mutation(brain_mutation_config["connection_dt_r"], "int")
 
     eye_mutation = NeuronMutation(
         baseline_mutation=eye_bl_mutation, refractory_mutation=eye_rp_mutation
@@ -317,6 +297,13 @@ def get_default_brain_mutation():
     )
 
     return brain_mutation
+
+
+def get_default_brain_mutation():
+    defalut_config = util.get_default_config()
+    return get_brain_mutation_from_brain_mutation_config(
+        defalut_config["brain_mutation_config"]
+    )
 
 
 class UniformMutation(object):
@@ -932,3 +919,127 @@ class PopulationEvolution(object):
             )
 
             curr_gen_ind += 1
+
+
+def run_evoluation(
+    run_config
+):
+    # check generation indices
+    start_generation_ind = run_config["simulation_config"]["start_generation_ind"]
+    if not util.is_integer(start_generation_ind) or start_generation_ind < 0:
+        raise ValueError(
+            "PopulationEvolution: start_generation_ind should be a non-negative integer."
+        )
+    
+    end_generation_ind = run_config["simulation_config"]["end_generation_ind"]
+    if not util.is_integer(end_generation_ind) or end_generation_ind < 0:
+        raise ValueError(
+            "PopulationEvolution: end_generation_ind should be a non-negative integer."
+        )
+    
+    if start_generation_ind >= end_generation_ind:
+        raise ValueError(
+            "PopulationEvolution: start_generation_ind should be smaller than end_generation_ind."
+        )
+    
+    pe = PopulationEvolution(
+        base_folder=run_config["simulation_config"]["data_folder"], 
+        generation_digits_num=run_config["simulation_config"]["generation_digits_num"])
+    brain_mutation = get_brain_mutation_from_brain_mutation_config(
+        run_config["brain_mutation_config"],
+    )
+
+    start_generation_folder = os.path.join(
+        pe._base_folder, pe._get_generation_name(start_generation_ind)
+    )
+
+    # check and generate starting folder structure
+    if start_generation_ind == 0:
+        if not os.path.isdir(start_generation_folder):
+            os.makedirs(start_generation_folder)
+
+        if os.listdir(start_generation_folder):
+            raise LookupError(
+                "PopulationEvolution: start generation folder ({}) is not empty.".format(
+                    os.path.realpath(start_generation_folder)
+                )
+            )
+        
+        print(
+            "\n======================================================================"
+        )
+        print("PopulationEvolution: generating fish for generation: 0 ...")
+
+        for fish_ind in range(run_config["evolution_config"]["population_size"]):
+            curr_brain = fi.genearte_brain_from_brain_config(run_config["brain_config"])
+            curr_fish = fi.Fish(brain=curr_brain, **run_config["fish_config"])
+            rand_fish = mutate_fish(
+                curr_fish,
+                brain_mutation=brain_mutation,
+                neuron_mutation_rate=run_config["evolution_config"]["neuron_mutation_rate"],
+                connection_mutation_rate=run_config["evolution_config"]["connection_mutation_rate"],
+                verbose=False,
+            )
+            rand_fish_f = h5py.File(
+                os.path.join(start_generation_folder, rand_fish.name + ".hdf5"), "a"
+            )
+            rand_fish_grp = rand_fish_f.create_group("fish")
+            rand_fish.to_h5_group(rand_fish_grp)
+            rand_fish_f["generations"] = [0]
+            rand_fish_f.close()
+
+        print("PopulationEvolution: fish generation for generation: 0 finished.")
+        print(
+            "======================================================================"
+        )
+
+        pe._run_simulation_multi_thread(
+            generation_ind=0,
+            process_num=run_config["simulation_config"]["process_num"],
+            simulation_length=run_config["simulation_config"]["simulation_length"],
+            terrain_size=run_config["terrain_config"]["terrain_size"],
+            sea_portion=run_config["terrain_config"]["sea_portion"],
+            terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
+            food_num=run_config["terrain_config"]["food_num"],
+        )
+    
+    # else:
+
+    #     if not os.listdir(start_generation_folder):
+    #         raise LookupError(
+    #             "PopulationEvolution: start generation folder ({}) should not be empty.".format(
+    #                 os.path.realpath(start_generation_folder)
+    #             )
+    #         )
+        
+    #     # run simulation
+    #     curr_gen_ind = start_generation_ind
+    #     while curr_gen_ind < end_generation_ind:
+    #         life_thr, fishes, simulation_ind = pe._calculate_offspring_num(
+    #             generation_ind=curr_gen_ind,
+    #             turnover_rate=run_config["evolution_config"]["turnover_rate"],
+    #             simulation_ind=0,
+    #             population_size=run_config["evolution_config"]["population_size"],
+    #         )
+
+    #         pe._generate_next_generation(
+    #             curr_generation_ind=curr_gen_ind,
+    #             fishes=fishes,
+    #             life_thr=life_thr,
+    #             simulation_ind=simulation_ind,
+    #             brain_mutation=brain_mutation,
+    #             neuron_mutation_rate=run_config["evolution_config"]["neuron_mutation_rate"],
+    #             connection_mutation_rate=run_config["evolution_config"]["connection_mutation_rate"],
+    #         )
+
+    #         pe._run_simulation_multi_thread(
+    #             generation_ind=curr_gen_ind + 1,
+    #             process_num=run_config["simulation_config"]["process_num"],
+    #             simulation_length=run_config["simulation_config"]["simulation_length"],
+    #             terrain_size=run_config["terrain_config"]["terrain_size"],
+    #             sea_portion=run_config["terrain_config"]["sea_portion"],
+    #             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
+    #             food_num=run_config["terrain_config"]["food_num"],
+    #         )
+
+    #         curr_gen_ind += 1

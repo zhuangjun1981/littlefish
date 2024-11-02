@@ -1,0 +1,66 @@
+simulation_config:
+  data_folder: to be overwritten              # directory to save simulation log
+  start_generation_ind: 0                     # start generation index
+  end_generation_ind: 10                      # end generation index
+  generation_digits_num: 7                    # use how many digits to represent generation index
+  process_num: 1                              # process number for multi-processing
+  simulation_length: 50000                    # max simulation length for each fish
+
+evolution_config:
+  connection_mutation_rate: 0.01
+  neuron_mutation_rate: 0.01
+  population_size: 100
+  turnover_rate: 0.6
+
+brain_config:
+  connection_amplitude: 0.001
+  connection_decay_time: 5
+  connection_latency: 3
+  connection_rise_time: 2
+  eye_baseline_rate: 0.0
+  eye_gain: 0.005
+  eye_refractory_period: 1.2
+  hidden_neuron_nums:
+  - 8
+  muscle_baseline_rate: 1.0e-05
+  muscle_refractory_period: 50.0
+  neuron_refractory_period: 1.2
+  neuron_baseline_rate: 0.005
+
+fish_config:
+  food_rate: 20.0
+  land_penalty_rate: 0.005
+  max_health: 100.0
+  mother_name: null
+  name: null
+
+brain_mutation_config:
+  eye_bl_r:                                 # eye baseline range
+  - -0.1
+  - 0.1
+  eye_rp_r: null                            # eye refractory period rang
+  
+  neuron_bl_r:                              # hidden neuron baseline range
+  - -0.1
+  - 0.1
+  neuron_rp_r: null                         # hidden neuron refractory period range
+
+  muscle_bl_r:                              # muscle baseline range
+  - -0.1
+  - 0.1
+  muscle_rp_r: null                         # muscle refractory period range
+  
+  connection_a_r:                           # connection amplitude range
+  - -0.1
+  - 0.1
+  connection_l_r: null                      # connection latency range
+  connection_rt_r: null                     # connection rise time range
+  connection_dt_r: null                     # connection decay time range
+  
+terrain_config:
+  food_num: 50                                # number of food
+  sea_portion: 0.5                            # portion of the sea
+  terrain_filter_sigma: 3.0
+  terrain_size:                               # shape of terrain                     
+  - 64
+  - 64

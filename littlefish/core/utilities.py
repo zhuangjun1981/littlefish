@@ -7,6 +7,8 @@ import numbers
 import random
 import matplotlib.pyplot as plt
 import scipy.ndimage as ni
+import os
+import yaml
 
 
 def is_integer(var):
@@ -442,6 +444,15 @@ def distrube_number(possibilities, population_size):
                 break
 
     return buckets
+
+
+def get_default_config():
+    curr_folder = os.path.dirname(os.path.abspath(__file__))
+    repo_folder = os.path.dirname(curr_folder)
+    default_config_path = os.path.join(repo_folder, "configs", "default_config.yml")
+    with open(default_config_path, "r") as f:
+        default_config = yaml.load(f, Loader=yaml.FullLoader)
+    return default_config
 
 
 if __name__ == "__main__":
