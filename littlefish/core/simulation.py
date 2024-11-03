@@ -3,6 +3,7 @@ import time
 import datetime
 import random
 import h5py
+import yaml
 from multiprocessing import Pool
 import numpy as np
 import pandas as pd
@@ -869,6 +870,10 @@ def run_evoluation(run_config):
                 )
             )
 
+        # save run_config to the current folder
+        with open(os.path.join(start_generation_folder, "run_config.yml"), "w") as f:
+            yaml.dump(run_config, f)
+
         print(
             "\n======================================================================"
         )
@@ -923,9 +928,13 @@ def run_evoluation(run_config):
     # run simulation
     curr_gen_ind = start_generation_ind
     while curr_gen_ind < end_generation_ind:
-        evolution.generate_next_generation(
+        next_generation_folder = evolution.generate_next_generation(
             base_folder=base_folder, curr_generation_ind=curr_gen_ind, simulation_ind=0
         )
+
+        # save run_config to the next generation folder
+        with open(os.path.join(next_generation_folder, "run_config.yml"), "w") as f:
+            yaml.dump(run_config, f)
 
         run_simulation_multi_thread(
             base_folder=base_folder,
