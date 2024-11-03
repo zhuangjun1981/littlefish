@@ -109,7 +109,7 @@ class Simulation(object):
         designed to run only once after creation
 
         :param terrain: terrain object, current terrain.terrain_2d.BinaryTerrain object
-        :param fish_list: list of fish object (fish.fish.Fish class)
+        :param fish_list: list of fish object (fish.Fish class)
         :param simulation_length: positive integer, number of time points of the simulation
         :param food_num: positive integer, number of food pixels in food map
         :return: None

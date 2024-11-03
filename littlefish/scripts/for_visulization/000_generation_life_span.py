@@ -5,8 +5,9 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
-gen_folder = r"F:\little_fish_simulation_logs\generation_0000000"
+gen_folder = r"F:\little_fish_simulation_logs_2\generation_0000000"
 
+names = []
 life_spans = []
 clip_top_life_span = 30000
 
@@ -20,8 +21,15 @@ for fn in os.listdir(gen_folder):
                 "equal one".format(curr_f["fish/name"][()])
             )
         sim_n = sim_n[0]
+        names.append(fn)
         life_spans.append(curr_f[sim_n]["simulation_log/last_time_point"][()])
         curr_f.close()
+
+life_span_df = pd.DataFrame()
+life_span_df["life_span"] = life_spans
+life_span_df["name"] = names
+life_span_df.sort_values(by="life_span", inplace=True)
+print(life_span_df)
 
 life_spans_plot = np.clip(life_spans, 0, clip_top_life_span)
 values, bin_edges = np.histogram(
@@ -40,6 +48,7 @@ df_plot = pd.DataFrame(
 # print(df_plot)
 generation = int(os.path.split(gen_folder)[-1].split("_")[-1])
 mean_life_span = np.mean(life_spans)
+# median_life_span = np.median(life_spans)
 
 f, ax = plt.subplots(figsize=(7, 5))
 ax.axvline(x=10000, ls="--", color="r")
@@ -49,5 +58,8 @@ ax.set_ylabel("fish count", fontsize=16)
 ax.set_title(
     f"generation: {generation:05d}, mean life span: {mean_life_span:.0f}", fontsize=16
 )
+# ax.set_title(
+#     f"generation: {generation:05d}, median life span: {median_life_span:.0f}", fontsize=16
+# )
 # plt.tight_layout()
 plt.show()

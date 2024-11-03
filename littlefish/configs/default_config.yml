@@ -3,13 +3,13 @@ simulation_config:
   start_generation_ind: 0                     # start generation index
   end_generation_ind: 10                      # end generation index
   generation_digits_num: 7                    # use how many digits to represent generation index
-  process_num: 10                              # process number for multi-processing
+  process_num: 10                             # process number for multi-processing
   simulation_length: 50000                    # max simulation length for each fish
 
 evolution_config:
   connection_mutation_rate: 0.01
   neuron_mutation_rate: 0.01
-  population_size: 100
+  population_size: 1000
   turnover_rate: 0.6
 
 brain_config:
