@@ -1,17 +1,16 @@
 import os
-import sys
 import time
 import datetime
 import random
 import h5py
-import inspect
-import littlefish.core.utilities as util
-import littlefish.core.terrain as tr
-import littlefish.core.fish as fi
-import littlefish.core.evolution as evo
-import matplotlib.pyplot as plt
+from multiprocessing import Pool
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import littlefish.core.utilities as utils
+import littlefish.core.terrain as tr
+import littlefish.core.fish as fish
+import littlefish.core.evolution as evo
 
 
 def simulate_one_fish(
@@ -44,7 +43,7 @@ def simulate_one_fish(
     """
 
     curr_fish_f = h5py.File(fish_path, "a")
-    curr_fish = fi.Fish.from_h5_group(curr_fish_f["fish"])
+    curr_fish = fish.Fish.from_h5_group(curr_fish_f["fish"])
 
     for sim_ind in range(simulation_num):
         curr_seed = random.randrange(2**32 - 1)
@@ -69,7 +68,7 @@ def simulate_one_fish(
         curr_simulation.run(verbose=verbose)
 
         curr_sim_grp = curr_fish_f.create_group(
-            "simulation_" + util.int2str(sim_ind, 3)
+            "simulation_" + utils.int2str(sim_ind, 3)
         )
         curr_sim_grp["ending_time"] = datetime.datetime.now().strftime(
             "%y%m%d_%H_%M_%S"
@@ -126,7 +125,7 @@ class Simulation(object):
         self._fish_list = fish_list
         self._simulation_length = simulation_length
 
-        if food_num < 1 or not util.is_integer(food_num):
+        if food_num < 1 or not utils.is_integer(food_num):
             raise ValueError("Simulation: food_num should be a positive integer.")
         else:
             self._food_num = food_num
@@ -643,9 +642,9 @@ class Simulation(object):
                 curr_fish_ah_grp = curr_fish_sim_grp.create_group("action_histories")
                 curr_fish_ah = curr_sim_history["action_histories"]
                 for neuron_ind, ah in curr_fish_ah.iterrows():
-                    curr_fish_ah_grp["neuron_" + util.int2str(neuron_ind, 4)] = ah.iloc[
-                        0
-                    ]
+                    curr_fish_ah_grp[
+                        "neuron_" + utils.int2str(neuron_ind, 4)
+                    ] = ah.iloc[0]
 
                 if is_save_psp_waveforms:
                     # save psp waveforms of all neurons in current fish
@@ -718,7 +717,7 @@ class Simulation(object):
             curr_fish_ah_grp = sim_grp.create_group("action_histories")
             curr_fish_ah = curr_sim_history["action_histories"]
             for neuron_ind, ah in curr_fish_ah.iterrows():
-                curr_fish_ah_grp["neuron_" + util.int2str(neuron_ind, 4)] = ah.iloc[0]
+                curr_fish_ah_grp["neuron_" + utils.int2str(neuron_ind, 4)] = ah.iloc[0]
 
             if is_save_psp_waveforms:
                 # save psp waveforms of all neurons in current fish
@@ -750,82 +749,87 @@ class Simulation(object):
             )
 
 
-# def simulation_fish_multiprocessing(simulation_params):
+def simulation_fish_multiprocessing(simulation_params):
+    """
+    warpper of "simulate_one_fish" for multi-processing
+    """
 
-#     f_path, fish_ind, fish_num, simulation_length, terrain, food_num = simulation_params
-#     si.simulate_one_fish(
-#         fish_path=f_path,
-#         simulation_length=simulation_length,
-#         simulation_num=1,
-#         terrain=terrain,
-#         food_num=food_num,
-#         hard_thr=0,
-#         fish_ind=fish_ind,
-#         fish_num=fish_num,
-#     )
+    f_path, fish_ind, fish_num, simulation_length, terrain, food_num = simulation_params
+    simulate_one_fish(
+        fish_path=f_path,
+        simulation_length=simulation_length,
+        simulation_num=1,
+        terrain=terrain,
+        food_num=food_num,
+        hard_thr=0,
+        fish_ind=fish_ind,
+        fish_num=fish_num,
+    )
 
 
-# def _run_simulation_multi_thread(
-#     self,
-#     generation_ind,
-#     process_num=6,
-#     simulation_length=50000,
-#     terrain_size=(64, 64),
-#     sea_portion=0.5,
-#     food_num=50,
-#     terrain_filter_sigma=3.0,
-# ):
-#     print(
-#         "\n======================================================================"
-#     )
-#     print(
-#         "PopulationEvolution: start simulating generation: {} ...".format(
-#             generation_ind
-#         )
-#     )
+def run_simulation_multi_thread(
+    base_folder,
+    generation_ind,
+    process_num=6,
+    simulation_length=50000,
+    terrain_size=(64, 64),
+    sea_portion=0.5,
+    food_num=50,
+    terrain_filter_sigma=3.0,
+    generation_digits_num=7,
+):
+    print("\n======================================================================")
+    print(
+        "PopulationEvolution: start simulating generation: {} ...".format(
+            generation_ind
+        )
+    )
 
-#     gen_folder = os.path.join(
-#         self._base_folder, self._get_generation_name(generation_ind)
-#     )
-#     fish_ns = [
-#         f for f in os.listdir(gen_folder) if f[:5] == "fish_" and f[-5:] == ".hdf5"
-#     ]
-#     fish_ns.sort()
-#     fish_ps = [os.path.join(gen_folder, f) for f in fish_ns]
+    gen_folder = os.path.join(
+        base_folder, utils.get_generation_name(generation_ind, generation_digits_num)
+    )
+    fish_ns = [
+        f for f in os.listdir(gen_folder) if f[:5] == "fish_" and f[-5:] == ".hdf5"
+    ]
+    fish_ns.sort()
+    fish_ps = [os.path.join(gen_folder, f) for f in fish_ns]
 
-#     tg = te.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
-#     ter = te.BinaryTerrain(tg.generate_binary_map(sigma=terrain_filter_sigma))
+    tg = tr.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
+    ter = tr.BinaryTerrain(tg.generate_binary_map(sigma=terrain_filter_sigma))
 
-#     sim_params = []
-#     for fish_ind, fish_p in enumerate(fish_ps):
-#         sim_params.append(
-#             (fish_p, fish_ind, len(fish_ps), simulation_length, ter, food_num)
-#         )
+    sim_params = []
+    for fish_ind, fish_p in enumerate(fish_ps):
+        sim_params.append(
+            (fish_p, fish_ind, len(fish_ps), simulation_length, ter, food_num)
+        )
 
-#     # with Pool(process_num) as p:
-#     #     p.map(simulation_fish_multiprocessing, sim_params)
+    with Pool(process_num) as p:
+        p.map(simulation_fish_multiprocessing, sim_params)
 
-#     for sim_param in sim_params:
-#         simulation_fish_multiprocessing(sim_param)
+    # for sim_param in sim_params:
+    #     simulation_fish_multiprocessing(sim_param)
 
-#     print(
-#         "PopulationEvolution: simulation of generation: {} finished.".format(
-#             generation_ind
-#         )
-#     )
-#     print("======================================================================")
+    print(
+        "PopulationEvolution: simulation of generation: {} finished.".format(
+            generation_ind
+        )
+    )
+    print("======================================================================")
 
 
 def run_evoluation(run_config):
-    # check generation indices
+    base_folder = run_config["simulation_config"]["data_folder"]
+
+    generation_digits_num = run_config["simulation_config"]["generation_digits_num"]
+
     start_generation_ind = run_config["simulation_config"]["start_generation_ind"]
-    if not util.is_integer(start_generation_ind) or start_generation_ind < 0:
+    if not utils.is_integer(start_generation_ind) or start_generation_ind < 0:
         raise ValueError(
             "PopulationEvolution: start_generation_ind should be a non-negative integer."
         )
 
     end_generation_ind = run_config["simulation_config"]["end_generation_ind"]
-    if not util.is_integer(end_generation_ind) or end_generation_ind < 0:
+    if not utils.is_integer(end_generation_ind) or end_generation_ind < 0:
         raise ValueError(
             "PopulationEvolution: end_generation_ind should be a non-negative integer."
         )
@@ -839,18 +843,17 @@ def run_evoluation(run_config):
         run_config["brain_mutation_config"],
     )
 
-    pe = evo.PopulationEvolution(
+    evolution = evo.PopulationEvolution(
         brain_mutation=brain_mutation,
-        generation_digits_num=run_config["simulation_config"]["generation_digits_num"],
+        generation_digits_num=generation_digits_num,
         **run_config["evolution_config"]
     )
 
-    base_folder = run_config["simulation_config"]["data_folder"]
     start_generation_folder = os.path.join(
         base_folder,
-        util.get_generation_name(
+        utils.get_generation_name(
             start_generation_ind,
-            run_config["simulation_config"]["generation_digits_num"],
+            generation_digits_num,
         ),
     )
 
@@ -872,8 +875,10 @@ def run_evoluation(run_config):
         print("PopulationEvolution: generating fish for generation: 0 ...")
 
         for fish_ind in range(run_config["evolution_config"]["population_size"]):
-            curr_brain = fi.genearte_brain_from_brain_config(run_config["brain_config"])
-            curr_fish = fi.Fish(brain=curr_brain, **run_config["fish_config"])
+            curr_brain = fish.genearte_brain_from_brain_config(
+                run_config["brain_config"]
+            )
+            curr_fish = fish.Fish(brain=curr_brain, **run_config["fish_config"])
             rand_fish = evo.mutate_fish(
                 curr_fish,
                 brain_mutation=brain_mutation,
@@ -896,7 +901,8 @@ def run_evoluation(run_config):
         print("PopulationEvolution: fish generation for generation: 0 finished.")
         print("======================================================================")
 
-        pe._run_simulation_multi_thread(
+        run_simulation_multi_thread(
+            base_folder=base_folder,
             generation_ind=0,
             process_num=run_config["simulation_config"]["process_num"],
             simulation_length=run_config["simulation_config"]["simulation_length"],
@@ -917,26 +923,12 @@ def run_evoluation(run_config):
     # run simulation
     curr_gen_ind = start_generation_ind
     while curr_gen_ind < end_generation_ind:
-        life_thr, fishes, simulation_ind = pe._calculate_offspring_num(
-            generation_ind=curr_gen_ind,
-            turnover_rate=run_config["evolution_config"]["turnover_rate"],
-            simulation_ind=0,
-            population_size=run_config["evolution_config"]["population_size"],
+        evolution.generate_next_generation(
+            base_folder=base_folder, curr_generation_ind=curr_gen_ind, simulation_ind=0
         )
 
-        pe._generate_next_generation(
-            curr_generation_ind=curr_gen_ind,
-            fishes=fishes,
-            life_thr=life_thr,
-            simulation_ind=simulation_ind,
-            brain_mutation=brain_mutation,
-            neuron_mutation_rate=run_config["evolution_config"]["neuron_mutation_rate"],
-            connection_mutation_rate=run_config["evolution_config"][
-                "connection_mutation_rate"
-            ],
-        )
-
-        pe._run_simulation_multi_thread(
+        run_simulation_multi_thread(
+            base_folder=base_folder,
             generation_ind=curr_gen_ind + 1,
             process_num=run_config["simulation_config"]["process_num"],
             simulation_length=run_config["simulation_config"]["simulation_length"],
@@ -960,9 +952,9 @@ if __name__ == "__main__":
     tg = tr.TerrainGenerator()
     terrain_map = tg.generate_binary_map(sigma=3.0, is_plot=True)
     terrain = tr.BinaryTerrain(terrain_map)
-    fish = fi.Fish()
+    fi = fish.Fish()
     sim = Simulation(
-        terrain=terrain, fish_list=[fish], simulation_length=5000, food_num=5
+        terrain=terrain, fish_list=[fi], simulation_length=5000, food_num=5
     )
     sim.initiate_simulation()
     # print(sim._simulation_histories)

@@ -3,7 +3,7 @@ simulation_config:
   start_generation_ind: 0                     # start generation index
   end_generation_ind: 10                      # end generation index
   generation_digits_num: 7                    # use how many digits to represent generation index
-  process_num: 1                              # process number for multi-processing
+  process_num: 10                              # process number for multi-processing
   simulation_length: 50000                    # max simulation length for each fish
 
 evolution_config:
@@ -13,19 +13,23 @@ evolution_config:
   turnover_rate: 0.6
 
 brain_config:
-  connection_amplitude: 0.001
-  connection_decay_time: 5
-  connection_latency: 3
-  connection_rise_time: 2
-  eye_baseline_rate: 0.0
+
   eye_gain: 0.005
+  eye_baseline_rate: 0.0
   eye_refractory_period: 1.2
+  
   hidden_neuron_nums:
   - 8
-  muscle_baseline_rate: 1.0e-05
-  muscle_refractory_period: 10.0
-  neuron_refractory_period: 1.2
   neuron_baseline_rate: 0.005
+  neuron_refractory_period: 1.2
+  
+  muscle_baseline_rate: 1.0e-05
+  muscle_refractory_period: 50.0
+  
+  connection_amplitude: 0.001
+  connection_latency: 3
+  connection_rise_time: 2
+  connection_decay_time: 5
 
 fish_config:
   food_rate: 20.0
