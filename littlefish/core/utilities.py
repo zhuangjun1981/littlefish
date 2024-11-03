@@ -455,6 +455,10 @@ def get_default_config():
     return default_config
 
 
+def get_generation_name(generation_ind, generation_digits_num=7):
+    return "generation_" + int2str(generation_ind, generation_digits_num)
+
+
 if __name__ == "__main__":
     # ==================================================
     # ts_trigger = np.arange(5)

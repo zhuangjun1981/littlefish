@@ -23,7 +23,7 @@ brain_config:
   hidden_neuron_nums:
   - 8
   muscle_baseline_rate: 1.0e-05
-  muscle_refractory_period: 50.0
+  muscle_refractory_period: 10.0
   neuron_refractory_period: 1.2
   neuron_baseline_rate: 0.005
 
@@ -31,6 +31,7 @@ fish_config:
   food_rate: 20.0
   land_penalty_rate: 0.005
   max_health: 100.0
+  health_decay_rate: 0.01
   mother_name: null
   name: null
 
