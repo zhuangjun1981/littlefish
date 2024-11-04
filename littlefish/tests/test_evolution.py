@@ -108,14 +108,19 @@ class TestEvolution(unittest.TestCase):
             decay_time_mutation=None,
         )
         bm = evo.BrainMutation(
-            neuron_mutation_rate=0.5,
             eye_mutation=eye_mutation,
             neuron_mutation=neuron_mutation,
             muscle_mutation=muscle_mutation,
-            connection_mutation_rate=0.1,
             connection_mutation=connection_mutation,
         )
-        mutated_brain = evo.mutate_brain(brain=brain, brain_mutation=bm, verbose=True)
+
+        mutated_brain = evo.mutate_brain(
+            brain=brain,
+            brain_mutation=bm,
+            neuron_mutation_rate=0.5,
+            connection_mutation_rate=0.1,
+            verbose=True,
+        )
 
         assert mutated_brain.get_neurons().loc[0, "neuron"].get_baseline_rate() >= 0.1
         assert mutated_brain.get_neurons().loc[0, "neuron"].get_baseline_rate() < 0.5
@@ -130,8 +135,9 @@ class TestEvolution(unittest.TestCase):
         assert (
             mutated_brain.get_neurons().loc[12, "neuron"].get_refractory_period() == 1.2
         )
+
         assert (
-            mutated_brain.get_neurons().loc[19, "neuron"].get_baseline_rate() == 0.0001
+            mutated_brain.get_neurons().loc[19, "neuron"].get_baseline_rate() == 0.00001
         )
         assert (
             mutated_brain.get_neurons().loc[19, "neuron"].get_refractory_period()
