@@ -847,7 +847,7 @@ def run_evoluation(run_config):
     evolution = evo.PopulationEvolution(
         brain_mutation=brain_mutation,
         generation_digits_num=generation_digits_num,
-        **run_config["evolution_config"]
+        **run_config["evolution_config"],
     )
 
     start_generation_folder = os.path.join(
