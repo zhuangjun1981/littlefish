@@ -30,7 +30,7 @@ def run():
         50.0,
     ]
     run_config["brain_mutation_config"]["connection_rt_r"] = [1, 10]
-    run_config["brain_mutation_config"]["connection_rt_r"] = [1, 20]
+    run_config["brain_mutation_config"]["connection_dt_r"] = [1, 20]
 
     sim.run_evoluation(run_config=run_config)
 
