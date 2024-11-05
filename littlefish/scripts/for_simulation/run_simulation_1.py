@@ -16,6 +16,10 @@ def run():
     run_config["simulation_config"]["start_generation_ind"] = 0
     run_config["simulation_config"]["end_generation_ind"] = 100
 
+    # the original run did not implement "move_penalty_rate"
+    # so set it to 0.
+    run_config["fish_config"]["move_penalty_rate"] = 0.0
+
     # this is not a good number, but was in the default config
     # and was used in the first simulation
     # now this value in default config has been changed

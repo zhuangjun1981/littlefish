@@ -13,7 +13,7 @@ def run():
     run_config = utils.get_default_config()
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 0
+    run_config["simulation_config"]["start_generation_ind"] = 12
     run_config["simulation_config"]["end_generation_ind"] = 100
 
     run_config["evolution_config"]["neuron_mutation_rate"] = 0.1

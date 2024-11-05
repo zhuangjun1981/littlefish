@@ -10,11 +10,11 @@ Detailed description can be found in this webpage: [The Little Fish](https://sit
 ```
 
 ## Run simulation
-- first edit the `<repo directory>/littlefish/scripts/for_simulation/run_simulation.py`
+- first edit the `<repo directory>/littlefish/scripts/for_simulation/run_simulation_1.py`
   - modify `data_folder` to be a directory for saving simulation logs (can be several Gigs) 
   - if running from scratch, make sure `start_generation_ind = 0`
 - Then run the script in python:
-  ```python <repo directory>/littlefish/scripts/for_simulation/run_simulation.py```
+  ```python <repo directory>/littlefish/scripts/for_simulation/run_simulation_1.py```
 
 ## View simulation
 - First start simulation viewer:
