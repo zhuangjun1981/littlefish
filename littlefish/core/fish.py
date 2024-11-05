@@ -1547,10 +1547,11 @@ class Fish(object):
     :attr _max_health: float, maximum health point a fish can have
     :attr _health_decay_rate: float, the constant rate of health reduction, health point / time unit
     :attr _land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
-                                   the terrain map, health point / (pixel * time unit)
-    :attri _food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
-                           health point / pixel. the food after taken will disappear, so no health gaining is a
-                           transient event
+        the terrain map, health point / (pixel * time unit)
+    :attr _food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+        health point / pixel. the food after taken will disappear, so no health gaining is a transient event
+    :attr _move_penalty_rate: float, the penalty of healh point, if the fish move once this amount will be subtracted
+        from its health.
     """
 
     def __init__(
@@ -1562,6 +1563,7 @@ class Fish(object):
         health_decay_rate=0.0001,
         land_penalty_rate=0.005,
         food_rate=20.0,
+        move_penalty_rate=0.001,
     ):
         """
 
@@ -1591,6 +1593,7 @@ class Fish(object):
         self._health_decay_rate = float(health_decay_rate)
         self._land_penalty_rate = land_penalty_rate
         self._food_rate = food_rate
+        self._move_penalty_rate = move_penalty_rate
 
         if brain is None:
             self._brain = Brain()
@@ -1640,6 +1643,9 @@ class Fish(object):
     def get_food_rate(self):
         return self._food_rate
 
+    def get_move_penalty_rate(self):
+        return self._move_penalty_rate
+
     def set_name(self, name):
         self._name = name
 
@@ -1652,6 +1658,9 @@ class Fish(object):
 
     def set_health_decay_rate(self, health_decay_rate):
         self._health_decay_rate = health_decay_rate
+
+    def set_move_penalty_rate(self, move_penalty_rate):
+        self._move_penalty_rate = float(move_penalty_rate)
 
     def act(
         self,
@@ -1719,7 +1728,7 @@ class Fish(object):
         # ----------------- not implemented --------------------------
 
         # update health
-        updated_health = updated_health - self._health_decay_rate
+        updated_health -= self._health_decay_rate
 
         if updated_health > 0:  # still alive
             movement_attempt = self._brain.act(
@@ -1733,6 +1742,9 @@ class Fish(object):
             )
         else:
             movement_attempt = None
+
+        if movement_attempt is not None and any(movement_attempt):
+            updated_health -= self._move_penalty_rate
 
         return updated_health, movement_attempt, food_eated
 
@@ -1799,6 +1811,7 @@ class Fish(object):
             "land_penalty_rate_per_pixel_tu", data=self._land_penalty_rate
         )
         h5_grp.create_dataset("food_rate_per_pixel", data=self._food_rate)
+        h5_grp.create_dataset("move_penalty_rate", data=self._move_penalty_rate)
         brain_group = h5_grp.create_group("brain")
         self._brain.to_h5_group(brain_group)
 
@@ -1812,6 +1825,7 @@ class Fish(object):
         curr_health_decay_rate = h5_grp["health_decay_rate_per_tu"][()]
         curr_land_penalty_rate = h5_grp["land_penalty_rate_per_pixel_tu"][()]
         curr_food_rate = h5_grp["food_rate_per_pixel"][()]
+        curr_move_penalty_rate = h5_grp["move_penalty_rate"][()]
 
         curr_fish = Fish(
             name=curr_name,
@@ -1821,6 +1835,7 @@ class Fish(object):
             health_decay_rate=curr_health_decay_rate,
             land_penalty_rate=curr_land_penalty_rate,
             food_rate=curr_food_rate,
+            move_penalty_rate=curr_move_penalty_rate,
         )
 
         return curr_fish

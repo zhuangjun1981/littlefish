@@ -204,6 +204,7 @@ def mutate_fish(
         health_decay_rate=fish.get_health_decay_rate(),
         land_penalty_rate=fish.get_land_penalty_rate(),
         food_rate=fish.get_food_rate(),
+        move_penalty_rate=fish.get_move_penalty_rate(),
     )
 
     if verbose:

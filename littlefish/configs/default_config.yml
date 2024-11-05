@@ -33,9 +33,10 @@ brain_config:
 
 fish_config:
   food_rate: 20.0
-  land_penalty_rate: 0.005
+  land_penalty_rate: 0.5
   max_health: 100.0
   health_decay_rate: 0.01
+  move_penalty_rate: 0.01
   mother_name: null
   name: null
 
