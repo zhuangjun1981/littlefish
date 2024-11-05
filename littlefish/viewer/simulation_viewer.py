@@ -150,8 +150,8 @@ class SimulationViewer(Ui_SimulationViewer):
             self.FishTableWidget.setItem(4, 0, QTableWidgetItem("health_decay_rate"))
             self.FishTableWidget.setItem(5, 0, QTableWidgetItem("land_penalty_rate"))
             self.FishTableWidget.setItem(6, 0, QTableWidgetItem("move_penalty_rate"))
-            self.FishTableWidget.setItem(7, 0, QTableWidgetItem("current_generation"))
-            self.FishTableWidget.setItem(8, 0, QTableWidgetItem("total_generation"))
+            self.FishTableWidget.setItem(7, 0, QTableWidgetItem("start_generation"))
+            self.FishTableWidget.setItem(8, 0, QTableWidgetItem("current_generation"))
             self.FishTableWidget.setItem(
                 0, 1, QTableWidgetItem(util.decode(self._file["fish/name"][()]))
             )
@@ -180,10 +180,10 @@ class SimulationViewer(Ui_SimulationViewer):
                 6, 1, QTableWidgetItem(str(self._file["fish/move_penalty_rate"][()]))
             )
             self.FishTableWidget.setItem(
-                7, 1, QTableWidgetItem(str(self._file["generations"][-1]))
+                7, 1, QTableWidgetItem(str(self._file["generations"][0]))
             )
             self.FishTableWidget.setItem(
-                8, 1, QTableWidgetItem(str(self._file["generations"].shape[0]))
+                8, 1, QTableWidgetItem(str(self._file["generations"][-1]))
             )
         except Exception as e:
             print(e)
