@@ -261,6 +261,8 @@ def plot_life_span_distribution(
 
 def collect_life_spans(
     simulation_folder: str,
+    min_generation: int = None,
+    max_generation: int = None,
 ) -> pd.DataFrame:
     gen_folders = [
         f
@@ -274,31 +276,36 @@ def collect_life_spans(
     life_spans = []
 
     for gen_i, gen_folder in enumerate(gen_folders):
-        print(f"reading {gen_folder}, {gen_i + 1} / {len(gen_folders)} ...")
+        curr_gen = int(gen_folder.split("_")[-1])
 
-        curr_folder = os.path.join(simulation_folder, gen_folder)
-        fish_fns = [
-            f
-            for f in os.listdir(curr_folder)
-            if f.startswith("fish_") and f.endswith(".hdf5")
-        ]
+        if (min_generation is None or curr_gen >= min_generation) and (
+            max_generation is None or curr_gen <= max_generation
+        ):
+            print(f"reading {gen_folder}, {gen_i + 1} / {len(gen_folders)} ...")
 
-        for fish_fn in fish_fns:
-            curr_fn = os.path.join(curr_folder, fish_fn)
-            ff = h5py.File(curr_fn, "r")
+            curr_folder = os.path.join(simulation_folder, gen_folder)
+            fish_fns = [
+                f
+                for f in os.listdir(curr_folder)
+                if f.startswith("fish_") and f.endswith(".hdf5")
+            ]
 
-            sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
-            if len(sim_n) == 0:
-                continue
-            elif len(sim_n) > 1:
-                print(
-                    f"{gen_folder}/{fish_fn} has more than one simulations, take the first one."
-                )
-            sim_n = sim_n[0]
+            for fish_fn in fish_fns:
+                curr_fn = os.path.join(curr_folder, fish_fn)
+                ff = h5py.File(curr_fn, "r")
 
-            fish_names.append(ff["fish/name"][()])
-            generations.append(int(gen_folder.split("_")[-1]))
-            life_spans.append(ff[sim_n]["simulation_log/last_time_point"][()])
+                sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
+                if len(sim_n) == 0:
+                    continue
+                elif len(sim_n) > 1:
+                    print(
+                        f"{gen_folder}/{fish_fn} has more than one simulations, take the first one."
+                    )
+                sim_n = sim_n[0]
+
+                fish_names.append(ff["fish/name"][()])
+                generations.append(curr_gen)
+                life_spans.append(ff[sim_n]["simulation_log/last_time_point"][()])
 
     life_span_df = pd.DataFrame()
     life_span_df["generation"] = generations
@@ -306,9 +313,3 @@ def collect_life_spans(
     life_span_df["life_span"] = life_spans
 
     return life_span_df
-
-
-if __name__ == "__main__":
-    simulation_folder = r"F:\little_fish_simulation_logs_4"
-    df = collect_life_spans(simulation_folder)
-    print(df.shape)
