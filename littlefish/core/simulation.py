@@ -100,6 +100,21 @@ def simulate_one_fish(
     curr_fish_f.close()
 
 
+def get_mean_firing_rate(sim_log_grp: h5py.Group) -> float:
+    """
+    given the hdf5 simulation log group, calculate mean firing rate of all neurons
+
+    :param sim_log_grp: h5py.Group, simuluation log group
+    """
+
+    sim_length = sim_log_grp["last_time_point"][()]
+    n_neurons = len(sim_log_grp["action_histories"])
+    total_actions = 0
+    for firing_history in sim_log_grp["action_histories"].items():
+        total_actions += len(firing_history)
+    return float(total_actions) / (sim_length * n_neurons)
+
+
 class Simulation(object):
     """
     Simulation class takes fish(s) and terrain to run the simulation of a fish's activity during its life

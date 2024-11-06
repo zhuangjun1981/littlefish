@@ -5,7 +5,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
-gen_folder = r"F:\little_fish_simulation_logs_4\generation_0000000"
+gen_folder = r"F:\little_fish_simulation_logs_4\generation_0000003"
 
 names = []
 life_spans = []

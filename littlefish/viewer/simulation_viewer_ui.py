@@ -93,7 +93,7 @@ class Ui_SimulationViewer(object):
         self.SimulationTableWidget.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.SimulationTableWidget.setFrameShadow(QtWidgets.QFrame.Plain)
         self.SimulationTableWidget.setShowGrid(False)
-        self.SimulationTableWidget.setRowCount(4)
+        self.SimulationTableWidget.setRowCount(5)
         self.SimulationTableWidget.setColumnCount(2)
         self.SimulationTableWidget.setObjectName("SimulationTableWidget")
         self.SimulationTableWidget.horizontalHeader().setVisible(False)

@@ -4,6 +4,7 @@ import h5py
 import littlefish.core.fish as fi
 import littlefish.core.plotting as pt
 import littlefish.core.utilities as util
+import littlefish.core.simulation as sim
 import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5.QtCore import QTimer
@@ -215,10 +216,17 @@ class SimulationViewer(Ui_SimulationViewer):
             self.SimulationTableWidget.setItem(1, 0, QTableWidgetItem("total_moves"))
             self.SimulationTableWidget.setItem(2, 0, QTableWidgetItem("max_length"))
             self.SimulationTableWidget.setItem(3, 0, QTableWidgetItem("ending_time"))
+            self.SimulationTableWidget.setItem(
+                4, 0, QTableWidgetItem("mean_firing_rate")
+            )
             self.SimulationTableWidget.setItem(0, 1, QTableWidgetItem(str(last_t)))
             self.SimulationTableWidget.setItem(1, 1, QTableWidgetItem(str(total_move)))
             self.SimulationTableWidget.setItem(2, 1, QTableWidgetItem(str(max_length)))
             self.SimulationTableWidget.setItem(3, 1, QTableWidgetItem(ending_time))
+            mean_firing_rate = sim.get_mean_firing_rate(sim_grp["simulation_log"])
+            self.SimulationTableWidget.setItem(
+                4, 1, QTableWidgetItem(f"{mean_firing_rate:.5f}")
+            )
         except Exception as e:
             print(e)
 
