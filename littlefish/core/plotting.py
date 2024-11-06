@@ -1,5 +1,8 @@
-import matplotlib.pyplot as plt
+import os
+import h5py
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 import littlefish.core.utilities as util
 
 
@@ -112,7 +115,7 @@ def plot_brain(
                     [pre_y, post_y],
                     color=amp_c,
                     lw=1.5,
-                    **connection_kws
+                    **connection_kws,
                 )
 
     # plotting neurons
@@ -130,7 +133,7 @@ def plot_brain(
                 ".",
                 mfc=bl_c,
                 mec="#444444",
-                **neuron_kws
+                **neuron_kws,
             )
         elif neuron["neuron"].get_neuron_type() == "muscle":
             plot_axis.plot(
@@ -139,13 +142,13 @@ def plot_brain(
                 ".",
                 mfc=bl_c,
                 mec="#444444",
-                **neuron_kws
+                **neuron_kws,
             )
             plot_axis.text(
                 neuron["plot_x"],
                 neuron["plot_y"],
                 util.short(neuron["neuron"].get_direction()),
-                **neuron_label_kws
+                **neuron_label_kws,
             )
         elif neuron["neuron"].get_neuron_type() == "eye":
             if neuron["neuron"].get_input_type() == "terrain":
@@ -155,7 +158,7 @@ def plot_brain(
                     ".",
                     mfc=bl_c,
                     mec="#065535",
-                    **neuron_kws
+                    **neuron_kws,
                 )
             elif neuron["neuron"].get_input_type() == "food":
                 plot_axis.plot(
@@ -164,13 +167,13 @@ def plot_brain(
                     ".",
                     mfc=bl_c,
                     mec="#800000",
-                    **neuron_kws
+                    **neuron_kws,
                 )
             plot_axis.text(
                 neuron["plot_x"],
                 neuron["plot_y"],
                 util.short(neuron["neuron"].get_direction()),
-                **neuron_label_kws
+                **neuron_label_kws,
             )
 
     plot_axis.set_axis_off()
@@ -178,3 +181,134 @@ def plot_brain(
     plot_axis.set_ylim([0, 1])
 
     return plot_axis
+
+
+def get_geneartion_life_spans(gen_folder: str) -> pd.DataFrame:
+    """
+    given a generation folder, return a dataframe with columns
+      "name": file name of the simulation of each fish
+      "life_span": the life span of the fish in the simulation
+    """
+
+    names = []
+    life_spans = []
+
+    for fn in os.listdir(gen_folder):
+        if fn[0:5] == "fish_" and fn[-5:] == ".hdf5":
+            curr_f = h5py.File(os.path.join(gen_folder, fn), "r")
+            sim_n = [s for s in curr_f.keys() if s[:11] == "simulation_"]
+            if len(sim_n) == 0:
+                continue
+            elif len(sim_n) > 1:
+                print(f"{fn} has more than one simulations, take the first one.")
+            sim_n = sim_n[0]
+            names.append(fn)
+            life_spans.append(curr_f[sim_n]["simulation_log/last_time_point"][()])
+            curr_f.close()
+
+    life_span_df = pd.DataFrame()
+    life_span_df["life_span"] = life_spans
+    life_span_df["name"] = names
+    life_span_df.sort_values(by="life_span", inplace=True)
+
+    return life_span_df
+
+
+def plot_life_span_distribution(
+    life_spans: list,
+    ax: plt.Axes,
+    bins: int = 60,
+    max_life_span: int = 30000,
+    **kwargs,
+) -> pd.DataFrame:
+    """
+    Given a list of life spans, plot the distribution.
+
+    :param life_spans: list of non-negative integers, life spans of fishs
+    :param ax: plt.Axes, plot axes
+    :param bins: int, number of bins
+    :param max_life_span: int, the maximum life span to clip to
+    :param **kwargs: other parameters to be passed to the ax.bar() function.
+    :return: df_plot, pandas.Dataframe, the distribution.
+    """
+
+    if ax is None:
+        f, ax = plt.subplots(figsize=(7, 5))
+
+    if max_life_span is None:
+        max_life_span = max(life_spans)
+
+    life_spans_plot = np.clip(life_spans, 0, max_life_span)
+    values, bin_edges = np.histogram(
+        life_spans_plot, bins=bins, range=[0, max_life_span]
+    )
+    bin_width = np.mean(np.diff(bin_edges))
+    bin_centers = (bin_edges[:-1] + bin_width / 2.0).astype(np.int32)
+
+    df_plot = pd.DataFrame(
+        {
+            "fish count": values,
+            "life span": bin_centers,
+        }
+    )
+
+    ax.bar(bin_centers, values, width=bin_width, **kwargs)
+    ax.set_xlabel("life span", fontsize=16)
+    ax.set_ylabel("fish count", fontsize=16)
+
+    return df_plot
+
+
+def collect_life_spans(
+    simulation_folder: str,
+) -> pd.DataFrame:
+    gen_folders = [
+        f
+        for f in os.listdir(simulation_folder)
+        if os.path.isdir(os.path.join(simulation_folder, f))
+        and f.startswith("generation")
+    ]
+
+    generations = []
+    fish_names = []
+    life_spans = []
+
+    for gen_i, gen_folder in enumerate(gen_folders):
+        print(f"reading {gen_folder}, {gen_i + 1} / {len(gen_folders)} ...")
+
+        curr_folder = os.path.join(simulation_folder, gen_folder)
+        fish_fns = [
+            f
+            for f in os.listdir(curr_folder)
+            if f.startswith("fish_") and f.endswith(".hdf5")
+        ]
+
+        for fish_fn in fish_fns:
+            curr_fn = os.path.join(curr_folder, fish_fn)
+            ff = h5py.File(curr_fn, "r")
+
+            sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
+            if len(sim_n) == 0:
+                continue
+            elif len(sim_n) > 1:
+                print(
+                    f"{gen_folder}/{fish_fn} has more than one simulations, take the first one."
+                )
+            sim_n = sim_n[0]
+
+            fish_names.append(ff["fish/name"][()])
+            generations.append(int(gen_folder.split("_")[-1]))
+            life_spans.append(ff[sim_n]["simulation_log/last_time_point"][()])
+
+    life_span_df = pd.DataFrame()
+    life_span_df["generation"] = generations
+    life_span_df["fish_name"] = fish_names
+    life_span_df["life_span"] = life_spans
+
+    return life_span_df
+
+
+if __name__ == "__main__":
+    simulation_folder = r"F:\little_fish_simulation_logs_4"
+    df = collect_life_spans(simulation_folder)
+    print(df.shape)
