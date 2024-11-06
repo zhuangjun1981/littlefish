@@ -3,6 +3,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import littlefish.core.utilities as util
 
 
@@ -271,41 +272,48 @@ def collect_life_spans(
         and f.startswith("generation")
     ]
 
-    generations = []
-    fish_names = []
-    life_spans = []
+    plot_gen_folders = []
 
-    for gen_i, gen_folder in enumerate(gen_folders):
+    for gen_folder in gen_folders:
         curr_gen = int(gen_folder.split("_")[-1])
 
         if (min_generation is None or curr_gen >= min_generation) and (
             max_generation is None or curr_gen <= max_generation
         ):
-            print(f"reading {gen_folder}, {gen_i + 1} / {len(gen_folders)} ...")
+            plot_gen_folders.append(gen_folder)
 
-            curr_folder = os.path.join(simulation_folder, gen_folder)
-            fish_fns = [
-                f
-                for f in os.listdir(curr_folder)
-                if f.startswith("fish_") and f.endswith(".hdf5")
-            ]
+    generations = []
+    fish_names = []
+    life_spans = []
 
-            for fish_fn in fish_fns:
-                curr_fn = os.path.join(curr_folder, fish_fn)
-                ff = h5py.File(curr_fn, "r")
+    for gen_i, gen_folder in enumerate(plot_gen_folders):
+        curr_gen = int(gen_folder.split("_")[-1])
 
-                sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
-                if len(sim_n) == 0:
-                    continue
-                elif len(sim_n) > 1:
-                    print(
-                        f"{gen_folder}/{fish_fn} has more than one simulations, take the first one."
-                    )
-                sim_n = sim_n[0]
+        print(f"reading {gen_folder}, {gen_i + 1} / {len(plot_gen_folders)} ...")
 
-                fish_names.append(ff["fish/name"][()])
-                generations.append(curr_gen)
-                life_spans.append(ff[sim_n]["simulation_log/last_time_point"][()])
+        curr_folder = os.path.join(simulation_folder, gen_folder)
+        fish_fns = [
+            f
+            for f in os.listdir(curr_folder)
+            if f.startswith("fish_") and f.endswith(".hdf5")
+        ]
+
+        for fish_fn in fish_fns:
+            curr_fn = os.path.join(curr_folder, fish_fn)
+            ff = h5py.File(curr_fn, "r")
+
+            sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
+            if len(sim_n) == 0:
+                continue
+            elif len(sim_n) > 1:
+                print(
+                    f"{gen_folder}/{fish_fn} has more than one simulations, take the first one."
+                )
+            sim_n = sim_n[0]
+
+            fish_names.append(ff["fish/name"][()])
+            generations.append(curr_gen)
+            life_spans.append(ff[sim_n]["simulation_log/last_time_point"][()])
 
     life_span_df = pd.DataFrame()
     life_span_df["generation"] = generations
@@ -313,3 +321,64 @@ def collect_life_spans(
     life_span_df["life_span"] = life_spans
 
     return life_span_df
+
+
+def plot_simulation_life_spans(
+    life_span_df: pd.DataFrame,
+    ax: plt.Axes = None,
+    bins: int = 60,
+    max_life_span: int = 30000,
+    cmap: str = "cool",
+    **kwargs,
+):
+    if max_life_span is None:
+        max_life_span = max(life_span_df["life_span"])
+
+    bin_width = None
+    bin_centers = None
+    cmap = plt.get_cmap(cmap)
+
+    if ax is None:
+        f, ax = plt.subplot(figsize=(7, 4))
+
+    gens = sorted(life_span_df["generation"].unique())
+    for gen_i, gen in enumerate(gens):
+        color = mcolors.to_hex(cmap(float(gen_i) / (len(gens) - 1)))
+
+        curr_ls = life_span_df.query("generation == @gen")["life_span"]
+        curr_ls = curr_ls.clip(0, max_life_span)
+        values, bin_edges = np.histogram(curr_ls, bins=bins, range=[0, max_life_span])
+
+        if bin_width is None:
+            bin_width = np.mean(np.diff(bin_edges))
+
+        if bin_centers is None:
+            bin_centers = (bin_edges[:-1] + bin_width / 2.0).astype(np.int32)
+
+        # ax.bar(bin_centers, values, width=bin_width, color="none", ec=color, **kwargs)
+        ax.step(
+            bin_centers,
+            values,
+            where="mid",
+            color=color,
+            label=f"gen{gen:04d}",
+            **kwargs,
+        )
+
+
+if __name__ == "__main__":
+    simulation_folder = r"F:\little_fish_simulation_logs_4"
+    life_span_df = collect_life_spans(
+        simulation_folder,
+        min_generation=0,
+        max_generation=24,
+    )
+    f, ax = plt.subplots()
+    plot_simulation_life_spans(
+        life_span_df,
+        ax,
+        max_life_span=20000,
+        bins=50,
+    )
+    ax.legend()
+    plt.show()
