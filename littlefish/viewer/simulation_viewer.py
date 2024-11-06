@@ -176,9 +176,12 @@ class SimulationViewer(Ui_SimulationViewer):
                     str(self._file["fish/land_penalty_rate_per_pixel_tu"][()])
                 ),
             )
-            self.FishTableWidget.setItem(
-                6, 1, QTableWidgetItem(str(self._file["fish/move_penalty_rate"][()]))
-            )
+            if "fish/move_penalty_rate" in self._file:
+                self.FishTableWidget.setItem(
+                    6,
+                    1,
+                    QTableWidgetItem(str(self._file["fish/move_penalty_rate"][()])),
+                )
             self.FishTableWidget.setItem(
                 7, 1, QTableWidgetItem(str(self._file["generations"][0]))
             )
