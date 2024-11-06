@@ -11,6 +11,7 @@ evolution_config:
   neuron_mutation_rate: 0.01
   population_size: 1000
   turnover_rate: 0.6
+  life_span_hard_threshold: null
 
 brain_config:
 

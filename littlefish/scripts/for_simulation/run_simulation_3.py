@@ -13,11 +13,13 @@ def run():
     run_config = utils.get_default_config()
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 14
+    run_config["simulation_config"]["start_generation_ind"] = 17
     run_config["simulation_config"]["end_generation_ind"] = 100
 
     run_config["evolution_config"]["neuron_mutation_rate"] = 0.1
     run_config["evolution_config"]["connection_mutation_rate"] = 0.1
+    # preventing fish that never move to pass to next generation
+    run_config["evolution_config"]["life_span_hard_threshold"] = 10000
 
     run_config["brain_config"]["hidden_neuron_nums"] = [10, 10]
     run_config["brain_config"]["muscle_refractory_period"] = 10.0

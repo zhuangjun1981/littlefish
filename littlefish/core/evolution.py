@@ -560,6 +560,7 @@ class PopulationEvolution(object):
         neuron_mutation_rate: float,
         connection_mutation_rate: float,
         brain_mutation: BrainMutation,
+        life_span_hard_threshold: int = None,
         generation_digits_num=7,
     ):
         """
@@ -569,6 +570,8 @@ class PopulationEvolution(object):
         :param neuron_mutation_rate: float, (0., 1.), probability of neuron mutation (of each mutable component)
         :param connection_mutation_rate: float, (0., 1.), probability of connection mutation (of each mutable component)
         :param brain_mutation: BrainMutation object, defines the value range of each component of the brain
+        :param life_span_hard_threshold: int, only the fish with life span larger than this number will have chances to
+            generate offspring and pass to next generation
         :param generation_digit_num: positive int, number of digits to represent generation number,
                                      default: 7 (max generation num 10 million)
         """
@@ -578,6 +581,7 @@ class PopulationEvolution(object):
         self.neuron_mutation_rate = neuron_mutation_rate
         self.connection_mutation_rate = connection_mutation_rate
         self.brain_mutation = brain_mutation
+        self.life_span_hard_threshold = life_span_hard_threshold
         self.generation_digits_num = generation_digits_num
 
     def _calculate_offspring_num(
@@ -677,16 +681,29 @@ class PopulationEvolution(object):
         retain_number = int(
             np.ceil(len(fish_ns) * (1.0 - self.turnover_rate))
         )  # number of fish to retain
-        life_thr = fishes.iloc[retain_number, 1]
 
         fishes = fishes[0:retain_number]
 
+        if self.life_span_hard_threshold is not None:
+            fishes = fishes.query("life_span > @self.life_span_hard_threshold").copy()
+
+        if len(fishes) == 0:
+            raise ValueError(
+                "No fish qualifies as mother fish. Try reducing the 'life_span_hard_threshold'."
+            )
+
+        life_thr = fishes.iloc[-1, 1]
+
         fishes["extra_life"] = fishes["life_span"] - life_thr
 
-        new_fish_number = self.population_size - retain_number
+        new_fish_number = self.population_size - fishes.shape[0]
         fishes["offspring_num"] = util.distrube_number(
             fishes["extra_life"], new_fish_number
         )
+
+        print("================== mother fish ==================")
+        print(fishes)
+        print("=================================================")
 
         return life_thr, fishes
 
