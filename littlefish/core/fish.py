@@ -10,36 +10,6 @@ import h5py
 import os
 import matplotlib.pyplot as plt
 
-# unnecessary global varible
-#
-# SIMULATION_LENGTH = 100000
-#
-# EYE_GAIN = 0.005
-# EYE_BASELINE_RATE = 0.
-# EYE_REFRACTORY_PERIOD = 10
-# EYE_BORDER_VALUE = 1
-# EYE_INPUT_FILTER = np.array([0.2, 0.6, 0.2])
-# EYE2_INPUT_FILTER = np.array([0.15, 0.3, 0.15, 0.1, 0.2, 0.1])
-# EYE_DIRECTIONS = ['east', 'northeast', 'north', 'northwest', 'west', 'southwest', 'south', 'southeast']
-# EYE_INPUT_TYPES = ['terrain', 'food', 'fish']
-#
-# NEURON_REFRACTORY_PERIOD = 10
-# NEURON_BASELINE_RATE = 0.0001
-#
-# MUSCLE_DIRECTIONS = ['east', 'north', 'west', 'south']
-# MUSCLE_REFRACTORY_PERIOD = 5000
-# MUSCLE_BASELINE_RATE = 0.00001
-#
-# CONNECTION_LATENCY = 30
-# CONNECTION_AMPLITUDE = 0.0001
-# CONNECTION_RISE_TIME = 50
-# CONNECTION_DECAY_TIME = 100
-#
-# FISH_MAX_HEALTH = 100.
-# FISH_HEALTH_DECAY_RATE = 0.0001
-# FISH_LAND_PENALTY_RATE = 0.005
-# FISH_FOOD_RATE = 20
-
 
 def generate_minimal_brain():
     """
