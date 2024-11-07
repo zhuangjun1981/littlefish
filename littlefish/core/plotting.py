@@ -285,6 +285,7 @@ def collect_life_spans(
     generations = []
     fish_names = []
     life_spans = []
+    is_from_last_gen = []
 
     for gen_i, gen_folder in enumerate(plot_gen_folders):
         curr_gen = int(gen_folder.split("_")[-1])
@@ -301,6 +302,11 @@ def collect_life_spans(
         for fish_fn in fish_fns:
             curr_fn = os.path.join(curr_folder, fish_fn)
             ff = h5py.File(curr_fn, "r")
+
+            if len(ff["generations"]) > 1:
+                is_from_last_gen.append(True)
+            else:
+                is_from_last_gen.append(False)
 
             sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
             if len(sim_n) == 0:
@@ -319,6 +325,7 @@ def collect_life_spans(
     life_span_df["generation"] = generations
     life_span_df["fish_name"] = fish_names
     life_span_df["life_span"] = life_spans
+    life_span_df["is_from_last_geneartion"] = is_from_last_gen
 
     return life_span_df
 
