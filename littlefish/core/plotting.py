@@ -336,6 +336,7 @@ def plot_simulation_life_spans(
     bins: int = 60,
     max_life_span: int = 30000,
     cmap: str = "cool",
+    legend_gap: int = 10,
     **kwargs,
 ):
     if max_life_span is None:
@@ -362,13 +363,17 @@ def plot_simulation_life_spans(
         if bin_centers is None:
             bin_centers = (bin_edges[:-1] + bin_width / 2.0).astype(np.int32)
 
-        # ax.bar(bin_centers, values, width=bin_width, color="none", ec=color, **kwargs)
+        if gen_i % legend_gap == 0:
+            legend = f"gen{gen:04d}"
+        else:
+            legend = None
+
         ax.step(
             bin_centers,
             values,
             where="mid",
             color=color,
-            label=f"gen{gen:04d}",
+            label=legend,
             **kwargs,
         )
 
