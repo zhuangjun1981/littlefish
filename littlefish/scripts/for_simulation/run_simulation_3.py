@@ -13,17 +13,20 @@ def run():
     run_config = utils.get_default_config()
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 29
+    run_config["simulation_config"]["start_generation_ind"] = 66
     run_config["simulation_config"]["end_generation_ind"] = 100
 
     run_config["evolution_config"]["neuron_mutation_rate"] = 0.1
     run_config["evolution_config"]["connection_mutation_rate"] = 0.1
-    run_config["evolution_config"]["turnover_rate"] = 0.8
+    run_config["evolution_config"]["turnover_rate"] = 0.9
     # preventing fish that never move to pass to next generation
-    # run_config["evolution_config"]["life_span_hard_threshold"] = 10000
+    run_config["evolution_config"]["life_span_hard_threshold"] = 10000
 
     run_config["brain_config"]["hidden_neuron_nums"] = [10, 10]
     run_config["brain_config"]["muscle_refractory_period"] = 10.0
+
+    run_config["terrain_config"]["food_num"] = 100
+    run_config["terrain_config"]["sea_portion"] = 0.99
 
     run_config["brain_mutation_config"]["eye_rp_r"] = [1.2, 5.0]
     run_config["brain_mutation_config"]["neuron_rp_r"] = [1.2, 5.0]
