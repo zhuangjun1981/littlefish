@@ -4,10 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from littlefish.core import plotting
 
-gen_folder = r"F:\little_fish_simulation_logs_3\generation_0000072"
-max_life_span = 30000
+gen_folder = r"F:\little_fish_simulation_logs_5\generation_0000000"
+max_life_span = 10000
 bins = 60
-default_life_span = 10000
+default_life_span = 2000
 
 
 life_span_df = plotting.get_geneartion_life_spans(gen_folder=gen_folder)

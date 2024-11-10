@@ -20,7 +20,7 @@ def run():
     run_config["evolution_config"]["connection_mutation_rate"] = 0.1
     run_config["evolution_config"]["turnover_rate"] = 0.9
     # preventing fish that never move to pass to next generation
-    run_config["evolution_config"]["life_span_hard_threshold"] = 10000
+    run_config["evolution_config"]["life_span_hard_threshold"] = 10001
 
     run_config["brain_config"]["hidden_neuron_nums"] = [10, 10]
     run_config["brain_config"]["muscle_refractory_period"] = 10.0

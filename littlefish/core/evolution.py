@@ -560,7 +560,8 @@ class PopulationEvolution(object):
         neuron_mutation_rate: float,
         connection_mutation_rate: float,
         brain_mutation: BrainMutation,
-        life_span_hard_threshold: int = None,
+        life_span_hard_threshold: int = 0,
+        movement_hard_threshold: int = 0,
         generation_digits_num=7,
     ):
         """
@@ -572,6 +573,8 @@ class PopulationEvolution(object):
         :param brain_mutation: BrainMutation object, defines the value range of each component of the brain
         :param life_span_hard_threshold: int, only the fish with life span larger than this number will have chances to
             generate offspring and pass to next generation
+        :param movement_hard_threshold: int, only the fish with movement more than this number will have chances to generate
+            offspring and pass to next generation
         :param generation_digit_num: positive int, number of digits to represent generation number,
                                      default: 7 (max generation num 10 million)
         """
@@ -582,6 +585,7 @@ class PopulationEvolution(object):
         self.connection_mutation_rate = connection_mutation_rate
         self.brain_mutation = brain_mutation
         self.life_span_hard_threshold = life_span_hard_threshold
+        self.movement_hard_threshold = movement_hard_threshold
         self.generation_digits_num = generation_digits_num
 
     def _calculate_offspring_num(
@@ -641,6 +645,7 @@ class PopulationEvolution(object):
 
         fish_ns = [os.path.splitext(f)[0] for f in fish_ns]
         life_spans = []
+        total_movements = []
         generation_nums = []
         for fish_n in fish_ns:
             fish_f = h5py.File(os.path.join(curr_gen_dir, fish_n + ".hdf5"), "r")
@@ -668,11 +673,14 @@ class PopulationEvolution(object):
             curr_sim_n = curr_sim_n[0]
 
             life_spans.append(fish_f[curr_sim_n]["simulation_log/last_time_point"][()])
+            total_movements.append(
+                fish_f[curr_sim_n]["simulation_log/total_movements"][()]
+            )
             fish_f.close()
 
         fishes = pd.DataFrame(
-            list(zip(fish_ns, life_spans, generation_nums)),
-            columns=["fish_name", "life_span", "generation_num"],
+            list(zip(fish_ns, life_spans, total_movements, generation_nums)),
+            columns=["fish_name", "life_span", "total_movements", "generation_num"],
         )
         fishes.sort_values(
             by=["life_span", "generation_num"], ascending=False, inplace=True
@@ -684,12 +692,13 @@ class PopulationEvolution(object):
 
         fishes = fishes[0:retain_number]
 
-        if self.life_span_hard_threshold is not None:
-            fishes = fishes.query("life_span > @self.life_span_hard_threshold").copy()
+        fishes = fishes.query(
+            "life_span >= @self.life_span_hard_threshold and total_movements >= @self.movement_hard_threshold"
+        ).copy()
 
         if len(fishes) == 0:
             raise ValueError(
-                "No fish qualifies as mother fish. Try reducing the 'life_span_hard_threshold'."
+                "No fish qualifies as mother fish. Try reducing the 'life_span_hard_threshold' or the 'movement_hard_threshold'."
             )
 
         life_thr = fishes.iloc[-1, 1]
