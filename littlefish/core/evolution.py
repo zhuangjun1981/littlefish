@@ -673,9 +673,7 @@ class PopulationEvolution(object):
             curr_sim_n = curr_sim_n[0]
 
             life_spans.append(fish_f[curr_sim_n]["simulation_log/last_time_point"][()])
-            total_movements.append(
-                fish_f[curr_sim_n]["simulation_log/total_movements"][()]
-            )
+            total_movements.append(fish_f[curr_sim_n]["simulation_log/total_moves"][()])
             fish_f.close()
 
         fishes = pd.DataFrame(

@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from littlefish.core import plotting
 
-gen_folder = r"F:\little_fish_simulation_logs_5\generation_0000000"
+gen_folder = r"F:\little_fish_simulation_logs_5\generation_0000100"
 max_life_span = 10000
 bins = 60
 default_life_span = 2000
