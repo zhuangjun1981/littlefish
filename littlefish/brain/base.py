@@ -18,7 +18,7 @@ class Neuron(object):
 
         self.baseline_rate = float(baseline_rate)
         self.refractory_period = float(refractory_period)
-        self.type = "littlefish.brain.Neuron"
+        self.type = "littlefish.brain.base.Neuron"
 
     def __str__(self):
         return f"{self.type} object"
@@ -115,101 +115,51 @@ class Connection(object):
         :param decay_time: int, temporal duration from peak to baseline, number of time units
         """
 
-        if latency is not None:
-            if not util.is_integer(latency):
-                raise ValueError("latency should be an integer.")
-            self._latency = int(latency)
-
-        if amplitude is not None:
-            self._amplitude = float(amplitude)
-
-        if rise_time is not None:
-            if not util.is_integer(rise_time):
-                raise ValueError("rise_time should be an integer.")
-            self._rise_time = int(rise_time)
-
-        if decay_time is not None:
-            if not util.is_integer(decay_time):
-                raise ValueError("decay_time should be an integer.")
-            self._decay_time = int(decay_time)
-
-        self._generate_psp()
+        self.latency = int(latency)
+        self.amplitude = float(amplitude)
+        self.rise_time = int(rise_time)
+        self.decay_time = int(decay_time)
+        self.psp = self.generate_psp()
+        self.type = "littlefish.brain.base.Connection"
 
     def __str__(self):
-        return "littlefish.brain.Connection object"
-
-    def copy(self):
-        """
-
-        :return: a copy of self for i.e. mutation
-        """
-
-        return Connection(
-            latency=self.get_latency(),
-            amplitude=self.get_amplitude(),
-            rise_time=self.get_rise_time(),
-            decay_time=self.get_decay_time(),
-        )
-
-    def get_latency(self):
-        return self._latency
+        return f"{self.type} object"
 
     def set_latency(self, new_latency):
-        if new_latency is not None:
-            if not util.is_integer(new_latency):
-                raise ValueError("new_latency should be an integer.")
-            self._latency = int(new_latency)
-            self._generate_psp()
-
-    def get_amplitude(self):
-        return self._amplitude
+        self.latency = int(new_latency)
+        self.psp = self.generate_psp()
 
     def set_ampletude(self, new_amplitude):
-        if new_amplitude is not None:
-            self._amplitude = float(new_amplitude)
-            self._generate_psp()
-
-    def get_rise_time(self):
-        return self._rise_time
+        self.amplitude = float(new_amplitude)
+        self.psp = self.generate_psp()
 
     def set_rise_time(self, new_rise_time):
-        if new_rise_time is not None:
-            if not util.is_integer(new_rise_time):
-                raise ValueError("new_rise should be an integer.")
-            self._rise_time = int(new_rise_time)
-            self._generate_psp()
-
-    def get_decay_time(self):
-        return self._decay_time
+        self.rise_time = int(new_rise_time)
+        self.psp = self.generate_psp()
 
     def set_decay_time(self, new_decay_time):
-        if new_decay_time is not None:
-            if not util.is_integer(new_decay_time):
-                raise ValueError("new_decay should be an integer.")
-            self._decay_time = int(new_decay_time)
-            self._generate_psp()
+        self.decay_time = int(new_decay_time)
+        self.psp = self.generate_psp()
 
-    def _generate_psp(self):
+    def generate_psp(self):
         """
-
         generate post synaptic probability wave form
         """
 
-        self._psp = np.zeros(self._latency + self._rise_time + self._decay_time)
-        self._psp[self._latency : self._latency + self._rise_time] = (
-            self._amplitude
-            * (np.arange(self._rise_time) + 1).astype(np.float32)
-            / float(self._rise_time)
+        psp = np.zeros(self.latency + self.rise_time + self.decay_time)
+        psp[self.latency : self.latency + self.rise_time] = (
+            self.amplitude
+            * (np.arange(self.rise_time) + 1).astype(np.float32)
+            / float(self.rise_time)
         )
 
-        self._psp[-self._decay_time :] = (
-            self._amplitude
-            * (np.arange(self._decay_time, 0, -1) - 1).astype(np.float32)
-            / float(self._decay_time)
+        psp[-self.decay_time :] = (
+            self.amplitude
+            * (np.arange(self.decay_time, 0, -1) - 1).astype(np.float32)
+            / float(self.decay_time)
         )
 
-    def get_psp(self):
-        return self._psp
+        return psp
 
     def set_params(self, latency=None, amplitude=None, rise_time=None, decay_time=None):
         """
@@ -224,31 +174,20 @@ class Connection(object):
         changed = False
 
         if latency is not None:
-            if not isinstance(latency, int):
-                raise ValueError("latency should be an integer.")
-            self._latency = latency
+            self.latency = int(latency)
             changed = True
-
         if amplitude is not None:
-            self._amplitude = float(amplitude)
+            self.amplitude = float(amplitude)
             changed = True
-
         if rise_time is not None:
-            if not isinstance(rise_time, int):
-                raise ValueError("rise_time should be an integer.")
-            self._rise_time = rise_time
+            self.rise_time = int(rise_time)
             changed = True
-
         if decay_time is not None:
-            if not isinstance(decay_time, int):
-                raise ValueError("decay_time should be an integer.")
-            self._decay_time = decay_time
+            self.decay_time = int(decay_time)
             changed = True
 
         if changed:
-            self._generate_psp()
-        else:
-            print("Brain.Connection: no parameter has been changed. Do nothing.")
+            self.psp = self.generate_psp()
 
     def act(self, t_point, postsynaptic_index, psp_waveforms):
         """
@@ -262,11 +201,11 @@ class Connection(object):
         :return:
         """
 
-        psp_end = t_point + len(self._psp)
+        psp_end = t_point + len(self.psp)
         if psp_end <= psp_waveforms.shape[1]:
-            psp_waveforms[postsynaptic_index, t_point:psp_end] += self._psp
+            psp_waveforms[postsynaptic_index, t_point:psp_end] += self.psp
         else:
-            psp_waveforms[postsynaptic_index, t_point:] += self._psp[
+            psp_waveforms[postsynaptic_index, t_point:] += self.psp[
                 : psp_waveforms.shape[1] - t_point
             ]
 

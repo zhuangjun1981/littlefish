@@ -28,7 +28,7 @@ class Eye(Neuron):
         super().__init__(
             baseline_rate=baseline_rate, refractory_period=refractory_period
         )
-        self.type = "littlefish.brain.Eye"
+        self.type = "littlefish.brain.eyes.Eye"
         self.eye_position = eye_position
         self.rf_positions = rf_positions
         self.rf_weights = rf_weights
