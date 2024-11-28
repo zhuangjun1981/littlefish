@@ -37,7 +37,7 @@ def prepend_find_packages(*roots):
 
 # find meta data
 def extract_meta(text, key_word):
-    match = re.search(rf"__{key_word}__\s*=\s*'([^']+)'", text)
+    match = re.search(rf'__{key_word}__\s*=\s*"([^"]+)"', text)
     if match:
         return match.group(1)
     raise RuntimeError(f"Unable to find {key_word} string.")
@@ -46,7 +46,6 @@ def extract_meta(text, key_word):
 def find_meta(f_path):
     with open(f_path, "r") as f:
         init_file = f.read()
-
     version = extract_meta(init_file, "version")
     license = extract_meta(init_file, "license")
     author = extract_meta(init_file, "author")
@@ -89,10 +88,20 @@ setup(
     url=url,
     author=author,
     tests_require=["pytest"],
-    install_requires=["numpy", "scipy", "matplotlib", "pandas", "h5py", "PyQt5"],
+    install_requires=[
+        "numpy",
+        "scipy",
+        "matplotlib",
+        "pandas",
+        "h5py",
+        "PyQt5-tools",
+        "pyyaml",
+        "jupyter",
+        "PyQt5",
+    ],
     cmdclass={"test": PyTest},
     author_email=author_email,
-    description="little fish brain network simulation",
+    description="littlefish brain network simulation",
     long_description=long_description,
     packages=prepend_find_packages("littlefish"),
     include_package_data=True,

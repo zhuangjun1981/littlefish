@@ -6,7 +6,7 @@ Detailed description can be found in this webpage: [The Little Fish](https://sit
 ```
 >>> git clone https://github.com/zhuangjun1981/littlefish
 >>> cd littlefish
->>> python setup.py install
+>>> pip install .
 ```
 
 ## Run simulation
