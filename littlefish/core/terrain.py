@@ -223,7 +223,7 @@ class BinaryTerrain(object):
                 "Terrain: cannot update food map. Do not understand current food position list."
             )
 
-        food_positions = np.array([np.array(pos, np.uint16) for pos in food_pos_list])
+        food_positions = np.array(food_pos_list)
         return food_positions
 
     def plot_terrain(self, plot_axis=None):

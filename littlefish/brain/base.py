@@ -65,8 +65,8 @@ class Neuron(object):
         ):
             return False
         else:
-            curr_rate = np.clip(self.baseline_rate + probability_input, 0, 1)
-            if probability_base <= curr_rate:
+            curr_rate = np.clip(self.baseline_rate + probability_input, 0, 1 + 1e-6)
+            if probability_base < curr_rate:
                 action_history.append(t_point)
                 return True
             else:

@@ -1,6 +1,7 @@
 import os
 import h5py
 import unittest
+import random
 import numpy as np
 from littlefish.brain.base import Neuron
 from littlefish.brain.eyes import Eye
@@ -9,7 +10,8 @@ from littlefish.brain.functional import load_neuron_from_h5_group
 
 class TestNeuron(unittest.TestCase):
     def setup(self):
-        pass
+        random.seed(42)
+        np.random.seed(42)
 
     def test_neuron_io(self):
         curr_folder = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +29,54 @@ class TestNeuron(unittest.TestCase):
         assert neuron.refractory_period == neuron2.refractory_period
 
         os.remove(temp_path)
+
+    def test_neuron_act(self):
+        total_t = 10
+        neuron = Neuron(baseline_rate=0.5, refractory_period=1.2)
+        action_history = []
+        for t_point in range(total_t):
+            neuron.act(
+                t_point=t_point,
+                action_history=action_history,
+                probability_input=0.5,
+            )
+        assert action_history == [0, 2, 4, 6, 8]
+
+        neuron1 = Neuron(baseline_rate=0.0, refractory_period=1.2)
+        action_history = []
+        for t_point in range(total_t):
+            if t_point in [0, 1, 5, 9]:
+                probility_input = 1.0
+            else:
+                probility_input = 0.0
+
+            neuron1.act(
+                t_point=t_point,
+                action_history=action_history,
+                probability_input=probility_input,
+            )
+        assert action_history == [0, 5, 9]
+
+        neuron2 = Neuron(baseline_rate=0.2, refractory_period=1.2)
+        action_history = []
+        for t_point in range(total_t):
+            if t_point in [0, 1, 5, 9]:
+                probility_input = 0.5
+            else:
+                probility_input = 0.0
+
+            if t_point in [2, 4, 5, 8, 9]:
+                probility_base = 0.3
+            else:
+                probility_base = 0.0
+
+            neuron2.act(
+                t_point=t_point,
+                action_history=action_history,
+                probability_input=probility_input,
+                probability_base=probility_base,
+            )
+        assert action_history == [0, 3, 5, 7, 9]
 
     def test_eye_io(self):
         curr_folder = os.path.dirname(os.path.abspath(__file__))
@@ -51,8 +101,65 @@ class TestNeuron(unittest.TestCase):
 
         os.remove(temp_path)
 
+    def test_eye_get_input(self):
+        input_map = np.arange(20).reshape(4, 5)
+        eye = Eye(
+            eye_position=np.array([-1, 0]),
+            rf_positions=np.array([[0, -1, -2, -3, -1], [0, 0, 0, 0, 1]]),
+            rf_weights=np.array([0.1, 0.2, 0.3, 0.4, 0.5]),
+        )
+
+        input_pixel_values = eye._get_input_pixel_values(
+            input_map=input_map,
+            body_position=(2, 2),
+            border_value=0.0,
+        )
+
+        assert np.array_equal(input_pixel_values, np.array([12, 7, 2, 0, 8]))
+
+        input_value = eye.get_input(
+            input_map=input_map, body_position=[2, 2], border_value=3.0
+        )
+
+        assert input_value == 8.4
+
+    def test_eye_act(self):
+        input_map = np.arange(20).reshape(4, 5)
+        eye = Eye(
+            eye_position=np.array([-1, 0]),
+            rf_positions=np.array([[0, -1, -2, -3, -1], [0, 0, 0, 0, 1]]),
+            rf_weights=np.array([0.01, 0.02, 0.03, 0.04, 0.05]),
+            baseline_rate=0.0,
+        )
+        input_value = eye.get_input(
+            input_map=input_map, body_position=[2, 2], border_value=1.0
+        )
+        assert input_value == 0.76
+
+        action_history = []
+        eye.act(
+            input_map=input_map,
+            body_position=[2, 2],
+            border_value=1.0,
+            t_point=3,
+            action_history=action_history,
+            probability_base=0.7,
+        )
+        eye.act(
+            input_map=input_map,
+            body_position=[2, 2],
+            border_value=1.0,
+            t_point=5,
+            action_history=action_history,
+            probability_base=0.9,
+        )
+        assert action_history == [3]
+
 
 if __name__ == "__main__":
     neuron_tests = TestNeuron()
     neuron_tests.test_neuron_io()
+    neuron_tests.test_neuron_act()
     neuron_tests.test_eye_io()
+    neuron_tests.test_eye_get_input()
+    neuron_tests.test_eye_act()
