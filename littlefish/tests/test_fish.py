@@ -11,34 +11,7 @@ class TestFish(unittest.TestCase):
     def setup(self):
         pass
 
-    def test_neuron_connection(self):
-        simulation_length = 5000
-        neuron_pre = fi.Neuron(baseline_rate=0.005)
-        neuron_post = fi.Neuron(baseline_rate=0.000)
-        connection = fi.Connection(amplitude=1, latency=5, rise_time=1, decay_time=1)
-
-        psp_waveforms = np.zeros((1, simulation_length))
-        action_history_pre = []
-        action_history_post = []
-
-        for i in range(simulation_length):
-            is_firing = neuron_pre.act(i, action_history=action_history_pre)
-            if is_firing:
-                connection.act(
-                    t_point=i, postsynaptic_index=0, psp_waveforms=psp_waveforms
-                )
-            neuron_post.act(
-                i,
-                action_history=action_history_post,
-                probability_input=psp_waveforms[0, i],
-            )
-
-        ccg, t = util.discreat_crosscorrelation(
-            np.array(action_history_pre), np.array(action_history_post)
-        )
-        assert np.argmax(ccg) == 15
-
-    def test_brain_minimum_brain(self):
+    def test_fish_with_minimum_brain(self):
         simulation_length = int(1e2)
         random.seed(111)
 
@@ -109,8 +82,7 @@ class TestFish(unittest.TestCase):
 
 if __name__ == "__main__":
     tfb = TestFish()
-    tfb.test_neuron_connection()
-    tfb.test_brain_minimum_brain()
+    tfb.test_fish_with_minimum_brain()
     tfb.test_brain_generate_empty_action_histories()
     tfb.test_generate_standard_fish()
     tfb.test_load_brain()

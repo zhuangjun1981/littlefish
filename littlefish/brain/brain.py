@@ -1,4 +1,5 @@
 import random
+import h5py
 import numpy as np
 import pandas as pd
 from littlefish.brain.neuron import Neuron, Eye, Muscle
@@ -42,35 +43,106 @@ class Brain:
       as the identifier of each connection.
     """
 
-    def __init__(self, neurons=None, connections=None):
+    def __init__(
+        self, neurons: pd.DataFrame = None, connections: pd.DataFrame = None
+    ) -> None:
         if neurons is None and connections is None:
             min_brain = generate_minimal_brain()
             self.neurons = min_brain.neurons()
             self.connections = min_brain.connections()
         else:
-            self.neurons = neurons
-            self.connections = connections
+            self.neurons = neurons.sort_index()
+            self.connections = connections.sort_index()
 
-        self.check_integrity(verbose=False)
+        self.check_integrity()
 
-    def check_integrity(self, verbose=False):
+    def check_integrity(self) -> None:
         # check columns of neurons
+        assert len(self.neurons.shape) == 2, "self.neurons dataframe should be 2d."
+        assert (
+            self.neurons.shape[0] >= 1
+        ), "self.neurons should have at least one neuron."
+        assert (
+            self.neurons.shape[1] == 2
+        ), "self.neurons dataframe should have two columns."
+        assert list(self.neurons.columns) == [
+            "layer",
+            "neuron",
+        ], "columns of self.neuron dataframe should be ['layer', 'neuron']"
+
         # check index of self.neuron is starting from 0 and continuously increasing with step 1
+        assert np.array_equal(
+            np.arange(self.neurons.shape[0], dtype=int),
+            np.array(self.neurons.index),
+        ), "index of self.neurons dataframe should be consecutively increasing integers starting from 0"
+
         # check layer of self.neuron is starting from 0 and increasing with step 1
+        layers = self.neurons["layer"]
+        for i in range(1, len(layers)):
+            assert (
+                layers[i] == layers[i - 1] or layers[i] == layers[i - 1] + 1
+            ), "'layer' in self.neurons dataframe should be monotonically increasing with step of 1."
+
         # check the first layer are all eyes
         # check the last layer are all muscles
         # check all hiddent layers are all neurons
+        for neuron_i, neuron_row in self.neurons.iterrows():
+            if neuron_row["layer"] == 0:
+                assert (
+                    neuron_row["neuron"].type == "littlefish.brain.neuron.Eye"
+                ), "first layer should be eyes."
+            elif neuron_row["layer"] == self.num_layers - 1:
+                assert (
+                    neuron_row["neuron"].type == "littlefish.brain.neuron.Muscle"
+                ), "last layer should be muscles."
+            else:
+                assert (
+                    neuron_row["neuron"].type == "littlefish.brain.neuron.Neuron"
+                ), "hidden layer should be neurons."
 
         # check columns of connections
+        assert self.connections.ndim == 2, "self.connections dataframe should be 2d"
+        assert (
+            self.connections.shape[1] == 3
+        ), "self.connections dataframe should have 3 columns"
+        assert list(self.connections.columns) == ["pre_idx", "post_idx", "connection"]
+
         # check pre- and post-synaptic neurons exist in self.neurons
+        for connection_i, connection_row in self.connections.iterrows():
+            assert (
+                connection_row["pre_idx"] < self.num_neurons
+            ), "all presynaptic neurons should exist in self.neurons dataframe."
+            assert (
+                connection_row["post_idx"] < self.num_neurons
+            ), "all postsynaptic neurons should exist in self.neurons dataframe."
+            assert (
+                connection_row["connection"].type
+                == "littlefish.brain.connection.Connection"
+            )
+
         # check a unique pair of pre- and post-synaptic neurons has only one connection
-        pass
+        assert (
+            len(set(zip(self.connections["pre_idx"], self.connections["post_idx"])))
+            == self.num_connections
+        ), "connections should be unique."
 
-    def get_postsynaptic_indices(self):
-        pass
+    @property
+    def num_neurons(self) -> int:
+        return self.neurons.shape[0]
 
-    def get_presynaptic_indices(self):
-        pass
+    @property
+    def num_layers(self) -> int:
+        return self.neurons.loc[self.neurons.shape[0] - 1, "layer"] + 1
+
+    @property
+    def num_connections(self) -> int:
+        return self.connections.shape[0]
+
+    def get_postsynaptic_indices(self, neuron_idx: int) -> list[int]:
+        return list(self.connections.query("pre_idx == @neuron_idx")["post_idx"])
+
+    def get_presynaptic_indices(self, neuron_idx: int) -> list[int]:
+        return list(self.connections.query("post_idx == @neuron_idx")["pre_idx"])
 
     def neuron_fire(self):
         pass
@@ -78,7 +150,13 @@ class Brain:
     def act(self):
         pass
 
+    def generate_empty_action_histories(self):
+        pass
+
     def get_connection_matrix(self):
+        pass
+
+    def to_h5_group(self, h5_group: h5py.Group):
         pass
 
 
@@ -680,3 +758,5 @@ if __name__ == "__main__":
     brain = generate_minimal_brain()
     print(brain.neurons)
     print(brain.connections)
+    print(brain.get_postsynaptic_indices(0))  # return [1, 2]
+    print(brain.get_presynaptic_indices(3))  # return [1, 2]
