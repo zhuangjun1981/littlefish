@@ -172,6 +172,36 @@ class TestNeuron(unittest.TestCase):
         assert muscle.direction == muscle2.direction
         os.remove(temp_path)
 
+    def test_muscle_action(self):
+        simulation_length = 20000
+        muscle = Muscle(
+            direction="east",
+            step_motion=np.array([0, 1]),
+            baseline_rate=0.0,
+            refractory_period=5000,
+        )
+        action_history = []
+        movements = []
+        for i in range(simulation_length):
+            movement = muscle.act(
+                i,
+                action_history=action_history,
+                probability_input=0.5,
+                probability_base=0.1,
+            )
+            if movement is not False:
+                movements.append(movement)
+        target_movements = [
+            np.array([0, 1], dtype=np.uint8),
+            np.array([0, 1], dtype=np.uint8),
+            np.array([0, 1], dtype=np.uint8),
+            np.array([0, 1], dtype=np.uint8),
+        ]
+        assert all(
+            [np.array_equal(movements[i], target_movements[i]) for i in range(4)]
+        )
+        assert action_history == [0, 5000, 10000, 15000]
+
 
 if __name__ == "__main__":
     neuron_tests = TestNeuron()
@@ -181,3 +211,4 @@ if __name__ == "__main__":
     neuron_tests.test_eye_get_input()
     neuron_tests.test_eye_act()
     neuron_tests.test_muscle_io()
+    neuron_tests.test_muscle_action()

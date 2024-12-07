@@ -107,9 +107,6 @@ class Connection(object):
         self.psp = self.generate_psp()
         self.type = "littlefish.brain.base.Connection"
 
-    def __str__(self):
-        return f"{self.type} object"
-
     def set_latency(self, new_latency):
         self.latency = int(new_latency)
         self.psp = self.generate_psp()
