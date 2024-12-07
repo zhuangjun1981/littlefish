@@ -1,65 +1,27 @@
 import numpy as np
-from littlefish.core import utilities as util
 from littlefish.brain.base import Neuron
 
 
-def get_muscle_direction(ind):
-    """
-    given the neuron_ind in the muscle layer return direction of a specific muscle
-
-    :return: string, direction of the muscle
-    """
-
-    muscle_directions = ["east", "north", "west", "south"]
-    direction_num = len(muscle_directions)
-    return muscle_directions[ind % direction_num]
-
-
-class SimpleMuscle(Neuron):
+class Muscle(Neuron):
     """
     muscle class for determining the motion of the fish. Subclass of Neuron class
     """
 
-    def __init__(self, direction, baseline_rate=0.001, refractory_period=500.0):
-        self._direction = direction
-
-        if self._direction == "east":
-            self._step_motion = np.array([0, 1], dtype=np.int8)
-        elif self._direction == "north":
-            self._step_motion = np.array([-1, 0], dtype=np.int8)
-        elif self._direction == "west":
-            self._step_motion = np.array([0, -1], dtype=np.int8)
-        elif self._direction == "south":
-            self._step_motion = np.array([1, 0], dtype=np.int8)
-        else:
-            raise ValueError(
-                "self.direction should be one of the following: "
-                "['east', 'north', 'west', 'south']."
-            )
+    def __init__(
+        self,
+        direction="south",
+        step_motion=np.array([1, 0], dtype=np.int8),
+        baseline_rate=0.001,
+        refractory_period=500.0,
+    ):
+        self.direction = direction
+        self.step_motion = step_motion
 
         super().__init__(
             baseline_rate=baseline_rate, refractory_period=refractory_period
         )
 
-        self.type = "littlefish.brain.SimpleMuscle"
-
-    def copy(self):
-        """
-
-        :return: a copy of self for i.e. mutation
-        """
-
-        return SimpleMuscle(
-            direction=self.get_direction(),
-            baseline_rate=self.get_baseline_rate(),
-            refractory_period=self.get_refractory_period(),
-        )
-
-    def get_neuron_type(self):
-        return "muscle"
-
-    def get_direction(self):
-        return self._direction
+        self.type = "littlefish.brain.Muscle"
 
     def act(
         self, t_point, action_history=[], probability_input=0.0, probability_base=None
@@ -86,31 +48,15 @@ class SimpleMuscle(Neuron):
         )
 
         if is_act:
-            return self._step_motion
+            return self.step_motion
         else:
             return is_act
 
-    def to_h5_group(self, h5_group):
-        br_dset = h5_group.create_dataset("baseline_rate", data=self._baseline_rate)
-        br_dset.attrs["unit"] = "action_per_time_unit"
-        rp_dset = h5_group.create_dataset(
-            "refractory_period", data=self._refractory_period
-        )
-        rp_dset.attrs["unit"] = "time_unit"
-        h5_group.create_dataset("direction", data=self._direction)
-        h5_group.attrs["neuron_type"] = "muscle"
 
-    @staticmethod
-    def from_h5_group(h5_group):
-        if util.decode(h5_group.attrs["neuron_type"]) != "muscle":
-            raise ValueError(
-                'Muscle: loading from h5 file failed. "neuron_type" attribute should be "muscle".'
-            )
-
-        direction = util.decode(h5_group["direction"][()])
-        muscle = SimpleMuscle(
-            direction=direction,
-            baseline_rate=h5_group["baseline_rate"][()],
-            refractory_period=h5_group["refractory_period"][()],
-        )
-        return muscle
+# direction, step_motion pair
+FOUR_MUSCLES = [
+    ("north", np.array([-1, 0], dtype=np.int8)),
+    ("south", np.array([1, 0], dtype=np.int8)),
+    ("east", np.array([0, -1], dtype=np.int8)),
+    ("west", np.array([0, 1], dtype=np.int8)),
+]

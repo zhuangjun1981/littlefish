@@ -1,8 +1,8 @@
 import pandas as pd
 from littlefish.core import utilities as util
 from littlefish.brain.base import Neuron, Connection, Brain
-from littlefish.brain.eyes import Eye
-from littlefish.brain.muscles import SimpleMuscle, get_muscle_direction
+from littlefish.brain.eyes import Eye, FOUR_EYES, EIGHT_EYES
+from littlefish.brain.muscles import Muscle, FOUR_MUSCLES
 
 
 def load_neuron_from_h5_group(h5_group):
@@ -19,55 +19,29 @@ def load_neuron_from_h5_group(h5_group):
     return obj(**kv_pairs)
 
 
-# def generate_minimal_brain():
-#     """
+def generate_minimal_brain():
+    """
+    :return: a Brain object with one eye, two neuron in hidden layer and one muscle
+    """
 
-#     :return: a Brain object with one eye, two neuron in hidden layer and one muscle
-#     """
+    neurons = pd.DataFrame()
+    neurons["layer"] = [0, 1, 1, 2]
+    neurons["neuron_ind"] = [0, 0, 1, 0]
+    neurons["neuron"] = [Eye(), Neuron(), Neuron(), Muscle()]
 
-#     eye = WideEye(
-#         direction="east",
-#         input_filter=None,
-#         gain=0.05,
-#         input_type="terrain",
-#         baseline_rate=0.0,
-#         refractory_period=1.2,
-#     )
+    # connections from eye to hidden layer
+    conn_0_1 = pd.DataFrame([[Connection()], [Connection()]], columns=[0], index=[1, 2])
 
-#     hidden0 = Neuron(baseline_rate=0.005, refractory_period=1.2)
-#     hidden1 = Neuron(baseline_rate=0.005, refractory_period=1.2)
-#     muscle = SimpleMuscle(direction="east", baseline_rate=0.1, refractory_period=500)
+    # connection from hidden layer to muscle
+    conn_1_2 = pd.DataFrame(
+        [[Connection(), Connection()]],
+        columns=[1, 2],
+        index=[3],
+    )
 
-#     neurons = pd.DataFrame(
-#         [[0, 0, eye], [1, 0, hidden0], [1, 1, hidden1], [2, 0, muscle]],
-#         columns=["layer", "neuron_ind", "neuron"],
-#     )
+    connections = {"L000_L001": conn_0_1, "L001_L002": conn_1_2}
 
-#     connection_eye_hidden0 = Connection(
-#         latency=3, amplitude=0.01, rise_time=5, decay_time=10
-#     )
-#     connection_eye_hidden1 = Connection(
-#         latency=3, amplitude=0.0001, rise_time=5, decay_time=10
-#     )
-#     connection_hidden0_muscle = Connection(
-#         latency=3, amplitude=0.0001, rise_time=5, decay_time=10
-#     )
-#     connection_hidden1_muscle = Connection(
-#         latency=3, amplitude=0.01, rise_time=5, decay_time=10
-#     )
-
-#     conn_0_1 = pd.DataFrame(
-#         [[connection_eye_hidden0], [connection_eye_hidden1]], columns=[0], index=[1, 2]
-#     )
-#     conn_1_2 = pd.DataFrame(
-#         [[connection_hidden0_muscle, connection_hidden1_muscle]],
-#         columns=[1, 2],
-#         index=[3],
-#     )
-
-#     connections = {"L000_L001": conn_0_1, "L001_L002": conn_1_2}
-
-#     return Brain(neurons=neurons, connections=connections)
+    return Brain(neurons=neurons, connections=connections)
 
 
 def genearte_brain_from_brain_config(
@@ -79,20 +53,22 @@ def genearte_brain_from_brain_config(
     layer_ind = 0
 
     # generate eyes
-    eye_num = 8
-    for eye_ind in range(eye_num):
-        curr_eye_dir, curr_eye_input_type = get_eye_type(eye_ind, dir_num=4)
-        curr_eye = WideEye(
-            direction=curr_eye_dir,
-            gain=brain_config["eye_gain"],
-            input_type=curr_eye_input_type,
-            baseline_rate=brain_config["eye_baseline_rate"],
-            refractory_period=brain_config["eye_refractory_period"],
-        )
-        neurons.loc[neuron_ind, "layer"] = 0
-        neurons.loc[neuron_ind, "neuron_ind"] = eye_ind
-        neurons.loc[neuron_ind, "neuron"] = curr_eye
-        neuron_ind += 1
+    for input_type in brain_config["input_types"]:
+        eye_set = brain_config["eye_set"]
+        for eye_direction, eye_dict in eval(f"{eye_set}.items()"):
+            curr_eye = Eye(
+                eye_direction=eye_direction,
+                rf_positions=eye_dict["rf_positions"],
+                rf_weights=eye_dict["rf_weights"],
+                gain=brain_config["eye_gain"],
+                input_type=input_type,
+                baseline_rate=brain_config["eye_baseline_rate"],
+                refractory_period=brain_config["eye_refractory_period"],
+            )
+            neurons.loc[neuron_ind, "layer"] = 0
+            neurons.loc[neuron_ind, "neuron_ind"] = neuron_ind
+            neurons.loc[neuron_ind, "neuron"] = curr_eye
+            neuron_ind += 1
 
     # generate hidden layers
     layer_ind += 1
@@ -113,11 +89,11 @@ def genearte_brain_from_brain_config(
         layer_ind += 1
 
     # generate muscles
-    mus_num = 4
-    for mus_ind in range(mus_num):
-        curr_mus_dir = get_muscle_direction(mus_ind)
-        curr_muscle = SimpleMuscle(
-            direction=curr_mus_dir,
+    muscle_set = eval(brain_config["muscle_set"])
+    for mus_ind, mus_tuple in muscle_set:
+        curr_muscle = Muscle(
+            direction=mus_tuple[0],
+            step_motion=mus_tuple[1],
             baseline_rate=brain_config["muscle_baseline_rate"],
             refractory_period=brain_config["muscle_refractory_period"],
         )

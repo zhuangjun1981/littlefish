@@ -5,6 +5,7 @@ import random
 import numpy as np
 from littlefish.brain.base import Neuron
 from littlefish.brain.eyes import Eye
+from littlefish.brain.muscles import Muscle
 from littlefish.brain.functional import load_neuron_from_h5_group
 
 
@@ -84,7 +85,7 @@ class TestNeuron(unittest.TestCase):
 
         eye = Eye()
         f_temp = h5py.File(temp_path, "a")
-        h5_grp = f_temp.create_group("neuron")
+        h5_grp = f_temp.create_group("eye")
         eye.to_h5_group(h5_grp)
 
         eye2 = load_neuron_from_h5_group(h5_grp)
@@ -95,7 +96,7 @@ class TestNeuron(unittest.TestCase):
         assert eye.refractory_period == eye2.refractory_period
         assert eye.gain == eye2.gain
         assert eye.input_type == eye2.input_type
-        assert np.array_equal(eye.eye_position, eye2.eye_position)
+        assert eye.eye_direction == eye2.eye_direction
         assert np.array_equal(eye.rf_positions, eye2.rf_positions)
         assert np.array_equal(eye.rf_weights, eye2.rf_weights)
 
@@ -104,7 +105,6 @@ class TestNeuron(unittest.TestCase):
     def test_eye_get_input(self):
         input_map = np.arange(20).reshape(4, 5)
         eye = Eye(
-            eye_position=np.array([-1, 0]),
             rf_positions=np.array([[0, -1, -2, -3, -1], [0, 0, 0, 0, 1]]),
             rf_weights=np.array([0.1, 0.2, 0.3, 0.4, 0.5]),
         )
@@ -126,7 +126,6 @@ class TestNeuron(unittest.TestCase):
     def test_eye_act(self):
         input_map = np.arange(20).reshape(4, 5)
         eye = Eye(
-            eye_position=np.array([-1, 0]),
             rf_positions=np.array([[0, -1, -2, -3, -1], [0, 0, 0, 0, 1]]),
             rf_weights=np.array([0.01, 0.02, 0.03, 0.04, 0.05]),
             baseline_rate=0.0,
@@ -155,6 +154,24 @@ class TestNeuron(unittest.TestCase):
         )
         assert action_history == [3]
 
+    def test_muscle_io(self):
+        curr_folder = os.path.dirname(os.path.abspath(__file__))
+        temp_path = os.path.join(curr_folder, "temp_file.h5")
+
+        muscle = Muscle()
+        f_temp = h5py.File(temp_path, "a")
+        h5_grp = f_temp.create_group("muscle")
+        muscle.to_h5_group(h5_grp)
+
+        muscle2 = load_neuron_from_h5_group(h5_grp)
+        f_temp.close()
+
+        assert muscle.type == muscle2.type
+        assert muscle.baseline_rate == muscle2.baseline_rate
+        assert muscle.refractory_period == muscle2.refractory_period
+        assert muscle.direction == muscle2.direction
+        os.remove(temp_path)
+
 
 if __name__ == "__main__":
     neuron_tests = TestNeuron()
@@ -163,3 +180,4 @@ if __name__ == "__main__":
     neuron_tests.test_eye_io()
     neuron_tests.test_eye_get_input()
     neuron_tests.test_eye_act()
+    neuron_tests.test_muscle_io()

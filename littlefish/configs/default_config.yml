@@ -15,7 +15,11 @@ evolution_config:
   movement_hard_threshold: 0
 
 brain_config:
-
+  
+  eye_set: FOUR_EYES                          # FOUR_EYEs or EIGHT_EYES
+  input_types:                                # input type of the eyes
+  - terrain
+  - food
   eye_gain: 0.005
   eye_baseline_rate: 0.0
   eye_refractory_period: 1.2
@@ -25,6 +29,7 @@ brain_config:
   neuron_baseline_rate: 0.005
   neuron_refractory_period: 1.2
   
+  muscle_set: FOUR_MUSCLES
   muscle_baseline_rate: 1.0e-05
   muscle_refractory_period: 50.0
   

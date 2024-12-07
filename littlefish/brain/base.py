@@ -83,21 +83,6 @@ class Neuron(object):
             if k == "refractory_period":
                 dset.attrs["unit"] = "time_unit"
 
-    @staticmethod
-    def from_h5_group(h5_group):
-        neuron_type = util.decode(h5_group.attrs["neuron_type"])
-
-        if neuron_type != "littlefish.brain.Neuron":
-            raise ValueError(
-                'Neuron: loading from h5 file failed. "neuron_type" attribute should be "littlefish.brain.Neuron".'
-            )
-
-        neuron = Neuron(
-            baseline_rate=h5_group["baseline_rate"][()],
-            refractory_period=h5_group["refractory_period"][()],
-        )
-        return neuron
-
 
 class Connection(object):
     """
