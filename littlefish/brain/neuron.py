@@ -388,7 +388,10 @@ class Eye(Neuron):
         t_point: int,
         action_history: list,
         probability_base: None,
-    ):
+    ) -> bool:
+        if input_map is None:
+            return False
+
         input_value = self.get_input(
             input_map=input_map, body_position=body_position, border_value=border_value
         )

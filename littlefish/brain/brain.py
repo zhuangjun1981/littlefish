@@ -144,11 +144,141 @@ class Brain:
     def get_presynaptic_indices(self, neuron_idx: int) -> list[int]:
         return list(self.connections.query("post_idx == @neuron_idx")["pre_idx"])
 
-    def neuron_fire(self):
-        pass
+    def get_postsynaptic_indices_and_connections(self, neuron_idx: int) -> pd.DataFrame:
+        """
+        given a presynaptic neuron index, return a dataframe containing all of its postsynaptic neurons
+        and corresponding connections.
+        """
+        return self.connections.query("pre_idx == @neuron_idx")[
+            ["post_idx", "connection"]
+        ]
 
-    def act(self):
-        pass
+    def neuron_fire(
+        self,
+        presynaptic_idx: int,
+        t_point: int,
+        psp_waveforms: np.ndarray,
+    ) -> None:
+        """
+        updata all corresponding psp waveforms when a presynaptic neuron (only in eye layer and hidden layer) fires
+
+        :param presynaptic_neuron_idx: int, the index of presynaptic neuron in self.neurons
+        :param t_point: int, time point in time unit axis of the action potential
+        :param psp_waveforms: 2d-array, shape (num_neurons, number of total simulation time points), dtype: floats,
+            psp waveforms of all neurons in the brain, each row represents one neuron in the same order as self.neurons
+            dataframe, each column represents a time point
+        :return: None
+        """
+        post_df = self.get_postsynaptic_indices_and_connections(
+            neuron_idx=presynaptic_idx
+        )
+        for post_i, post_row in post_df.iterrows():
+            post_neuron_idx = post_row["post_idx"]
+            curr_connection = post_row["connection"]
+            curr_connection.act(
+                t_point=t_point,
+                postsynaptic_index=post_neuron_idx,
+                psp_waveforms=psp_waveforms,
+            )
+
+    def act(
+        self,
+        t_point: int,
+        action_histories: pd.DataFrame,
+        psp_waveforms: np.ndarray,
+        body_position: tuple[int],
+        terrain_map: np.ndarray,
+        food_map: np.ndarray = None,
+        fish_map: np.ndarray = None,
+    ):
+        """
+
+        :param t_point: int, current time stamp of time unit axis
+        :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
+            same order as self.neurons data frame, columns = ['action_history']
+        :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
+            neuron in the same order as self.neurons data frame, each column represents a time point
+        :param body_position: tuple of two ints, (row, col), current position of body center of the fish
+        :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
+        :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
+        :param fish_map: not fully implemented right now.
+        :return: movement_attempt: 1-d array, np.uint8, (row, col), representing the movement attempt, be careful, this
+            may not represent the actual movement, it will be evaluated by the fish object
+            (fish class) containing this brain to see if the movement is possible. if the fish
+            is hitting the edge the world map, then the it will not move out of the map
+            None: no movement has been attempted,
+        """
+
+        movement_attempt = np.array([0, 0], dtype=np.uint8)
+
+        for i, neuron in self.neurons.iterrows():
+            if neuron["neuron"].type == "littlefish.brain.neuron.Eye":  # eye layer
+                curr_eye = neuron["neuron"]
+
+                if curr_eye.input_type == "terrain":
+                    input_map = terrain_map
+                    boarder_value = 1
+                elif curr_eye.input_type == "food":
+                    input_map = food_map
+                    border_value = 0
+                elif curr_eye.input_type == "fish":
+                    input_map = fish_map
+                    boarder_value = 0
+                else:
+                    raise ValueError(
+                        "Brain: the input_type of eye should be one of the following:"
+                        '"terrain", "food" or "fish".'
+                    )
+
+                is_fire = curr_eye.act(
+                    input_map=input_map,
+                    body_position=body_position,
+                    boarder_value=boarder_value,
+                    t_point=t_point,
+                    action_history=action_histories.loc[i, "action_history"],
+                )
+
+                if is_fire:  # the current eye fires
+                    # print('eye spike')
+                    self.neuron_fire(
+                        presynaptic_neuron_ind=i,
+                        t_point=t_point,
+                        psp_waveforms=psp_waveforms,
+                    )
+
+            elif (
+                neuron["neuron"].type == "littlefish.brain.neuron.Neuron"
+            ):  # hidden neuron
+                curr_neuron = neuron["neuron"]
+                is_fire = curr_neuron.act(
+                    t_point=t_point,
+                    action_history=action_histories.loc[i, "action_history"],
+                    probability_input=psp_waveforms[i, t_point],
+                )
+                if is_fire:
+                    # print('neuron spike')
+                    self.neuron_fire(
+                        presynaptic_neuron_ind=i,
+                        t_point=t_point,
+                        psp_waveforms=psp_waveforms,
+                    )
+
+            elif neuron["neuron"].type == "littlefish.brain.neuron.Muscle":  # muscle
+                curr_muscle = neuron["neuron"]
+                curr_movement_attempt = curr_muscle.act(
+                    t_point=t_point,
+                    action_history=action_histories.loc[i, "action_history"],
+                    probability_input=psp_waveforms[i, t_point],
+                )
+                if curr_movement_attempt is not False:
+                    # print('muscle spike')
+                    movement_attempt = movement_attempt + curr_movement_attempt
+            else:
+                raise ValueError(
+                    "Brain: neuron at index" + str(i) + " has invalid type."
+                )
+
+        return movement_attempt
 
     def generate_empty_action_histories(self):
         pass
@@ -760,3 +890,4 @@ if __name__ == "__main__":
     print(brain.connections)
     print(brain.get_postsynaptic_indices(0))  # return [1, 2]
     print(brain.get_presynaptic_indices(3))  # return [1, 2]
+    print(brain.get_postsynaptic_indices_and_connections(0))  # return [1, 2]

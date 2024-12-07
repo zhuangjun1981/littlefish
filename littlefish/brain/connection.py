@@ -91,7 +91,9 @@ class Connection:
         if changed:
             self.psp = self.generate_psp()
 
-    def act(self, t_point, postsynaptic_index, psp_waveforms):
+    def act(
+        self, t_point: int, postsynaptic_index: int, psp_waveforms: np.ndarray
+    ) -> None:
         """
         if the presynaptic neuron fires at the 'time_point', a psp wave form will be generated and add to the
         input waveform of postsynaptic neuron defined by postsynaptic_index
