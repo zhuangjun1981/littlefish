@@ -217,13 +217,13 @@ class Brain:
 
                 if curr_eye.input_type == "terrain":
                     input_map = terrain_map
-                    boarder_value = 1
+                    border_value = 1
                 elif curr_eye.input_type == "food":
                     input_map = food_map
                     border_value = 0
                 elif curr_eye.input_type == "fish":
                     input_map = fish_map
-                    boarder_value = 0
+                    border_value = 0
                 else:
                     raise ValueError(
                         "Brain: the input_type of eye should be one of the following:"
@@ -233,7 +233,7 @@ class Brain:
                 is_fire = curr_eye.act(
                     input_map=input_map,
                     body_position=body_position,
-                    boarder_value=boarder_value,
+                    border_value=border_value,
                     t_point=t_point,
                     action_history=action_histories.loc[i, "action_history"],
                 )
