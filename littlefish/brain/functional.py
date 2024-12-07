@@ -1,8 +1,15 @@
 import pandas as pd
 from littlefish.core import utilities as util
-from littlefish.brain.base import Neuron, Connection, Brain
-from littlefish.brain.eyes import Eye, FOUR_EYES, EIGHT_EYES
-from littlefish.brain.muscles import Muscle, FOUR_MUSCLES
+from littlefish.brain.neuron import (
+    Neuron,
+    Eye,
+    Muscle,
+    FOUR_EYES,
+    EIGHT_EYES,
+    FOUR_MUSCLES,
+)
+from littlefish.brain.connection import Connection
+from littlefish.brain.brain import Brain
 
 
 def load_neuron_from_h5_group(h5_group):
@@ -17,31 +24,6 @@ def load_neuron_from_h5_group(h5_group):
             kv_pairs[k] = value
     obj = eval(neuron_type)
     return obj(**kv_pairs)
-
-
-def generate_minimal_brain():
-    """
-    :return: a Brain object with one eye, two neuron in hidden layer and one muscle
-    """
-
-    neurons = pd.DataFrame()
-    neurons["layer"] = [0, 1, 1, 2]
-    neurons["neuron_ind"] = [0, 0, 1, 0]
-    neurons["neuron"] = [Eye(), Neuron(), Neuron(), Muscle()]
-
-    # connections from eye to hidden layer
-    conn_0_1 = pd.DataFrame([[Connection()], [Connection()]], columns=[0], index=[1, 2])
-
-    # connection from hidden layer to muscle
-    conn_1_2 = pd.DataFrame(
-        [[Connection(), Connection()]],
-        columns=[1, 2],
-        index=[3],
-    )
-
-    connections = {"L000_L001": conn_0_1, "L001_L002": conn_1_2}
-
-    return Brain(neurons=neurons, connections=connections)
 
 
 def genearte_brain_from_brain_config(

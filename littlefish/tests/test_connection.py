@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from littlefish.brain.base import Connection
+from littlefish.brain.brain import Connection
 
 
 class TestConnection(unittest.TestCase):

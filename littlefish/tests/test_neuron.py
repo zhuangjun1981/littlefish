@@ -3,9 +3,7 @@ import h5py
 import unittest
 import random
 import numpy as np
-from littlefish.brain.base import Neuron
-from littlefish.brain.eyes import Eye
-from littlefish.brain.muscles import Muscle
+from littlefish.brain.neuron import Neuron, Eye, Muscle
 from littlefish.brain.functional import load_neuron_from_h5_group
 
 
