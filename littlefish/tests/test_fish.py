@@ -38,13 +38,6 @@ class TestFish(unittest.TestCase):
         assert action_histories.iloc[0, 0] == [53, 75, 93]
         assert action_histories.iloc[3, 0] == [6]
 
-    def test_brain_generate_empty_action_histories(self):
-        db = fi.Brain()
-        eah = db.generate_empty_action_histories()
-        eah.loc[3, "action_history"].append(10)
-        assert len(eah.loc[0, "action_history"]) == 0
-        assert len(eah.loc[3, "action_history"]) == 1
-
     def test_generate_standard_fish(self):
         fi.generate_standard_fish()
 

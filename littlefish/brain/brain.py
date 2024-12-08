@@ -28,19 +28,32 @@ def generate_minimal_brain():
 class Brain:
     """
     Brain contains a graph of neurons and their connections.
-    Brain.neurons is a dataframe with two columns:
-      - layer (int)
-      - neuron (Neuron or its subclass).
+    Attributeis:
+      -neurons is a dataframe with two columns:
+        - layer (int)
+        - neuron (Neuron or its subclass).
 
-      Each row is one neuron. The index of this dataframe is important
-      because it serves as the idetifier of each neuron.
+        Each row is one neuron. The index of this dataframe is important
+        because it serves as the idetifier of each neuron.
 
-    Brain.connections is a dataframe with three columns:
-      - pre_idx (int, index of presynaptic neuron)
-      - post_idx (int, index of postsynaptic neuron)
+      - connections is a dataframe with three columns:
+        - pre_idx (int, index of presynaptic neuron)
+        - post_idx (int, index of postsynaptic neuron)
 
-      Each row is one connection. The index of this dataframe serves
-      as the identifier of each connection.
+        Each row is one connection. The index of this dataframe serves
+        as the identifier of each connection.
+
+      - simulation_cache: dictionary, with two keys: "action_histories" and "psp_waveforms".
+        if not in simulation, the value of both keys should be None.
+        - action_histories: list[list[int]], outer list has the length of number of neurons,
+          with the same order of self.neurons. inner list is the timestamp of action potentials
+          of each neuron.
+        - psp_waveforms: 2d array, shape: (num_neurons, t_points in simulation). post synaptic
+          potential waveform of each neuron.
+
+    The reason the "simulation_cache" is saved in this class but not in simulation class is that
+    this allow the simulation to run other types of brains which may not have the same simulation
+    cache (memory) structure.
     """
 
     def __init__(
@@ -54,7 +67,12 @@ class Brain:
             self.neurons = neurons.sort_index()
             self.connections = connections.sort_index()
 
+        self.clear_simulation_cache()
+
         self.check_integrity()
+
+    def clear_simulation_cache(self):
+        self.simulation_cache = {"action_histories": None, "psp_waveforms": None}
 
     def check_integrity(self) -> None:
         # check columns of neurons
@@ -126,6 +144,23 @@ class Brain:
             == self.num_connections
         ), "connections should be unique."
 
+        # check simulation cache
+        action_histories = self.simulation_cache["action_histories"]
+        psp_waveforms = self.simulation_cache["psp_waveforms"]
+
+        if action_histories is None or psp_waveforms is None:
+            pass
+        else:
+            assert (
+                len(action_histories) == self.num_neurons
+            ), "length of self.simulation_cache['action_histories'] should be the same as number of neurons."
+            assert (
+                psp_waveforms.ndim == 2
+            ), "self.simulation_cache['psp_waveforms'] should be 2d array."
+            assert (
+                psp_waveforms.shape[0] == self.num_neurons
+            ), "number of rows of self.simulation_cache['psp_waveforms'] should be the same as number of neurons."
+
     @property
     def num_neurons(self) -> int:
         return self.neurons.shape[0]
@@ -153,11 +188,22 @@ class Brain:
             ["post_idx", "connection"]
         ]
 
+    def initiate_simulation(self, max_simulation_length):
+        """
+        initiate simulation: instantiation self.simulation_cache and pre-allocate memory
+        for psp_waveforms.
+        """
+        self.simulation_cache["action_histories"] = [
+            [] for _ in range(self.num_neurons)
+        ]
+        self.simulation_cache["psp_waveforms"] = np.zeros(
+            (self.num_neurons, max_simulation_length), dtype=np.float32
+        )
+
     def neuron_fire(
         self,
         presynaptic_idx: int,
         t_point: int,
-        psp_waveforms: np.ndarray,
     ) -> None:
         """
         updata all corresponding psp waveforms when a presynaptic neuron (only in eye layer and hidden layer) fires
@@ -178,14 +224,12 @@ class Brain:
             curr_connection.act(
                 t_point=t_point,
                 postsynaptic_index=post_neuron_idx,
-                psp_waveforms=psp_waveforms,
+                psp_waveforms=self.simulation_cache["psp_waveforms"],
             )
 
     def act(
         self,
         t_point: int,
-        action_histories: pd.DataFrame,
-        psp_waveforms: np.ndarray,
         body_position: tuple[int],
         terrain_map: np.ndarray,
         food_map: np.ndarray = None,
@@ -194,22 +238,22 @@ class Brain:
         """
 
         :param t_point: int, current time stamp of time unit axis
-        :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
-            same order as self.neurons data frame, columns = ['action_history']
-        :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
-            neuron in the same order as self.neurons data frame, each column represents a time point
         :param body_position: tuple of two ints, (row, col), current position of body center of the fish
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
         :param fish_map: not fully implemented right now.
-        :return: movement_attempt: 1-d array, np.uint8, (row, col), representing the movement attempt, be careful, this
+        :return:
+          movement_attempt: 1-d array, np.uint8, (row, col), representing the movement attempt, be careful, this
             may not represent the actual movement, it will be evaluated by the fish object
             (fish class) containing this brain to see if the movement is possible. if the fish
             is hitting the edge the world map, then the it will not move out of the map
-            None: no movement has been attempted,
+            None: no movement has been attempted.
+          total_action_potential_number: int, number of total action potential of the whole brain at this time point.
+            [0, num_neurons], each neuron can only have a single action potential at a time point.
         """
 
         movement_attempt = np.array([0, 0], dtype=np.uint8)
+        total_action_potential_number = 0
 
         for i, neuron in self.neurons.iterrows():
             if neuron["neuron"].type == "littlefish.brain.neuron.Eye":  # eye layer
@@ -235,16 +279,16 @@ class Brain:
                     body_position=body_position,
                     border_value=border_value,
                     t_point=t_point,
-                    action_history=action_histories.loc[i, "action_history"],
+                    action_history=self.simulation_cache["action_histories"][i],
                 )
 
                 if is_fire:  # the current eye fires
                     # print('eye spike')
                     self.neuron_fire(
-                        presynaptic_neuron_ind=i,
+                        presynaptic_idx=i,
                         t_point=t_point,
-                        psp_waveforms=psp_waveforms,
                     )
+                    total_action_potential_number += 1
 
             elif (
                 neuron["neuron"].type == "littlefish.brain.neuron.Neuron"
@@ -252,42 +296,44 @@ class Brain:
                 curr_neuron = neuron["neuron"]
                 is_fire = curr_neuron.act(
                     t_point=t_point,
-                    action_history=action_histories.loc[i, "action_history"],
-                    probability_input=psp_waveforms[i, t_point],
+                    action_history=self.simulation_cache["action_histories"][i],
+                    probability_input=self.simulation_cache["psp_waveforms"][
+                        i, t_point
+                    ],
                 )
                 if is_fire:
                     # print('neuron spike')
                     self.neuron_fire(
-                        presynaptic_neuron_ind=i,
+                        presynaptic_idx=i,
                         t_point=t_point,
-                        psp_waveforms=psp_waveforms,
                     )
+                    total_action_potential_number += 1
 
             elif neuron["neuron"].type == "littlefish.brain.neuron.Muscle":  # muscle
                 curr_muscle = neuron["neuron"]
                 curr_movement_attempt = curr_muscle.act(
                     t_point=t_point,
-                    action_history=action_histories.loc[i, "action_history"],
-                    probability_input=psp_waveforms[i, t_point],
+                    action_history=self.simulation_cache["action_histories"][i],
+                    probability_input=self.simulation_cache["psp_waveforms"][
+                        i, t_point
+                    ],
                 )
                 if curr_movement_attempt is not False:
                     # print('muscle spike')
                     movement_attempt = movement_attempt + curr_movement_attempt
+                    total_action_potential_number += 1
             else:
                 raise ValueError(
                     "Brain: neuron at index" + str(i) + " has invalid type."
                 )
 
-        return movement_attempt
+        return movement_attempt, total_action_potential_number
 
-    def generate_empty_action_histories(self):
-        pass
+    # def get_connection_matrix(self):
+    #     pass
 
-    def get_connection_matrix(self):
-        pass
-
-    def to_h5_group(self, h5_group: h5py.Group):
-        pass
+    # def to_h5_group(self, h5_group: h5py.Group):
+    #     pass
 
 
 class BrainOld(object):
@@ -890,4 +936,4 @@ if __name__ == "__main__":
     print(brain.connections)
     print(brain.get_postsynaptic_indices(0))  # return [1, 2]
     print(brain.get_presynaptic_indices(3))  # return [1, 2]
-    print(brain.get_postsynaptic_indices_and_connections(0))  # return [1, 2]
+    print(brain.get_postsynaptic_indices_and_connections(0))

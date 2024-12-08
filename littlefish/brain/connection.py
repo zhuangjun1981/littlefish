@@ -31,7 +31,7 @@ class Connection:
         self.latency = int(new_latency)
         self.psp = self.generate_psp()
 
-    def set_ampletude(self, new_amplitude):
+    def set_amplitude(self, new_amplitude):
         self.amplitude = float(new_amplitude)
         self.psp = self.generate_psp()
 

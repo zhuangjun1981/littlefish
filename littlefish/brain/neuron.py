@@ -387,7 +387,7 @@ class Eye(Neuron):
         border_value: float,
         t_point: int,
         action_history: list,
-        probability_base: None,
+        probability_base: float = None,
     ) -> bool:
         if input_map is None:
             return False
