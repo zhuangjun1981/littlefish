@@ -1,3 +1,5 @@
+import h5py
+from typing import Union
 import pandas as pd
 from littlefish.core import utilities as util
 from littlefish.brain.neuron import (
@@ -12,7 +14,7 @@ from littlefish.brain.connection import Connection
 from littlefish.brain.brain import Brain
 
 
-def load_neuron_from_h5_group(h5_group):
+def load_neuron_from_h5_group(h5_group: h5py.Group) -> Union[Neuron, Eye, Muscle]:
     neuron_type = util.decode(h5_group["type"][()])
     neuron_type = neuron_type.split(".")[-1]
     kv_pairs = {}
@@ -24,6 +26,66 @@ def load_neuron_from_h5_group(h5_group):
             kv_pairs[k] = value
     obj = eval(neuron_type)
     return obj(**kv_pairs)
+
+
+def load_brain_from_h5_group(
+    h5_group: h5py.Group,
+    should_load_simulation_cache: bool = False,
+) -> Brain:
+    """
+    load Brain object from h5 group.
+    """
+    grp_neurons = h5_group["neurons"]
+    layers = grp_neurons.attrs["layers"]
+    neuron_names = sorted(list(grp_neurons.keys()))
+    neurons = []
+    for neuron_name in neuron_names:
+        neurons.append(load_neuron_from_h5_group(grp_neurons[neuron_name]))
+    neurons = pd.DataFrame({"layer": layers, "neuron": neurons})
+
+    grp_connection = h5_group["connections"]
+    amplitudes = grp_connection["amplitudes"][()]
+    conn_mat = grp_connection["connection_matrix"][()]
+    assert len(amplitudes) == conn_mat.shape[0]
+    assert conn_mat.shape[1] == 5
+
+    pre_idxs = conn_mat[:, 0]
+    post_idxs = conn_mat[:, 1]
+    connections = []
+    for conn_i, amplitude in enumerate(amplitudes):
+        connections.append(
+            Connection(
+                latency=conn_mat[conn_i, 2],
+                amplitude=amplitude,
+                rise_time=conn_mat[conn_i, 3],
+                decay_time=conn_mat[conn_i, 4],
+            )
+        )
+    connections = pd.DataFrame(
+        {"pre_idx": pre_idxs, "post_idx": post_idxs, "connection": connections}
+    )
+
+    brain = Brain(neurons=neurons, connections=connections)
+
+    if should_load_simulation_cache:
+        if "simulation_cache" in h5_group:
+            grp_sim_cache = h5_group["simulation_cache"]
+
+            if "action_histories" in grp_sim_cache and "psp_waveforms" in grp_sim_cache:
+                grp_action_histries = grp_sim_cache["action_histries"]
+                neuron_names = sorted(list(grp_action_histries.keys()))
+                action_histories = []
+                for neuron_name in neuron_names:
+                    action_histories.append(list(grp_action_histries[neuron_name][()]))
+
+                psp_wavefroms = grp_sim_cache["psp_wavefroms"][()]
+
+                brain.simulation_cache = {
+                    "action_histories": action_histories,
+                    "psp_waveforms": psp_wavefroms,
+                }
+
+    return brain
 
 
 def genearte_brain_from_brain_config(

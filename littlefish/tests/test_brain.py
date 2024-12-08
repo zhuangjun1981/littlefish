@@ -2,6 +2,7 @@ import unittest
 import random
 import numpy as np
 import littlefish.brain.brain as brain
+from littlefish.brain.functional import load_brain_from_h5_group
 
 
 class TestBrain(unittest.TestCase):
@@ -117,7 +118,7 @@ class TestBrain(unittest.TestCase):
     def test_act(self):
         random.seed(42)
         np.random.seed(42)
-        np.set_printoptions(precision=4, suppress=True)
+        # np.set_printoptions(precision=4, suppress=True)
         input_map = np.arange(20).reshape(4, 5)
         body_position = [2, 3]
         max_simulation_length = 20
@@ -266,9 +267,145 @@ class TestBrain(unittest.TestCase):
         assert np.array_equal(movement_attempt, [1, 0])
         assert action_potential_num == 3
 
+    def test_io(self):
+        import os
+        import h5py
+
+        random.seed(42)
+        np.random.seed(42)
+        min_brain = brain.generate_minimal_brain()
+
+        curr_folder = os.path.dirname(os.path.abspath(__file__))
+        temp_path = os.path.join(curr_folder, "temp_file.h5")
+
+        if os.path.isfile(temp_path):
+            os.remove(temp_path)
+
+        f_temp = h5py.File(temp_path, "a")
+        h5_grp = f_temp.create_group("brain")
+        min_brain.to_h5_group(h5_group=h5_grp, should_save_cache=False)
+
+        min_brain_2 = load_brain_from_h5_group(
+            h5_grp, should_load_simulation_cache=False
+        )
+
+        assert np.array_equal(min_brain.neurons["layer"], min_brain_2.neurons["layer"])
+        assert np.array_equal(
+            min_brain.connections["pre_idx"], min_brain_2.connections["pre_idx"]
+        )
+        assert np.array_equal(
+            min_brain.connections["post_idx"], min_brain_2.connections["post_idx"]
+        )
+
+        assert (
+            min_brain.neurons.loc[0, "neuron"].type
+            == min_brain_2.neurons.loc[0, "neuron"].type
+        )
+        assert (
+            min_brain.neurons.loc[0, "neuron"].eye_direction
+            == min_brain_2.neurons.loc[0, "neuron"].eye_direction
+        )
+        assert np.array_equal(
+            min_brain.neurons.loc[0, "neuron"].rf_positions,
+            min_brain_2.neurons.loc[0, "neuron"].rf_positions,
+        )
+        assert np.array_equal(
+            min_brain.neurons.loc[0, "neuron"].rf_weights,
+            min_brain_2.neurons.loc[0, "neuron"].rf_weights,
+        )
+        assert (
+            min_brain.neurons.loc[0, "neuron"].gain
+            == min_brain_2.neurons.loc[0, "neuron"].gain
+        )
+        assert (
+            min_brain.neurons.loc[0, "neuron"].input_type
+            == min_brain_2.neurons.loc[0, "neuron"].input_type
+        )
+        assert (
+            min_brain.neurons.loc[0, "neuron"].baseline_rate
+            == min_brain_2.neurons.loc[0, "neuron"].baseline_rate
+        )
+        assert (
+            min_brain.neurons.loc[0, "neuron"].refractory_period
+            == min_brain_2.neurons.loc[0, "neuron"].refractory_period
+        )
+
+        assert (
+            min_brain.neurons.loc[1, "neuron"].type
+            == min_brain_2.neurons.loc[1, "neuron"].type
+        )
+        assert (
+            min_brain.neurons.loc[1, "neuron"].baseline_rate
+            == min_brain_2.neurons.loc[1, "neuron"].baseline_rate
+        )
+        assert (
+            min_brain.neurons.loc[1, "neuron"].refractory_period
+            == min_brain_2.neurons.loc[1, "neuron"].refractory_period
+        )
+
+        assert (
+            min_brain.neurons.loc[2, "neuron"].type
+            == min_brain_2.neurons.loc[2, "neuron"].type
+        )
+        assert (
+            min_brain.neurons.loc[2, "neuron"].baseline_rate
+            == min_brain_2.neurons.loc[2, "neuron"].baseline_rate
+        )
+        assert (
+            min_brain.neurons.loc[2, "neuron"].refractory_period
+            == min_brain_2.neurons.loc[2, "neuron"].refractory_period
+        )
+
+        assert (
+            min_brain.neurons.loc[3, "neuron"].type
+            == min_brain_2.neurons.loc[3, "neuron"].type
+        )
+        assert (
+            min_brain.neurons.loc[3, "neuron"].direction
+            == min_brain_2.neurons.loc[3, "neuron"].direction
+        )
+        assert np.array_equal(
+            min_brain.neurons.loc[3, "neuron"].step_motion,
+            min_brain_2.neurons.loc[3, "neuron"].step_motion,
+        )
+        assert (
+            min_brain.neurons.loc[3, "neuron"].baseline_rate
+            == min_brain_2.neurons.loc[3, "neuron"].baseline_rate
+        )
+        assert (
+            min_brain.neurons.loc[3, "neuron"].refractory_period
+            == min_brain_2.neurons.loc[3, "neuron"].refractory_period
+        )
+
+        for i in range(4):
+            assert (
+                min_brain.connections.loc[i, "connection"].type
+                == min_brain_2.connections.loc[i, "connection"].type
+            )
+            assert (
+                min_brain.connections.loc[i, "connection"].amplitude
+                == min_brain_2.connections.loc[i, "connection"].amplitude
+            )
+            assert (
+                min_brain.connections.loc[i, "connection"].latency
+                == min_brain_2.connections.loc[i, "connection"].latency
+            )
+            assert (
+                min_brain.connections.loc[i, "connection"].rise_time
+                == min_brain_2.connections.loc[i, "connection"].rise_time
+            )
+            assert (
+                min_brain.connections.loc[i, "connection"].decay_time
+                == min_brain_2.connections.loc[i, "connection"].decay_time
+            )
+
+        f_temp.close()
+        os.remove(temp_path)
+
 
 if __name__ == "__main__":
     test_brain = TestBrain()
-    # test_brain.test_generate_minimal_brain()
-    # test_brain.test_neuron_fire()
+    test_brain.test_generate_minimal_brain()
+    test_brain.test_neuron_fire()
     test_brain.test_act()
+    test_brain.test_io()

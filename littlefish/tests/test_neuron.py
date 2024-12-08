@@ -16,6 +16,9 @@ class TestNeuron(unittest.TestCase):
         curr_folder = os.path.dirname(os.path.abspath(__file__))
         temp_path = os.path.join(curr_folder, "temp_file.h5")
 
+        if os.path.isfile(temp_path):
+            os.remove(temp_path)
+
         neuron = Neuron()
         f_temp = h5py.File(temp_path, "a")
         h5_grp = f_temp.create_group("neuron")
@@ -80,6 +83,9 @@ class TestNeuron(unittest.TestCase):
     def test_eye_io(self):
         curr_folder = os.path.dirname(os.path.abspath(__file__))
         temp_path = os.path.join(curr_folder, "temp_file.h5")
+
+        if os.path.isfile(temp_path):
+            os.remove(temp_path)
 
         eye = Eye()
         f_temp = h5py.File(temp_path, "a")
@@ -155,6 +161,9 @@ class TestNeuron(unittest.TestCase):
     def test_muscle_io(self):
         curr_folder = os.path.dirname(os.path.abspath(__file__))
         temp_path = os.path.join(curr_folder, "temp_file.h5")
+
+        if os.path.isfile(temp_path):
+            os.remove(temp_path)
 
         muscle = Muscle()
         f_temp = h5py.File(temp_path, "a")
