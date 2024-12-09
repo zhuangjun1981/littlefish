@@ -3,7 +3,11 @@
 # from builtins import *
 import numpy as np
 from littlefish.core import utilities as util
-from littlefish.brain.functional import genearte_brain_from_brain_config
+from littlefish.brain.brain import Brain
+from littlefish.brain.functional import (
+    genearte_brain_from_brain_config,
+    load_brain_from_h5_group,
+)
 
 
 def generate_standard_fish():
@@ -14,7 +18,7 @@ def generate_standard_fish():
     return Fish(brain=brain, **default_config["fish_config"])
 
 
-class Fish(object):
+class Fish:
     """
     the main fish class
 
@@ -29,132 +33,88 @@ class Fish(object):
     the simulation works on "real-time" basis on a time unit axis (consider one time unit is equivalent to 0.1
     millisecond.
 
-    :attr _brain: a brain.Brain object
-    :attr _max_health: float, maximum health point a fish can have
-    :attr _health_decay_rate: float, the constant rate of health reduction, health point / time unit
-    :attr _land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
+    :attr brain: a brain.Brain object
+    :attr max_health: float, maximum health point a fish can have
+    :attr health_decay_rate: float, the constant rate of health reduction, health point / time unit
+    :attr land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
         the terrain map, health point / (pixel * time unit)
-    :attr _food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
+    :attr food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
         health point / pixel. the food after taken will disappear, so no health gaining is a transient event
-    :attr _move_penalty_rate: float, the penalty of healh point, if the fish move once this amount will be subtracted
+    :attr move_penalty_rate: float, the penalty of healh point, if the fish move once this amount will be subtracted
         from its health.
     """
 
     def __init__(
         self,
-        name=None,
-        mother_name=None,
-        brain=None,
-        max_health=100.0,
-        health_decay_rate=0.0001,
-        land_penalty_rate=0.005,
-        food_rate=20.0,
-        move_penalty_rate=0.001,
-    ):
+        name: str = None,
+        mother_name: str = None,
+        brain: Brain = None,
+        max_health: float = 100.0,
+        health_decay_rate: float = 0.0001,
+        land_penalty_rate: float = 0.005,
+        food_rate: float = 20.0,
+        move_penalty_rate: float = 0.001,
+    ) -> None:
         """
 
-        :param brain: a brain.Brain object
+        :param brain: a littlefish.brain.brain.Brain object
         :param max_health: float, maximum health point a fish can have
         :param health_decay_rate: float, the constant rate of health reduction, health point / time unit
         :param land_penalty_rate: float, the penalty of health point, if the fish's body covers land pixels (1s) in
-                                  the terrain map, health point / (pixel * time unit)
+            the terrain map, health point / (pixel * time unit)
         :param food_rate: float, the gaining of health point if fish's body covers food pixels (1s) in the food map,
-                          health point / pixel. the food after taken will disappear, so no health gaining is a
-                          transient event
+            health point / pixel. the food after taken will disappear, so no health gaining is a transient event
+        :param move_penalty_rate: float, the penalty of healh point, if the fish move once this amount will be subtracted
+            from its health.
         """
 
         # print('\nFish: Creating littlefish.core.fish.Fish object.')
 
         if name is None:
-            self._name = "test_fish"
+            self.name = "test_fish"
         else:
-            self._name = name
+            self.name = name
 
         if mother_name is None:
-            self._mother_name = ""
+            self.mother_name = ""
         else:
-            self._mother_name = mother_name
+            self.mother_name = mother_name
 
-        self._max_health = float(max_health)
-        self._health_decay_rate = float(health_decay_rate)
-        self._land_penalty_rate = land_penalty_rate
-        self._food_rate = food_rate
-        self._move_penalty_rate = move_penalty_rate
+        self.max_health = float(max_health)
+        self.health_decay_rate = float(health_decay_rate)
+        self.land_penalty_rate = float(land_penalty_rate)
+        self.food_rate = float(food_rate)
+        self.move_penalty_rate = float(move_penalty_rate)
 
         if brain is None:
-            self._brain = Brain()
+            self.brain = Brain()
         else:
-            brain.check_integrity(verbose=False)
-            self._brain = brain
+            brain.check_integrity()
+            self.brain = brain
 
         # print('Fish: littlefish.core.fish.Fish object created successfully.')
 
-    def copy(self):
-        """
-
-        :return: a copy of self for i.e. mutation
-        """
-
-        return Fish(
-            name=self.get_name(),
-            mother_name=self.get_mother_name(),
-            brain=self.get_brain(),
-            max_health=self.get_max_health(),
-            health_decay_rate=self.get_health_decay_rate(),
-            food_rate=self.get_food_rate(),
-        )
-
-    def get_name(self):
-        return self._name
-
-    @property
-    def name(self):
-        return self.get_name()
-
-    def get_mother_name(self):
-        return self._mother_name
-
-    def get_brain(self):
-        return self._brain
-
-    def get_max_health(self):
-        return self._max_health
-
-    def get_health_decay_rate(self):
-        return self._health_decay_rate
-
-    def get_land_penalty_rate(self):
-        return self._land_penalty_rate
-
-    def get_food_rate(self):
-        return self._food_rate
-
-    def get_move_penalty_rate(self):
-        return self._move_penalty_rate
-
     def set_name(self, name):
-        self._name = name
+        self.name = name
 
     def set_brain(self, brain):
-        brain.check_integrity(verbose=False)
-        self._brain = brain
+        brain.check_integrity()
+        self.brain = brain
 
     def set_food_rate(self, food_rate):
-        self._food_rate = float(food_rate)
+        self.food_rate = float(food_rate)
 
     def set_health_decay_rate(self, health_decay_rate):
-        self._health_decay_rate = health_decay_rate
+        self.health_decay_rate = health_decay_rate
 
     def set_move_penalty_rate(self, move_penalty_rate):
-        self._move_penalty_rate = float(move_penalty_rate)
+        self.move_penalty_rate = float(move_penalty_rate)
 
     def act(
         self,
         t_point,
         curr_position,
         curr_health,
-        action_histories,
-        psp_waveforms,
         terrain_map,
         food_map=None,
         fish_map=None,
@@ -166,12 +126,6 @@ class Fish(object):
         :param curr_position: list or tuple of two non-negative integers, coordinates of fish center position,
                               [row, col]
         :param curr_health: positive float, health point at the beginning of t_point
-        :param action_histories: data frame of lists, each list is the action history of a particular neuron, in the
-                                 same order as self._neurons data frame, columns = ['action_history'], used by
-                                 self._brain.act()
-        :param psp_waveforms: 2d-array of floats, psp waveforms of all neurons in the brain, each row represents one
-                              neuron in the same order as self._neurons data frame, each column represents a time point,
-                              used by self._brain.act()
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
         :param fish_map: not fully implemented right now.
@@ -206,7 +160,7 @@ class Fish(object):
         )
 
         # update current health with land penalty
-        updated_health -= body_land_overlap * self._land_penalty_rate
+        updated_health -= body_land_overlap * self.land_penalty_rate
 
         # ----------------- not implemented --------------------------
         # if fish_map is not None:
@@ -214,13 +168,11 @@ class Fish(object):
         # ----------------- not implemented --------------------------
 
         # update health
-        updated_health -= self._health_decay_rate
+        updated_health -= self.health_decay_rate
 
         if updated_health > 0:  # still alive
-            movement_attempt = self._brain.act(
+            movement_attempt, action_potential_num = self.brain.act(
                 t_point=t_point,
-                action_histories=action_histories,
-                psp_waveforms=psp_waveforms,
                 body_position=curr_position,
                 terrain_map=terrain_map,
                 food_map=food_map,
@@ -230,7 +182,9 @@ class Fish(object):
             movement_attempt = None
 
         if movement_attempt is not None and any(movement_attempt):
-            updated_health -= self._move_penalty_rate
+            updated_health -= self.move_penalty_rate * (
+                abs(movement_attempt[0]) + abs(movement_attempt[1])
+            )
 
         return updated_health, movement_attempt, food_eated
 
@@ -272,39 +226,31 @@ class Fish(object):
     @staticmethod
     def _eval_fish(self, fish_map):
         """currently not implemented"""
-
         pass
 
     def _eat_food(self, body_food_overlap, curr_health):
         """
         count the number of food to be taken, add relevant HP to curr_health, but not exceed the maximum health
         """
-
-        if body_food_overlap == 0:
-            return curr_health
-        else:
-            updated_health = curr_health + self._food_rate * body_food_overlap
-            if updated_health > self._max_health:
-                updated_health = self._max_health
-            return updated_health
+        return min(self.max_health, curr_health + self.food_rate * body_food_overlap)
 
     def to_h5_group(self, h5_grp):
-        h5_grp.create_dataset("name", data=self._name)
-        h5_grp.create_dataset("mother_name", data=self._mother_name)
-        h5_grp.create_dataset("max_health", data=self._max_health)
-        h5_grp.create_dataset("health_decay_rate_per_tu", data=self._health_decay_rate)
+        h5_grp.create_dataset("name", data=self.name)
+        h5_grp.create_dataset("mother_name", data=self.mother_name)
+        h5_grp.create_dataset("max_health", data=self.max_health)
+        h5_grp.create_dataset("health_decay_rate_per_tu", data=self.health_decay_rate)
         h5_grp.create_dataset(
-            "land_penalty_rate_per_pixel_tu", data=self._land_penalty_rate
+            "land_penalty_rate_per_pixel_tu", data=self.land_penalty_rate
         )
-        h5_grp.create_dataset("food_rate_per_pixel", data=self._food_rate)
-        h5_grp.create_dataset("move_penalty_rate", data=self._move_penalty_rate)
+        h5_grp.create_dataset("food_rate_per_pixel", data=self.food_rate)
+        h5_grp.create_dataset("move_penalty_rate", data=self.move_penalty_rate)
         brain_group = h5_grp.create_group("brain")
-        self._brain.to_h5_group(brain_group)
+        self.brain.to_h5_group(brain_group)
 
     @staticmethod
     def from_h5_group(h5_grp):
         brain_grp = h5_grp["brain"]
-        curr_brain = Brain.from_h5_group(brain_grp)
+        curr_brain = load_brain_from_h5_group(brain_grp)
         curr_name = util.decode(h5_grp["name"][()])
         curr_mother_name = util.decode(h5_grp["mother_name"][()])
         curr_max_health = h5_grp["max_health"][()]
