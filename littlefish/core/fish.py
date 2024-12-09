@@ -1,6 +1,4 @@
-# from __future__ import (absolute_import, division,
-#                         print_function, unicode_literals)
-# from builtins import *
+import h5py
 import numpy as np
 from littlefish.core import utilities as util
 from littlefish.brain.brain import Brain
@@ -16,6 +14,24 @@ def generate_standard_fish():
     brain = genearte_brain_from_brain_config(default_config["brain_config"])
 
     return Fish(brain=brain, **default_config["fish_config"])
+
+
+def load_fish_from_h5_group(h5_grp: h5py.Group):
+    """load Fish object from a hdf5 group."""
+    brain_grp = h5_grp["brain"]
+
+    fish = Fish(
+        name=util.decode(h5_grp["name"][()]),
+        mother_name=util.decode(h5_grp["mother_name"][()]),
+        brain=load_brain_from_h5_group(brain_grp),
+        max_health=float(h5_grp["max_health"][()]),
+        health_decay_rate=float(h5_grp["health_decay_rate_per_tu"][()]),
+        land_penalty_rate=float(h5_grp["land_penalty_rate_per_pixel_tu"][()]),
+        food_rate=float(h5_grp["food_rate_per_pixel"][()]),
+        move_penalty_rate=float(h5_grp["move_penalty_rate"][()]),
+    )
+
+    return fish
 
 
 class Fish:
@@ -246,28 +262,3 @@ class Fish:
         h5_grp.create_dataset("move_penalty_rate", data=self.move_penalty_rate)
         brain_group = h5_grp.create_group("brain")
         self.brain.to_h5_group(brain_group)
-
-    @staticmethod
-    def from_h5_group(h5_grp):
-        brain_grp = h5_grp["brain"]
-        curr_brain = load_brain_from_h5_group(brain_grp)
-        curr_name = util.decode(h5_grp["name"][()])
-        curr_mother_name = util.decode(h5_grp["mother_name"][()])
-        curr_max_health = h5_grp["max_health"][()]
-        curr_health_decay_rate = h5_grp["health_decay_rate_per_tu"][()]
-        curr_land_penalty_rate = h5_grp["land_penalty_rate_per_pixel_tu"][()]
-        curr_food_rate = h5_grp["food_rate_per_pixel"][()]
-        curr_move_penalty_rate = h5_grp["move_penalty_rate"][()]
-
-        curr_fish = Fish(
-            name=curr_name,
-            mother_name=curr_mother_name,
-            brain=curr_brain,
-            max_health=curr_max_health,
-            health_decay_rate=curr_health_decay_rate,
-            land_penalty_rate=curr_land_penalty_rate,
-            food_rate=curr_food_rate,
-            move_penalty_rate=curr_move_penalty_rate,
-        )
-
-        return curr_fish
