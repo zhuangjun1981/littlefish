@@ -1,0 +1,35 @@
+brain_config:
+
+  eye_layer:
+    eye_set: FOUR_EYES
+    input_types: 
+    - terrain
+    - food
+    gain: 0.005
+    baseline_rate: 0.0
+    refractory_period: 1.2
+
+  hidden_layers:
+    neuron_nums:
+    - 8
+    baseline_rate: 0.005
+    refractory_period: 1.2
+
+  muscle_layer:
+    muscle_set: FOUR_MUSCLES
+    baseline_rate: 1.0e-05
+    refractory_period: 50.0
+
+  connection_0_1: 
+    connection_type: full
+    amplitude: 0.001
+    latency: 3
+    rise_time: 2
+    decay_time: 5
+
+  connection_1_2: 
+    connection_type: full
+    amplitude: 0.001
+    latency: 3
+    rise_time: 2
+    decay_time: 5

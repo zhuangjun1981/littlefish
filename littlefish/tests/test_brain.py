@@ -2,7 +2,10 @@ import unittest
 import random
 import numpy as np
 import littlefish.brain.brain as brain
-from littlefish.brain.functional import load_brain_from_h5_group
+from littlefish.brain.functional import (
+    load_brain_from_h5_group,
+    generate_brain_from_brain_config,
+)
 
 
 class TestBrain(unittest.TestCase):
@@ -402,6 +405,30 @@ class TestBrain(unittest.TestCase):
         f_temp.close()
         os.remove(temp_path)
 
+    def test_generate_brain_from_brain_config(self):
+        import os
+
+        curr_folder = os.path.dirname(os.path.realpath(__file__))
+
+        brain_config_path_min = os.path.join(curr_folder, "brain_config_minimal.yml")
+        brain_min = generate_brain_from_brain_config(
+            brain_config_path=brain_config_path_min
+        )
+
+        brain_config_path_4eyes_ff = os.path.join(
+            curr_folder, "brain_config_4eyes_feedforward.yml"
+        )
+        brain_4eyes_ff = generate_brain_from_brain_config(
+            brain_config_path=brain_config_path_4eyes_ff
+        )
+
+        brain_config_path_8eyes_recur = os.path.join(
+            curr_folder, "brain_config_8eyes_recurrent.yml"
+        )
+        brain_8eyes_recur = generate_brain_from_brain_config(
+            brain_config_path=brain_config_path_8eyes_recur
+        )
+
 
 if __name__ == "__main__":
     test_brain = TestBrain()
@@ -409,3 +436,4 @@ if __name__ == "__main__":
     test_brain.test_neuron_fire()
     test_brain.test_act()
     test_brain.test_io()
+    test_brain.test_generate_brain_from_brain_config()

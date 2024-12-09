@@ -1,4 +1,5 @@
 import h5py
+import yaml
 from typing import Union
 import pandas as pd
 from littlefish.core import utilities as util
@@ -6,10 +7,8 @@ from littlefish.brain.neuron import (
     Neuron,
     Eye,
     Muscle,
-    FOUR_EYES,
-    EIGHT_EYES,
-    FOUR_MUSCLES,
 )
+from littlefish.brain.layer_sets import *
 from littlefish.brain.connection import Connection
 from littlefish.brain.brain import Brain
 
@@ -88,94 +87,127 @@ def load_brain_from_h5_group(
     return brain
 
 
-def genearte_brain_from_brain_config(
-    brain_config,
+def generate_brain_from_brain_config(
+    brain_config: dict = None,
+    brain_config_path: str = None,
 ):
-    neurons = pd.DataFrame(columns=["layer", "neuron_ind", "neuron"])
+    # load brain_config dictionary
+    if brain_config is None and brain_config_path is None:
+        raise LookupError(
+            "one of 'brain_config' and 'brain_config_path' should not be None."
+        )
+    elif brain_config is None and brain_config_path is not None:
+        with open(brain_config_path, "r") as f:
+            brain_config = yaml.load(f, Loader=yaml.FullLoader)["brain_config"]
+    elif brain_config is not None and brain_config_path is None:
+        pass
+    else:
+        raise LookupError(
+            "one of 'brain_config' and 'brain_config_path' should be None."
+        )
 
-    neuron_ind = 0
-    layer_ind = 0
+    layers = []
+    neurons = []
+
+    curr_layer = 0
 
     # generate eyes
-    for input_type in brain_config["input_types"]:
-        eye_set = brain_config["eye_set"]
-        for eye_direction, eye_dict in eval(f"{eye_set}.items()"):
+    eye_set = eval(brain_config["eye_layer"]["eye_set"])
+    input_types = brain_config["eye_layer"]["input_types"]
+    eye_params = brain_config["eye_layer"]
+    eye_params.pop("eye_set")
+    eye_params.pop("input_types")
+    for input_type in input_types:
+        for eye_direction, rf_dict in eye_set.items():
+            layers.append(curr_layer)
             curr_eye = Eye(
                 eye_direction=eye_direction,
-                rf_positions=eye_dict["rf_positions"],
-                rf_weights=eye_dict["rf_weights"],
-                gain=brain_config["eye_gain"],
+                rf_positions=rf_dict["rf_positions"],
+                rf_weights=rf_dict["rf_weights"],
                 input_type=input_type,
-                baseline_rate=brain_config["eye_baseline_rate"],
-                refractory_period=brain_config["eye_refractory_period"],
+                **eye_params,
             )
-            neurons.loc[neuron_ind, "layer"] = 0
-            neurons.loc[neuron_ind, "neuron_ind"] = neuron_ind
-            neurons.loc[neuron_ind, "neuron"] = curr_eye
-            neuron_ind += 1
+            neurons.append(curr_eye)
 
     # generate hidden layers
-    layer_ind += 1
-    hid_nums = brain_config[
-        "hidden_neuron_nums"
-    ]  # each number is number of neurons in each hidden layer, default is one hidden layer with 8 neurons
-    for hid_num in hid_nums:
-        for hid_ind in range(hid_num):
-            curr_neuron = Neuron(
-                baseline_rate=brain_config["neuron_baseline_rate"],
-                refractory_period=brain_config["neuron_refractory_period"],
-            )
-            neurons.loc[neuron_ind, "layer"] = layer_ind
-            neurons.loc[neuron_ind, "neuron_ind"] = hid_ind
-            neurons.loc[neuron_ind, "neuron"] = curr_neuron
-            neuron_ind += 1
-
-        layer_ind += 1
+    if "hidden_layers" in brain_config:
+        hidden_neuron_numbers = brain_config["hidden_layers"]["neuron_nums"]
+        neuron_params = brain_config["hidden_layers"]
+        neuron_params.pop("neuron_nums")
+        for hidden_neuron_number in hidden_neuron_numbers:
+            curr_layer += 1
+            for _ in range(hidden_neuron_number):
+                layers.append(curr_layer)
+                neurons.append(Neuron(**neuron_params))
 
     # generate muscles
-    muscle_set = eval(brain_config["muscle_set"])
-    for mus_ind, mus_tuple in muscle_set:
+    muscle_set = eval(brain_config["muscle_layer"]["muscle_set"])
+    muscle_params = brain_config["muscle_layer"]
+    muscle_params.pop("muscle_set")
+    curr_layer += 1
+    for direction, step_motion in muscle_set:
+        layers.append(curr_layer)
         curr_muscle = Muscle(
-            direction=mus_tuple[0],
-            step_motion=mus_tuple[1],
-            baseline_rate=brain_config["muscle_baseline_rate"],
-            refractory_period=brain_config["muscle_refractory_period"],
+            direction=direction, step_motion=step_motion, **muscle_params
         )
-        neurons.loc[neuron_ind, "layer"] = layer_ind
-        neurons.loc[neuron_ind, "neuron_ind"] = mus_ind
-        neurons.loc[neuron_ind, "neuron"] = curr_muscle
-        neuron_ind += 1
-    # ================================== generate neurons =========================================
+        neurons.append(curr_muscle)
 
-    # ================================== generate connections =========================================
-    connections = {}
+    neurons = pd.DataFrame({"layer": layers, "neuron": neurons})
 
-    default_connection = Connection(
-        latency=brain_config["connection_latency"],
-        amplitude=brain_config["connection_latency"],
-        rise_time=brain_config["connection_rise_time"],
-        decay_time=brain_config["connection_decay_time"],
+    pre_idxs = []
+    post_idxs = []
+    connections = []
+    all_layers = neurons["layer"].unique().tolist()
+    for layer_i in range(1, len(all_layers)):
+        pre_layer = all_layers[layer_i - 1]
+        post_layer = all_layers[layer_i]
+        conn_dict = brain_config[f"connection_{pre_layer}_{post_layer}"]
+
+        if (
+            conn_dict["connection_type"] == "full"
+        ):  # currently only full connection are supported
+            conn_params = conn_dict
+            conn_params.pop("connection_type")
+            curr_pre_idxs = neurons.query("layer == @pre_layer").index.to_list()
+            curr_post_idxs = neurons.query("layer == @post_layer").index.to_list()
+
+            for curr_pre_idx in sorted(curr_pre_idxs):
+                for curr_post_idx in sorted(curr_post_idxs):
+                    pre_idxs.append(curr_pre_idx)
+                    post_idxs.append(curr_post_idx)
+                    connections.append(Connection(**conn_params))
+
+    connections = pd.DataFrame(
+        {"pre_idx": pre_idxs, "post_idx": post_idxs, "connection": connections}
     )
-    layer_num = int(round(max(neurons["layer"]))) + 1
 
-    for pre_layer in range(layer_num - 1):
-        post_layer = pre_layer + 1
-
-        post_neuron_inds = neurons[neurons["layer"] == post_layer].index.tolist()
-        post_neuron_inds.sort()
-
-        pre_neuron_inds = neurons[neurons["layer"] == pre_layer].index.tolist()
-        pre_neuron_inds.sort()
-
-        curr_name = (
-            "L" + util.int2str(pre_layer, 3) + "_L" + util.int2str(post_layer, 3)
-        )
-        # curr_df = pd.DataFrame([[default_connection] * len(pre_neuron_inds)] * len(post_neuron_inds),
-        #                        columns=pre_neuron_inds, index=post_neuron_inds)
-        curr_conn_df = pd.DataFrame(columns=pre_neuron_inds, index=post_neuron_inds)
-        curr_conn_df[:] = default_connection
-        connections.update({curr_name: curr_conn_df})
-    # ================================== generate connections =========================================
-
-    # generate brain
     return Brain(neurons=neurons, connections=connections)
+
+
+if __name__ == "__main__":
+    import os
+
+    curr_folder = os.path.dirname(os.path.realpath(__file__))
+
+    brain_config_path_min = os.path.join(
+        os.path.dirname(curr_folder), "configs", "brain_config_minimal.yml"
+    )
+    brain_min = generate_brain_from_brain_config(
+        brain_config_path=brain_config_path_min
+    )
+
+    brain_config_path_4eyes_ff = os.path.join(
+        os.path.dirname(curr_folder), "configs", "brain_config_4eyes_feedforward.yml"
+    )
+    brain_4eyes_ff = generate_brain_from_brain_config(
+        brain_config_path=brain_config_path_4eyes_ff
+    )
+
+    brain_config_path_8eyes_recur = os.path.join(
+        os.path.dirname(curr_folder), "configs", "brain_config_8eyes_recurrent.yml"
+    )
+    brain_8eyes_recur = generate_brain_from_brain_config(
+        brain_config_path=brain_config_path_8eyes_recur
+    )
+    print(brain_8eyes_recur.neurons)
+    print(brain_8eyes_recur.connections)

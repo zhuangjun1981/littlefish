@@ -1,0 +1,19 @@
+brain_config:
+  
+  eye_layer:
+    eye_set: ONE_EYE
+    input_types: 
+    - terrain
+
+  hidden_layers:
+    neuron_nums:
+    - 2
+
+  muscle_layer:
+    muscle_set: ONE_MUSCLE
+
+  connection_0_1: 
+    connection_type: full
+
+  connection_1_2: 
+    connection_type: full
