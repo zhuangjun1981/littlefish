@@ -2,7 +2,11 @@ import os
 import h5py
 import random
 import unittest
-import littlefish.core.fish as fi
+from littlefish.core.fish import (
+    Fish,
+    load_fish_from_h5_group,
+    generate_fish_from_config,
+)
 import littlefish.core.utilities as util
 import numpy as np
 
@@ -11,72 +15,70 @@ class TestFish(unittest.TestCase):
     def setup(self):
         pass
 
-    def test_fish_with_minimum_brain(self):
-        simulation_length = int(1e2)
-        random.seed(111)
+    def test_load_fish_from_config(self):
+        import os
+        import yaml
 
-        minimum_brain = fi.generate_minimal_brain()
-        terrain_map = np.zeros((10, 10), dtype=np.uint8)
-        terrain_map[2:4, 4:6] = 1
-
-        action_histories = minimum_brain.generate_empty_action_histories()
-        psp_waveforms = minimum_brain.generate_empty_psp_waveforms(
-            simulation_length=simulation_length
-        )
-        body_position = np.array([3, 2], dtype=np.uint8)
-
-        for i in range(simulation_length):
-            movement = minimum_brain.act(
-                t_point=i,
-                body_position=body_position,
-                action_histories=action_histories,
-                psp_waveforms=psp_waveforms,
-                terrain_map=terrain_map,
-            )
-            if not np.array_equal(movement, [0, 0]):
-                body_position = body_position + movement
-        assert action_histories.iloc[0, 0] == [53, 75, 93]
-        assert action_histories.iloc[3, 0] == [6]
-
-    def test_generate_standard_fish(self):
-        fi.generate_standard_fish()
-
-    def test_load_brain(self):
         curr_folder = os.path.dirname(os.path.realpath(__file__))
-        example_log_f = h5py.File(
-            os.path.join(curr_folder, "example_simulation_log.hdf5"), "r"
-        )
-        brain_grp = example_log_f["fish_test_fish/brain"]
-        curr_brain = fi.Brain.from_h5_group(brain_grp)
-        assert curr_brain.get_neurons().loc[0, "neuron"]._gain == 0.005
-        assert curr_brain.get_neurons().loc[0, "neuron"]._baseline_rate == 0.0
-        assert curr_brain.get_neurons().loc[0, "neuron"]._refractory_period == 1.2
-        assert curr_brain._connections["L001_L002"].loc[16, 8]._amplitude == 0.001
-        assert curr_brain._connections["L001_L002"].loc[16, 8]._latency == 3
-        assert curr_brain._connections["L001_L002"].loc[16, 8]._rise_time == 2
-        assert curr_brain._connections["L001_L002"].loc[16, 8]._decay_time == 5
-        example_log_f.close()
+        config_path = os.path.join(curr_folder, "fish_config.yml")
+        with open(config_path, "r") as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
 
-    def test_load_fish(self):
-        curr_folder = os.path.dirname(os.path.realpath(__file__))
-        example_log_f = h5py.File(
-            os.path.join(curr_folder, "example_simulation_log.hdf5"), "r"
+        fish = generate_fish_from_config(
+            fish_config=config["fish_config"],
+            brain_config=config["brain_config"],
         )
-        fish_grp = example_log_f["fish_test_fish"]
-        curr_fish = fi.Fish.from_h5_group(fish_grp)
-        assert curr_fish._food_rate == 10.0
-        assert curr_fish._health_decay_rate == 0.001
-        assert curr_fish._land_penalty_rate == 0.01
-        assert curr_fish._max_health == 100.0
-        assert curr_fish._mother_name == ""
-        assert curr_fish._name == "test_fish"
-        example_log_f.close()
+
+        assert fish.name == "fish"
+        assert fish.mother_name == "mother_fish"
+        assert fish.max_health == 100.0
+        assert fish.food_rate == 10.0
+        assert fish.land_penalty_rate == 1.0
+        assert fish.health_decay_rate == 0.05
+        assert fish.move_penalty_rate == 0.0001
+        assert fish.action_potential_penalty_rate == 0.000001
+        assert np.array_equal(
+            fish.brain.neurons.layer,
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2],
+        )
+        assert fish.brain.connections.shape == (96, 3)
+
+    def test_io(self):
+        curr_folder = os.path.dirname(os.path.abspath(__file__))
+        temp_path = os.path.join(curr_folder, "temp_file.h5")
+
+        if os.path.isfile(temp_path):
+            os.remove(temp_path)
+
+        fish = Fish(name="aa", mother_name="bb")
+        f_temp = h5py.File(temp_path, "a")
+        h5_grp = f_temp.create_group("fish")
+        fish.to_h5_group(h5_group=h5_grp)
+        fish2 = load_fish_from_h5_group(h5_group=h5_grp)
+
+        assert fish2.name == "aa"
+        assert fish2.mother_name == "bb"
+        assert fish2.max_health == fish.max_health
+        assert fish2.health_decay_rate == fish.health_decay_rate
+        assert fish2.land_penalty_rate == fish.land_penalty_rate
+        assert fish2.food_rate == fish.food_rate
+        assert fish2.move_penalty_rate == fish.move_penalty_rate
+        assert fish2.action_potential_penalty_rate == fish.action_potential_penalty_rate
+        assert fish2.brain.neurons.shape == fish.brain.neurons.shape
+        assert fish2.brain.connections.shape == fish.brain.connections.shape
+        assert np.array_equal(fish2.brain.neurons.layer, fish.brain.neurons.layer)
+        assert np.array_equal(
+            fish2.brain.connections.pre_idx, fish.brain.connections.pre_idx
+        )
+        assert np.array_equal(
+            fish2.brain.connections.post_idx, fish.brain.connections.post_idx
+        )
+
+        f_temp.close()
+        os.remove(temp_path)
 
 
 if __name__ == "__main__":
-    tfb = TestFish()
-    tfb.test_fish_with_minimum_brain()
-    tfb.test_brain_generate_empty_action_histories()
-    tfb.test_generate_standard_fish()
-    tfb.test_load_brain()
-    tfb.test_load_fish()
+    test_fish = TestFish()
+    test_fish.test_io()
+    test_fish.test_load_fish_from_config()

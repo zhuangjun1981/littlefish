@@ -61,8 +61,8 @@ class Brain:
     ) -> None:
         if neurons is None and connections is None:
             min_brain = generate_minimal_brain()
-            self.neurons = min_brain.neurons()
-            self.connections = min_brain.connections()
+            self.neurons = min_brain.neurons
+            self.connections = min_brain.connections
         else:
             self.neurons = neurons.sort_index()
             self.connections = connections.sort_index()

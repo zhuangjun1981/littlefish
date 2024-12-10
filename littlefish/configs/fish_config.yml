@@ -1,0 +1,31 @@
+fish_config:
+  name: fish
+  mother_name: mother_fish
+  max_health: 20.0
+  food_rate: 20.0
+  land_penalty_rate: 0.5
+  health_decay_rate: 0.01
+  move_penalty_rate: 0.001
+  action_potential_penalty_rate: 0.
+
+
+brain_config:
+
+  eye_layer:
+    eye_set: FOUR_EYES
+    input_types: 
+    - terrain
+    - food
+
+  hidden_layers:
+    neuron_nums:
+    - 8
+
+  muscle_layer:
+    muscle_set: FOUR_MUSCLES
+
+  connection_0_1: 
+    connection_type: full
+
+  connection_1_2: 
+    connection_type: full

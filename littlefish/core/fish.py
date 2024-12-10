@@ -3,35 +3,9 @@ import numpy as np
 from littlefish.core import utilities as util
 from littlefish.brain.brain import Brain
 from littlefish.brain.functional import (
-    genearte_brain_from_brain_config,
     load_brain_from_h5_group,
+    generate_brain_from_brain_config,
 )
-
-
-def generate_standard_fish():
-    default_config = util.get_default_config()
-
-    brain = genearte_brain_from_brain_config(default_config["brain_config"])
-
-    return Fish(brain=brain, **default_config["fish_config"])
-
-
-def load_fish_from_h5_group(h5_grp: h5py.Group):
-    """load Fish object from a hdf5 group."""
-    brain_grp = h5_grp["brain"]
-
-    fish = Fish(
-        name=util.decode(h5_grp["name"][()]),
-        mother_name=util.decode(h5_grp["mother_name"][()]),
-        brain=load_brain_from_h5_group(brain_grp),
-        max_health=float(h5_grp["max_health"][()]),
-        health_decay_rate=float(h5_grp["health_decay_rate_per_tu"][()]),
-        land_penalty_rate=float(h5_grp["land_penalty_rate_per_pixel_tu"][()]),
-        food_rate=float(h5_grp["food_rate_per_pixel"][()]),
-        move_penalty_rate=float(h5_grp["move_penalty_rate"][()]),
-    )
-
-    return fish
 
 
 class Fish:
@@ -65,11 +39,12 @@ class Fish:
         name: str = None,
         mother_name: str = None,
         brain: Brain = None,
-        max_health: float = 100.0,
-        health_decay_rate: float = 0.0001,
-        land_penalty_rate: float = 0.005,
+        max_health: float = 20.0,
+        health_decay_rate: float = 0.01,
+        land_penalty_rate: float = 0.5,
         food_rate: float = 20.0,
         move_penalty_rate: float = 0.001,
+        action_potential_penalty_rate: float = 0.0,
     ) -> None:
         """
 
@@ -82,6 +57,8 @@ class Fish:
             health point / pixel. the food after taken will disappear, so no health gaining is a transient event
         :param move_penalty_rate: float, the penalty of healh point, if the fish move once this amount will be subtracted
             from its health.
+        :param action_potential_penalty_rate: float, health decay per action potential, implement this can encourage
+            sparse firing of the neurons.
         """
 
         # print('\nFish: Creating littlefish.core.fish.Fish object.')
@@ -101,6 +78,7 @@ class Fish:
         self.land_penalty_rate = float(land_penalty_rate)
         self.food_rate = float(food_rate)
         self.move_penalty_rate = float(move_penalty_rate)
+        self.action_potential_penalty_rate = float(action_potential_penalty_rate)
 
         if brain is None:
             self.brain = Brain()
@@ -195,12 +173,14 @@ class Fish:
                 fish_map=fish_map,
             )
         else:
-            movement_attempt = None
+            movement_attempt = np.array([0, 0], dtype=np.uint8)
+            action_potential_num = 0
 
-        if movement_attempt is not None and any(movement_attempt):
-            updated_health -= self.move_penalty_rate * (
-                abs(movement_attempt[0]) + abs(movement_attempt[1])
-            )
+        updated_health -= self.move_penalty_rate * (
+            abs(movement_attempt[0]) + abs(movement_attempt[1])
+        )
+
+        updated_health -= self.action_potential_penalty_rate * action_potential_num
 
         return updated_health, movement_attempt, food_eated
 
@@ -250,15 +230,34 @@ class Fish:
         """
         return min(self.max_health, curr_health + self.food_rate * body_food_overlap)
 
-    def to_h5_group(self, h5_grp):
-        h5_grp.create_dataset("name", data=self.name)
-        h5_grp.create_dataset("mother_name", data=self.mother_name)
-        h5_grp.create_dataset("max_health", data=self.max_health)
-        h5_grp.create_dataset("health_decay_rate_per_tu", data=self.health_decay_rate)
-        h5_grp.create_dataset(
-            "land_penalty_rate_per_pixel_tu", data=self.land_penalty_rate
-        )
-        h5_grp.create_dataset("food_rate_per_pixel", data=self.food_rate)
-        h5_grp.create_dataset("move_penalty_rate", data=self.move_penalty_rate)
-        brain_group = h5_grp.create_group("brain")
-        self.brain.to_h5_group(brain_group)
+    def to_h5_group(self, h5_group):
+        attributes = vars(self)
+
+        for k, v in attributes.items():
+            if k != "brain":
+                h5_group.create_dataset(k, data=v)
+
+        grp_brain = h5_group.create_group("brain")
+        self.brain.to_h5_group(h5_group=grp_brain)
+
+
+def load_fish_from_h5_group(h5_group: h5py.Group) -> Fish:
+    """load Fish object from a hdf5 group."""
+
+    fish_params = {}
+    brain_grp = h5_group["brain"]
+    fish_params["brain"] = load_brain_from_h5_group(brain_grp)
+
+    for key, dset in h5_group.items():
+        if key != "brain":
+            if key in ["name", "mother_name"]:
+                fish_params[key] = util.decode(dset[()])
+            else:
+                fish_params[key] = dset[()]
+    return Fish(**fish_params)
+
+
+def generate_fish_from_config(fish_config, brain_config) -> Fish:
+    brain = generate_brain_from_brain_config(brain_config=brain_config)
+
+    return Fish(brain=brain, **fish_config)
