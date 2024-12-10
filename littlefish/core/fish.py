@@ -86,32 +86,42 @@ class Fish:
             brain.check_integrity()
             self.brain = brain
 
+        self.clear_simulation_cache()
+
         # print('Fish: littlefish.core.fish.Fish object created successfully.')
 
-    def set_name(self, name):
+    def clear_simulation_cache(self):
+        self.simulation_cache = {"health_history": None}
+
+    def initiate_simulation(self, max_simulation_length: int) -> None:
+        self.brain.initiate_simulation(max_simulation_length=max_simulation_length)
+        health_history = np.zeros((max_simulation_length,), dtype=np.float32)
+        health_history[0] = self.max_health
+        self.simulation_cache = {"health_history": health_history}
+
+    def set_name(self, name: str) -> None:
         self.name = name
 
-    def set_brain(self, brain):
+    def set_brain(self, brain: Brain) -> None:
         brain.check_integrity()
         self.brain = brain
 
-    def set_food_rate(self, food_rate):
+    def set_food_rate(self, food_rate: float) -> None:
         self.food_rate = float(food_rate)
 
-    def set_health_decay_rate(self, health_decay_rate):
+    def set_health_decay_rate(self, health_decay_rate: float) -> None:
         self.health_decay_rate = health_decay_rate
 
-    def set_move_penalty_rate(self, move_penalty_rate):
+    def set_move_penalty_rate(self, move_penalty_rate: float) -> None:
         self.move_penalty_rate = float(move_penalty_rate)
 
     def act(
         self,
-        t_point,
-        curr_position,
-        curr_health,
-        terrain_map,
-        food_map=None,
-        fish_map=None,
+        t_point: int,
+        curr_position: list[int],
+        terrain_map: np.ndarray,
+        food_map: np.ndarray = None,
+        fish_map: np.ndarray = None,
     ):
         """
         simulate the fish's action at a given time point
@@ -128,17 +138,11 @@ class Fish:
                                   None if updated_health is below 0 (fish is dead).
         """
 
-        updated_health = float(curr_health)
+        curr_health = self.simulation_cache["health_history"][t_point]
 
         # evaluate food
         if food_map is not None:
-            body_food_overlap = self._eval_food(
-                food_map=food_map, curr_position=curr_position
-            )
-            updated_health = self._eat_food(
-                body_food_overlap=body_food_overlap, curr_health=updated_health
-            )
-            food_eated = body_food_overlap
+            food_eaten = self._eval_food(food_map=food_map, curr_position=curr_position)
 
             # update food map
             food_map[
@@ -146,7 +150,10 @@ class Fish:
                 curr_position[1] - 1 : curr_position[1] + 2,
             ] = 0
         else:
-            food_eated = 0
+            food_eaten = 0
+
+        # apply food reward
+        updated_health = min(self.max_health, curr_health + self.food_rate * food_eaten)
 
         # evaluate the extend of how much of the fish is on the land
         body_land_overlap = self._eval_terrain(
@@ -161,7 +168,7 @@ class Fish:
         #     self._eval_fish(fish_map=fish_map)
         # ----------------- not implemented --------------------------
 
-        # update health
+        # apply health decay
         updated_health -= self.health_decay_rate
 
         if updated_health > 0:  # still alive
@@ -176,16 +183,21 @@ class Fish:
             movement_attempt = np.array([0, 0], dtype=np.uint8)
             action_potential_num = 0
 
+        # apply movement penalty
         updated_health -= self.move_penalty_rate * (
             abs(movement_attempt[0]) + abs(movement_attempt[1])
         )
 
+        # apply action potential penalty
         updated_health -= self.action_potential_penalty_rate * action_potential_num
 
-        return updated_health, movement_attempt, food_eated
+        if t_point + 1 < len(self.simulation_cache["health_history"]):
+            self.simulation_cache["health_history"][t_point + 1] = updated_health
+
+        return updated_health, movement_attempt, food_eaten
 
     @staticmethod
-    def _eval_terrain(terrain_map, curr_position):
+    def _eval_terrain(terrain_map: np.ndarray, curr_position: list[int]) -> int:
         """
         Evaluate the coverage of fish body on terrain map, return the sum of all terrain pixels that are covered by
         the fish body
@@ -202,7 +214,7 @@ class Fish:
         return body_land_overlap
 
     @staticmethod
-    def _eval_food(food_map, curr_position):
+    def _eval_food(food_map: np.ndarray, curr_position: list[int]) -> int:
         """
         find out how many foods are covered by the fish body
 
@@ -220,28 +232,33 @@ class Fish:
         return body_food_overlap
 
     @staticmethod
-    def _eval_fish(self, fish_map):
+    def _eval_fish(self, fish_map: np.ndarray):
         """currently not implemented"""
         pass
 
-    def _eat_food(self, body_food_overlap, curr_health):
-        """
-        count the number of food to be taken, add relevant HP to curr_health, but not exceed the maximum health
-        """
-        return min(self.max_health, curr_health + self.food_rate * body_food_overlap)
-
-    def to_h5_group(self, h5_group):
+    def to_h5_group(
+        self, h5_group: h5py.Group, should_save_cache: bool = False
+    ) -> None:
         attributes = vars(self)
 
         for k, v in attributes.items():
-            if k != "brain":
+            if k not in ["brain", "simulation_cache"]:
                 h5_group.create_dataset(k, data=v)
 
         grp_brain = h5_group.create_group("brain")
         self.brain.to_h5_group(h5_group=grp_brain)
 
+        if should_save_cache and self.simulation_cache["health_history"] is not None:
+            grp_sim_cache = h5_group.create_group("simulation_cache")
+            grp_sim_cache.create_dataset(
+                "health_history", data=self.simulation_cache["health_history"]
+            )
 
-def load_fish_from_h5_group(h5_group: h5py.Group) -> Fish:
+
+def load_fish_from_h5_group(
+    h5_group: h5py.Group,
+    should_load_simulation_cache: bool = False,
+) -> Fish:
     """load Fish object from a hdf5 group."""
 
     fish_params = {}
@@ -249,15 +266,20 @@ def load_fish_from_h5_group(h5_group: h5py.Group) -> Fish:
     fish_params["brain"] = load_brain_from_h5_group(brain_grp)
 
     for key, dset in h5_group.items():
-        if key != "brain":
+        if key not in ["brain", "simulation_cache"]:
             if key in ["name", "mother_name"]:
                 fish_params[key] = util.decode(dset[()])
             else:
                 fish_params[key] = dset[()]
-    return Fish(**fish_params)
+    fish = Fish(**fish_params)
+
+    if should_load_simulation_cache and "simulation_cache" in h5_group:
+        health_history = h5_group["simulation_cache/health_history"]
+        fish.simulation_cache = {"health_history": health_history}
+
+    return fish
 
 
-def generate_fish_from_config(fish_config, brain_config) -> Fish:
+def generate_fish_from_config(fish_config: dict, brain_config: dict) -> Fish:
     brain = generate_brain_from_brain_config(brain_config=brain_config)
-
     return Fish(brain=brain, **fish_config)

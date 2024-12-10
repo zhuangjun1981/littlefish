@@ -199,7 +199,7 @@ class Simulation(object):
                         dtype=[
                             ("pos_row", np.uint16),
                             ("pos_col", np.uint16),
-                            ("health", np.float64),
+                            ("health", np.float32),
                         ],
                     )
                 )

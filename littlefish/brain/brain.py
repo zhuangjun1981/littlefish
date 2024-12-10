@@ -188,7 +188,7 @@ class Brain:
             ["post_idx", "connection"]
         ]
 
-    def initiate_simulation(self, max_simulation_length):
+    def initiate_simulation(self, max_simulation_length: int) -> None:
         """
         initiate simulation: instantiation self.simulation_cache and pre-allocate memory
         for psp_waveforms.
