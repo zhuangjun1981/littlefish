@@ -340,6 +340,7 @@ class Brain:
         self,
         h5_group: h5py.Group,
         should_save_cache: bool = False,
+        should_save_psp_waveforms: bool = False,
     ):
         """
         save brain object to a hdf5 group
@@ -380,9 +381,15 @@ class Brain:
 
         if should_save_cache:
             grp_sim_cache = h5_group.create_group("simulation_cache")
-            self.save_simulation_cache_to_h5_group(grp_sim_cache)
+            self.save_simulation_cache_to_h5_group(
+                grp_sim_cache, should_save_psp_waveforms
+            )
 
-    def save_simulation_cache_to_h5_group(self, h5_group: h5py.Group):
+    def save_simulation_cache_to_h5_group(
+        self,
+        h5_group: h5py.Group,
+        should_save_psp_waveforms: bool = False,
+    ):
         grp_action = h5_group.create_group("action_histories")
         if self.simulation_cache["action_histories"] is not None:
             for i, action_history in enumerate(
@@ -391,7 +398,11 @@ class Brain:
                 neuron_name = f"neuron_{i:04d}"
                 grp_action.create_dataset(name=neuron_name, data=action_history)
 
-        if self.simulation_cache["psp_waveforms"] is not None:
-            h5_group.create_dataset(
+        if (
+            should_save_psp_waveforms
+            and self.simulation_cache["psp_waveforms"] is not None
+        ):
+            psp_dset = h5_group.create_dataset(
                 name="psp_waveforms", data=self.simulation_cache["psp_waveforms"]
             )
+            psp_dset.attrs["data_format"] = "neuron_ind x time_point"

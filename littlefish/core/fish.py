@@ -64,12 +64,12 @@ class Fish:
         # print('\nFish: Creating littlefish.core.fish.Fish object.')
 
         if name is None:
-            self.name = "test_fish"
+            self.name = "unknown_fish"
         else:
             self.name = name
 
         if mother_name is None:
-            self.mother_name = ""
+            self.mother_name = "unknown_mother_fish"
         else:
             self.mother_name = mother_name
 
@@ -214,7 +214,7 @@ class Fish:
         if t_point + 1 < len(self.simulation_cache["health_history"]):
             self.simulation_cache["health_history"][t_point + 1] = updated_health
 
-        return movement_attempt, food_eaten
+        return updated_health, movement_attempt, food_eaten
 
     @staticmethod
     def _eval_terrain(terrain_map: np.ndarray, curr_position: list[int]) -> int:
@@ -274,7 +274,9 @@ class Fish:
 
     def save_simulation_cache_to_h5_group(self, h5_group: h5py.Group):
         for k, v in self.simulation_cache.items():
-            h5_group.create_dataset(k, data=v)
+            dset = h5_group.create_dataset(k, data=v)
+            if k == "position_history":
+                dset.attrs["data_format"] = "time_point x center position [row, col]"
 
 
 def load_fish_from_h5_group(
