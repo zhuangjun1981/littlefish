@@ -53,8 +53,9 @@ class TestSimulation(unittest.TestCase):
         # print(simulation.simulation_cache["food_pos_history"])
 
         sim_log_f = h5py.File(log_path, "a")
+        fish.to_h5_group(sim_log_f, should_save_cache=False)
         simulation.to_h5_group(sim_log_f, should_save_psp_waveforms=True)
-        sim_name = list(sim_log_f.keys())[0]
+        sim_name = [k for k in sim_log_f.keys() if k.startswith("simulation_")][0]
 
         assert np.array_equal(sim_log_f[sim_name]["terrain_map"][()], terrain_map)
         assert np.array_equal(
@@ -70,7 +71,7 @@ class TestSimulation(unittest.TestCase):
             ),
         )
         sim_log_f.close()
-        os.remove(log_path)
+        # os.remove(log_path)
 
 
 if __name__ == "__main__":
