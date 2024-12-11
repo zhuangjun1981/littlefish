@@ -270,8 +270,11 @@ class Fish:
 
         if should_save_cache and self.simulation_cache is not None:
             grp_sim_cache = h5_group.create_group("simulation_cache")
-            for k, v in self.simulation_cache:
-                grp_sim_cache.create_dataset(k, data=v)
+            self.save_simulation_cache_to_h5_group(h5_group=grp_sim_cache)
+
+    def save_simulation_cache_to_h5_group(self, h5_group: h5py.Group):
+        for k, v in self.simulation_cache.items():
+            h5_group.create_dataset(k, data=v)
 
 
 def load_fish_from_h5_group(

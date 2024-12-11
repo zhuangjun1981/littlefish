@@ -382,7 +382,7 @@ class Brain:
             grp_sim_cache = h5_group.create_group("simulation_cache")
             self.save_simulation_cache_to_h5_group(grp_sim_cache)
 
-    def save_simulation_cache_to_h5_group(self, h5_group):
+    def save_simulation_cache_to_h5_group(self, h5_group: h5py.Group):
         grp_action = h5_group.create_group("action_histories")
         if self.simulation_cache["action_histories"] is not None:
             for i, action_history in enumerate(

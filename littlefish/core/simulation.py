@@ -327,7 +327,7 @@ class Simulation(object):
 
             while len(alive_fish_list) > 0 and curr_t < self.simulation_length - 1:
                 # print simulation progress
-                if (verbose > 1) and (self._simulation_length > 100):
+                if (verbose > 1) and (self.simulation_length > 100):
                     if curr_t // (self.simulation_length // 10) > curr_progress:
                         curr_msg = (
                             f"\n{time.time() - t0:09.2f} second: "
@@ -348,8 +348,8 @@ class Simulation(object):
                 for curr_fish in alive_fish_list:  # loop through current live fish
                     movement_attempt, food_eated = curr_fish.act(
                         t_point=curr_t,
-                        terrain_map=self._terrain._terrain_map,
-                        food_map=self._food_map,
+                        terrain_map=self.terrain.terrain_map,
+                        food_map=self.food_map,
                         fish_map=None,
                     )
 
@@ -428,7 +428,7 @@ class Simulation(object):
                         print(curr_msg)
                         self.simulation_cache["message"] += "\n" + curr_msg
 
-            self._simulation_status = 4
+            self.simulation_status = 4
 
         else:
             raise RuntimeError(
@@ -447,7 +447,7 @@ class Simulation(object):
         :return: None
         """
 
-        if self._simulation_status == 4:
+        if self.simulation_status == 4:
             save_name = (
                 "simulation_"
                 + datetime.datetime.now().strftime("%y%m%d_%H_%M_%S")
@@ -456,21 +456,21 @@ class Simulation(object):
             if not os.path.isdir(log_folder):
                 os.makedirs(log_folder)
             log_f = h5py.File(os.path.join(log_folder, save_name), "a")
-            log_f["terrain_map"] = self._terrain._terrain_map
-            log_f["message"] = self._simulation_histories["message"]
+            log_f["terrain_map"] = self.terrain.terrain_map
+            log_f["message"] = self.simulation_cache["message"]
 
-            end_t_dset = log_f.create_dataset("last_time_point", data=self._end_t)
+            end_t_dset = log_f.create_dataset("last_time_point", data=self.end_t)
             end_t_dset.attrs["description"] = "the last time point simulated."
 
             food_pos_dset = log_f.create_dataset(
-                "food_pos_history", data=self._simulation_histories["food_pos_history"]
+                "food_pos_history", data=self.simulation_cache["food_pos_history"]
             )
             food_pos_dset.attrs[
                 "data_format"
             ] = "time_points x food_num x food position [row, col]"
 
             fish_list_grp = log_f.create_group("fish_list")
-            for curr_fish in self._fish_list:
+            for curr_fish in self.fish_list:
                 curr_fish_grp = fish_list_grp.create_group(curr_fish.name)
 
                 # save data of current fish
@@ -483,41 +483,15 @@ class Simulation(object):
 
                 # create group to save simulation history of current fish
                 curr_fish_sim_grp = curr_fish_grp.create_group("sim_history")
-                curr_sim_history = self._simulation_histories[curr_fish.name]
-
-                # save total moves
-                curr_fish_grp["total_moves"] = curr_sim_history["total_moves"]
-
-                # save action histories of every neuron in current fish
-                curr_fish_ah_grp = curr_fish_sim_grp.create_group("action_histories")
-                curr_fish_ah = curr_sim_history["action_histories"]
-                for neuron_ind, ah in curr_fish_ah.iterrows():
-                    curr_fish_ah_grp[
-                        "neuron_" + utils.int2str(neuron_ind, 4)
-                    ] = ah.iloc[0]
-
-                if is_save_psp_waveforms:
-                    # save psp waveforms of all neurons in current fish
-                    curr_fish_psp_wf_dset = curr_fish_sim_grp.create_dataset(
-                        "psp_waveforms", data=curr_sim_history["psp_waveforms"]
-                    )
-                    curr_fish_psp_wf_dset.attrs[
-                        "data_format"
-                    ] = "neuron_ind x time_point"
-
-                # save life history of fish
-                curr_life_his = self._simulation_histories[curr_fish.name][
-                    "life_history"
-                ]
-                curr_pos_arr = np.array(curr_life_his.loc[:, ["pos_row", "pos_col"]])
-                curr_fish_pos_dset = curr_fish_sim_grp.create_dataset(
-                    "position_history", data=curr_pos_arr
+                curr_fish.save_simulation_cache_to_h5_group(h5_group=curr_fish_sim_grp)
+                curr_brain_sim_grp = curr_fish_sim_grp.create_group("sim_history_brain")
+                curr_fish.brain.save_simulation_cache_to_h5_group(
+                    h5_group=curr_brain_sim_grp
                 )
-                curr_fish_pos_dset.attrs[
+                curr_fish_sim_grp["position_history"].attrs[
                     "data_format"
                 ] = "time_point x center position [row, col]"
-                curr_health_arr = np.array(curr_life_his.loc[:, "health"])
-                curr_fish_sim_grp["health"] = curr_health_arr
+
         else:
             raise RuntimeError(
                 "Simulation: Cannot save save_log. Simulation has not run yet."

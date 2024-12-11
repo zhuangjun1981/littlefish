@@ -73,3 +73,8 @@ class TestSimulation(unittest.TestCase):
         )
         sim_his_f.close()
         os.remove(sim_his_fn)
+
+
+if __name__ == "__main__":
+    test_simulation = TestSimulation()
+    test_simulation.test_simulation()
