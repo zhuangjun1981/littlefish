@@ -24,33 +24,17 @@ class TerrainGenerator(object):
         :param sea_portion: float, (0, 1), the portion of sea in the generated maps
         """
 
-        self._size = size
+        self.size = size
 
-        if sea_portion <= 0 or sea_portion >= 1:
+        if sea_portion < 0.0 or sea_portion > 1.0:
             raise ValueError(
                 "TerrainGenerator: sea_portion should be larger than 0. and smaller than"
                 "1."
             )
 
-        self._sea_portion = sea_portion
+        self.sea_portion = sea_portion
 
-    def get_size(self):
-        """
-
-        :return: size of world_map (height, width)
-        """
-
-        return self._size
-
-    def get_sea_portion(self):
-        """
-
-        :return: sea level
-        """
-
-        return self._sea_portion
-
-    def generate_float_map(self, sigma=0.0):
+    def generate_float_map(self, sigma: float = 0.0):
         """
         generate a world_map with floating point with elevation [0., 1.]
 
@@ -58,20 +42,22 @@ class TerrainGenerator(object):
         :return:
         """
 
-        float_map = np.random.random(self._size)
+        float_map = np.random.random(self.size)
         float_map = ni.filters.gaussian_filter(float_map, sigma)
         float_map = util.array_nor(float_map)
 
         return float_map
 
-    def generate_binary_map(self, sigma=0.5, step_size=0.001, is_plot=False):
+    def generate_binary_map(
+        self, sigma: float = 0.5, step_size: float = 0.001, is_plot: bool = False
+    ):
         """
         generate binary map, 1: land, 0: sea, with the proportion of sea is roughly same as
-        self._sea_portion
+        self.sea_portion
 
         :param sigma: positive float, filter sigma to filter the world_map
         :param step_size: positive float, (0, 1), step size to try different sea level to reach
-                          self._sea_portion
+            self.sea_portion
         :param is_plot: if True, pop a plot of binary world_map
         :return: a binary world_map with defined size, 0 means under water. 1 means above water
         """
@@ -79,17 +65,22 @@ class TerrainGenerator(object):
         float_map = self.generate_float_map(sigma=sigma)
         binary_map = np.zeros(float_map.shape, dtype=np.bool)
 
-        total_area = float(self._size[0] * self._size[1])
+        if self.sea_portion == 0:
+            binary_map = np.ones(self.size, dtype=np.uint8)
+        elif self.sea_portion == 1:
+            binary_map = np.zeros(self.size, dtype=np.uint8)
+        else:
+            total_area = float(self.size[0] * self.size[1])
 
-        sea_level = step_size
-        binary_map[float_map >= sea_level] = 1
-        curr_sea_portion = 1 - (np.sum(binary_map[:]) / total_area)
-
-        while curr_sea_portion < self._sea_portion:
-            sea_level += step_size
-            binary_map[:] = 0
+            sea_level = step_size
             binary_map[float_map >= sea_level] = 1
             curr_sea_portion = 1 - (np.sum(binary_map[:]) / total_area)
+
+            while curr_sea_portion < self.sea_portion:
+                sea_level += step_size
+                binary_map[:] = 0
+                binary_map[float_map >= sea_level] = 1
+                curr_sea_portion = 1 - (np.sum(binary_map[:]) / total_area)
 
         if is_plot:
             f = plt.figure(figsize=(20, 8))
@@ -112,35 +103,29 @@ class BinaryTerrain(object):
     2 dimensional binary terrain object.
     """
 
-    def __init__(self, input_array):
+    def __init__(self, input_array: np.ndarray):
         """
 
         :param input_array:
         """
 
         if util.check_binary_2d_array(input_array):
-            self._terrain_map = input_array
+            self.terrain_map = input_array
         else:
             raise ValueError(
                 "BinaryTerrain: input array should be binary 2d numpy array, with _dtype integer."
             )
 
-    def get_terrain_shape(self):
-        return self._terrain_map.shape
-
-    def get_terrain_map(self):
-        return self._terrain_map
-
-    def generate_fish_starting_position(self, fish_num=1):
+    def generate_fish_starting_position(self, fish_num: int = 1):
         """
         return randomized fish starting position. Note: fishes can be completely or partially overlapping
 
         :param fish_num: positive integer, number of fish positions to return
         :return: list of tuple, each tuple contains 2 positive integers (row, col) of a random position for a 3x3 fish,
-                 where its body will not cover 1s in self._terrain_map
+            where its body will not cover 1s in self.terrain_map
         """
 
-        position_maps = np.array(self._terrain_map)
+        position_maps = np.array(self.terrain_map)
         position_maps = ni.binary_dilation(
             position_maps, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]
         )
@@ -156,7 +141,7 @@ class BinaryTerrain(object):
         ]
         return [tuple(p) for p in fish_positions]
 
-    def update_food_map(self, food_num, food_map):
+    def update_food_map(self, food_num: int, food_map: np.ndarray):
         """
         update the input food_map and food_pos_array, to generate new food map and food_pos_array so that the terrain
         contains food_num of food pixels (each food only occupies one pixel). If the number of food is less than
@@ -166,7 +151,7 @@ class BinaryTerrain(object):
         :param food_num: positive integer, number of food pixels after update
         :return: food_map: updated food map
         :return: food_positions: 2d array, food_num x 2, _dtype: uint16, array of food pixel coordinates,
-                                 each row is a food position, columns: [row, col]
+            each row is a food position, columns: [row, col]
         """
 
         curr_food_pos_list = np.where(food_map == 1)
@@ -201,7 +186,7 @@ class BinaryTerrain(object):
         ):  # current number of food less than food_num
             # get positions to add food
             possible_positions = list(
-                zip(*np.where(np.logical_or(self._terrain_map, food_map) == 0))
+                zip(*np.where(np.logical_or(self.terrain_map, food_map) == 0))
             )
             food_add_index = np.random.choice(
                 range(len(possible_positions)),
@@ -231,9 +216,7 @@ class BinaryTerrain(object):
         pass
 
     def get_sea_portion(self):
-        return float(np.sum(self._terrain_map.flat)) / float(
-            len(self._terrain_map.flat)
-        )
+        return float(np.sum(self.terrain_map.flat)) / float(len(self.terrain_map.flat))
 
 
 if __name__ == "__main__":

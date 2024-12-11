@@ -93,11 +93,33 @@ class Fish:
     def clear_simulation_cache(self):
         self.simulation_cache = {"health_history": None}
 
-    def initiate_simulation(self, max_simulation_length: int) -> None:
+    def initiate_simulation(
+        self, position: list[int], max_simulation_length: int
+    ) -> None:
+        """
+        pre-allocate memorys for runing the simulation.
+        first initiate simulation for the brain
+        then initiate simulation fot the fish
+        the self.simulation_cache is a dictionary:
+          {
+            "health_history": ndarray, shape: (simulation length, )
+            "position_history": ndarray, shape: (simulation length, 2), first column: row_idx, second column: col_idx
+          }
+        """
+
         self.brain.initiate_simulation(max_simulation_length=max_simulation_length)
+
         health_history = np.zeros((max_simulation_length,), dtype=np.float32)
         health_history[0] = self.max_health
-        self.simulation_cache = {"health_history": health_history}
+
+        position_history = np.zeros((max_simulation_length, 2), dtype=np.int16)
+        position_history[0, :] = position
+
+        self.simulation_cache = {
+            "health_history": health_history,
+            "position_history": position_history,
+            "total_moves": 0,
+        }
 
     def set_name(self, name: str) -> None:
         self.name = name
@@ -118,7 +140,6 @@ class Fish:
     def act(
         self,
         t_point: int,
-        curr_position: list[int],
         terrain_map: np.ndarray,
         food_map: np.ndarray = None,
         fish_map: np.ndarray = None,
@@ -127,8 +148,6 @@ class Fish:
         simulate the fish's action at a given time point
 
         :param t_point: non-negative int, time point
-        :param curr_position: list or tuple of two non-negative integers, coordinates of fish center position,
-                              [row, col]
         :param curr_health: positive float, health point at the beginning of t_point
         :param terrain_map: 2d array, with only 0s (water) and 1s (land). represents the land scape of the world
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
@@ -139,6 +158,7 @@ class Fish:
         """
 
         curr_health = self.simulation_cache["health_history"][t_point]
+        curr_position = self.simulation_cache["position_history"][t_point, :]
 
         # evaluate food
         if food_map is not None:
@@ -194,7 +214,7 @@ class Fish:
         if t_point + 1 < len(self.simulation_cache["health_history"]):
             self.simulation_cache["health_history"][t_point + 1] = updated_health
 
-        return updated_health, movement_attempt, food_eaten
+        return movement_attempt, food_eaten
 
     @staticmethod
     def _eval_terrain(terrain_map: np.ndarray, curr_position: list[int]) -> int:
@@ -248,11 +268,10 @@ class Fish:
         grp_brain = h5_group.create_group("brain")
         self.brain.to_h5_group(h5_group=grp_brain)
 
-        if should_save_cache and self.simulation_cache["health_history"] is not None:
+        if should_save_cache and self.simulation_cache is not None:
             grp_sim_cache = h5_group.create_group("simulation_cache")
-            grp_sim_cache.create_dataset(
-                "health_history", data=self.simulation_cache["health_history"]
-            )
+            for k, v in self.simulation_cache:
+                grp_sim_cache.create_dataset(k, data=v)
 
 
 def load_fish_from_h5_group(
@@ -274,8 +293,9 @@ def load_fish_from_h5_group(
     fish = Fish(**fish_params)
 
     if should_load_simulation_cache and "simulation_cache" in h5_group:
-        health_history = h5_group["simulation_cache/health_history"]
-        fish.simulation_cache = {"health_history": health_history}
+        fish.simulation_cache = {}
+        for k, v in h5_group["simulation_cache"].items():
+            fish.simulation_cache[k] = v[()]
 
     return fish
 

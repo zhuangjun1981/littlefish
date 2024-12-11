@@ -121,11 +121,12 @@ class TestFish(unittest.TestCase):
             action_potential_penalty_rate=0.0001,
         )
 
-        fish.initiate_simulation(max_simulation_length=max_simulation_length)
+        fish.initiate_simulation(
+            position=body_position, max_simulation_length=max_simulation_length
+        )
 
-        updated_health, movement_attempt, food_eaten = fish.act(
+        movement_attempt, food_eaten = fish.act(
             t_point=0,
-            curr_position=body_position,
             terrain_map=terrain_map,
             food_map=food_map,
         )
@@ -140,10 +141,10 @@ class TestFish(unittest.TestCase):
         food_map[1, 4] = 1
         food_map[0, 3] = 1
         terrain_map[3, 2] = 0
+        fish.simulation_cache["position_history"][1] = body_position
 
-        updated_health, movement_attempt, food_eaten = fish.act(
+        movement_attempt, food_eaten = fish.act(
             t_point=1,
-            curr_position=body_position,
             terrain_map=terrain_map,
             food_map=food_map,
         )

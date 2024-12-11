@@ -171,7 +171,7 @@ def check_arithmetic_progression(seq):
 
 def check_binary_2d_array(array):
     """
-    check if an array is 2 dimensional and _dtype is int and only contains 0s and 1s
+    check if an array is 2 dimensional and dtype is int and only contains 0s and 1s
     """
 
     if not isinstance(array, np.ndarray):
