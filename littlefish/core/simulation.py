@@ -68,20 +68,10 @@ def simulate_one_fish(
 
         curr_simulation.initiate_simulation()
         curr_simulation.run(verbose=verbose)
-
-        curr_sim_grp = curr_fish_f.create_group(
-            "simulation_" + utils.int2str(sim_ind, 3)
-        )
-        curr_sim_grp["ending_time"] = datetime.datetime.now().strftime(
-            "%y%m%d_%H_%M_%S"
-        )
-        curr_sim_grp["random_seed"] = curr_seed
-        curr_sim_grp["simulation_length"] = simulation_length
-        curr_sim_grp["terrain_shape"] = terrain.terrain_map.shape
-        curr_sim_grp["sea_portion"] = terrain.get_sea_portion()
-        curr_sim_grp["food_num"] = food_num
+        curr_simulation.simulation_cache["random_seed"] = curr_seed
+        curr_simulation.simulation_cache["numpy_random_seed"] = curr_seed
         # curr_sim_grp['script_txt'] = inspect.getsource(sys.modules[__name__])
-        curr_simulation.save_log_to_h5_group(curr_sim_grp, is_save_psp_waveforms=False)
+        curr_simulation.to_h5_group(curr_fish_f, is_save_psp_waveforms=False)
 
         if verbose:
             print(
@@ -411,6 +401,9 @@ class Simulation(object):
 
             else:
                 self.simulation_cache["last_time_point"] = curr_t
+                self.simulation_cache["ending_time"] = datetime.datetime.now().strftime(
+                    "%y%m%d_%H_%M_%S"
+                )
 
                 if curr_t == self.simulation_length - 1:
                     if verbose > 1:
@@ -469,6 +462,7 @@ class Simulation(object):
         save_group.create_dataset("terrain_map", data=self.terrain.terrain_map)
         save_group.create_dataset("max_simulation_length", data=self.simulation_length)
         save_group.create_dataset("food_num", data=self.food_num)
+        save_group.create_dataset("sea_portion", data=self.terrain.get_sea_portion())
 
         sim_cache_group = save_group.create_group("simulation_cache")
         for k, v in self.simulation_cache.items():
@@ -479,7 +473,7 @@ class Simulation(object):
                 ] = "time_points x food_num x food position [row, col]"
 
         for fish in self.fish_list:
-            fish_grp = save_group.create_group(fish.name)
+            fish_grp = save_group.create_group(f"fish_{fish.name}")
             fish.save_simulation_cache_to_h5_group(fish_grp)
             brain_grp = fish_grp.create_group("brain_simulation_cache")
             fish.brain.save_simulation_cache_to_h5_group(

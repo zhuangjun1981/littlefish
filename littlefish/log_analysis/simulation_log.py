@@ -1,4 +1,5 @@
 import h5py
+import littlefish.core.utilities as util
 
 
 class SimulationLog:
@@ -34,6 +35,59 @@ class SimulationLog:
     @property
     def name(self):
         return self.log.name.split("/")[-1]
+
+    @property
+    def terrain_shape(self):
+        return self.log["terrain_map"].shape
+
+    @property
+    def food_num(self):
+        return self.log["food_num"][()]
+
+    @property
+    def terrain_map(self):
+        return self.log["terrain_map"][()]
+
+    @property
+    def max_simulation_length(self):
+        return self.log["max_simulation_length"][()]
+
+    @property
+    def last_time_point(self):
+        return self.log["simulation_cache/last_time_point"][()]
+
+    @property
+    def ending_time(self):
+        return util.decode(self.log["simulation_cache/ending_time"][()])
+
+    @property
+    def fish_names(self):
+        return [
+            k[5:]
+            for k in self.log.keys()
+            if isinstance(self.log[k], h5py.Group) and k.startswith("fish_")
+        ]
+
+    def get_food_position_history(self):
+        return self.log["simulation_cache/food_pos_history"][()]
+
+    def get_fish_total_moves(self, fish_name: str):
+        return self.log[f"fish_{fish_name}/total_moves"][()]
+
+    def get_fish_firing_stats(self, fish_name: str):
+        grp_action_history = self.log[
+            f"fish_{fish_name}/brain_simulation_cache/action_histories"
+        ]
+        action_num = 0
+        for k, v in grp_action_history.items():
+            action_num += len(v)
+        return action_num, action_num / len(grp_action_history.keys())
+
+    def get_fish_health_history(self, fish_name: str):
+        return self.log[f"fish_{fish_name}/health_history"][()]
+
+    def get_fish_position_history(self, fish_name: str):
+        return self.log[f"fish_{fish_name}/position_history"][()]
 
 
 if __name__ == "__main__":

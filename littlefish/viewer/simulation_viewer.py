@@ -1,10 +1,12 @@
 import sys
+import os
 
 import h5py
 import littlefish.core.fish as fi
 import littlefish.core.plotting as pt
 import littlefish.core.utilities as util
 import littlefish.core.simulation as sim
+import littlefish.log_analysis.simulation_log as sl
 import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5.QtCore import QTimer
@@ -26,7 +28,7 @@ LAND_RGB = np.array([46, 204, 113], dtype=int)
 SEA_RGB = np.array([52, 152, 219], dtype=int)
 FISH_RGB = np.array([241, 196, 15], dtype=int)
 FOOD_RGB = np.array([157, 32, 45], dtype=int)
-PLOT_STEP = 10
+PLOT_STEP = 1
 
 
 def get_terrain_map_rgb(terrain_map_binary):
@@ -112,6 +114,7 @@ class SimulationViewer(Ui_SimulationViewer):
         self.PlayTimer.timeout.connect(self._show_next_frame)
         self.PlaySlider.sliderMoved.connect(self._slide_to_t)
 
+        self._saved_directory = None
         self.clear_loaded_file()
 
     def get_file(self):
@@ -119,28 +122,19 @@ class SimulationViewer(Ui_SimulationViewer):
         options |= QFileDialog.DontUseNativeDialog
         f_path, _ = QFileDialog.getOpenFileName(
             caption="QFileDialog.getOpenFileName()",
-            directory="C:/little_fish_simulation_logs_2",
+            directory=self._saved_directory,
             filter="hdf Files (*.hdf5 *.h5);;",
         )
         self.clear_loaded_file()
         self.PlotBrainButton.setEnabled(True)
         self.FilePathBrowser.setText(f_path)
+        self._saved_directory = os.path.dirname(f_path)
         self._file = h5py.File(f_path, "r")
-        self._max_health = self._file["fish/max_health"][()]
-        self._show_fish_params()
         self._set_simulation_list()
 
     def _plot_brain(self):
-        try:
-            fish = fi.Fish.from_h5_group(self._file["fish"])
-            fish_n = fish.name
-            self._brain_figure = plt.figure(figsize=(10, 10))
-            ax = self._brain_figure.add_axes([0.05, 0.05, 0.9, 0.9])
-            ax = pt.plot_brain(fish.get_brain(), plot_axis=ax)
-            ax.set_title(fish_n)
-            plt.show()
-        except Exception as e:
-            print(e)
+        """this needs to be reimplemented"""
+        pass
 
     def _show_fish_params(self):
         try:
@@ -151,90 +145,89 @@ class SimulationViewer(Ui_SimulationViewer):
             self.FishTableWidget.setItem(4, 0, QTableWidgetItem("health_decay_rate"))
             self.FishTableWidget.setItem(5, 0, QTableWidgetItem("land_penalty_rate"))
             self.FishTableWidget.setItem(6, 0, QTableWidgetItem("move_penalty_rate"))
-            self.FishTableWidget.setItem(7, 0, QTableWidgetItem("start_generation"))
-            self.FishTableWidget.setItem(8, 0, QTableWidgetItem("current_generation"))
+            self.FishTableWidget.setItem(7, 0, QTableWidgetItem("firing_penalty_rate"))
+            self.FishTableWidget.setItem(8, 0, QTableWidgetItem("start_generation"))
+            self.FishTableWidget.setItem(9, 0, QTableWidgetItem("current_generation"))
+            self.FishTableWidget.setItem(10, 0, QTableWidgetItem("total_moves"))
+            self.FishTableWidget.setItem(11, 0, QTableWidgetItem("total_firings"))
+            self.FishTableWidget.setItem(12, 0, QTableWidgetItem("mean_firing_rate"))
+            self.FishTableWidget.setItem(0, 1, QTableWidgetItem(self.fish.name))
+            self.FishTableWidget.setItem(1, 1, QTableWidgetItem(self.fish.mother_name))
             self.FishTableWidget.setItem(
-                0, 1, QTableWidgetItem(util.decode(self._file["fish/name"][()]))
+                2, 1, QTableWidgetItem(str(self.fish.max_health))
             )
             self.FishTableWidget.setItem(
-                1, 1, QTableWidgetItem(util.decode(self._file["fish/mother_name"][()]))
+                3, 1, QTableWidgetItem(str(self.fish.food_rate))
             )
             self.FishTableWidget.setItem(
-                2, 1, QTableWidgetItem(str(self._file["fish/max_health"][()]))
+                4, 1, QTableWidgetItem(str(self.fish.health_decay_rate))
             )
             self.FishTableWidget.setItem(
-                3, 1, QTableWidgetItem(str(self._file["fish/food_rate_per_pixel"][()]))
+                5, 1, QTableWidgetItem(str(self.fish.land_penalty_rate))
             )
             self.FishTableWidget.setItem(
-                4,
-                1,
-                QTableWidgetItem(str(self._file["fish/health_decay_rate_per_tu"][()])),
+                6, 1, QTableWidgetItem(str(self.fish.move_penalty_rate))
             )
             self.FishTableWidget.setItem(
-                5,
+                7, 1, QTableWidgetItem(str(self.fish.action_potential_penalty_rate))
+            )
+
+            # this should be in evolution_log, which needs to be implemented
+            # if "generations" in self._file:
+            #     self.FishTableWidget.setItem(
+            #         8, 1, QTableWidgetItem(str(self._file["generations"][0]))
+            #     )
+            #     self.FishTableWidget.setItem(
+            #         9, 1, QTableWidgetItem(str(self._file["generations"][-1]))
+            #     )
+
+            self.FishTableWidget.setItem(
+                10,
                 1,
                 QTableWidgetItem(
-                    str(self._file["fish/land_penalty_rate_per_pixel_tu"][()])
+                    str(self.sim_log.get_fish_total_moves(self.fish_name))
                 ),
             )
-            if "fish/move_penalty_rate" in self._file:
-                self.FishTableWidget.setItem(
-                    6,
-                    1,
-                    QTableWidgetItem(str(self._file["fish/move_penalty_rate"][()])),
-                )
-            self.FishTableWidget.setItem(
-                7, 1, QTableWidgetItem(str(self._file["generations"][0]))
+            firing_total, firing_mean = self.sim_log.get_fish_firing_stats(
+                self.fish_name
             )
-            self.FishTableWidget.setItem(
-                8, 1, QTableWidgetItem(str(self._file["generations"][-1]))
-            )
+            self.FishTableWidget.setItem(11, 1, QTableWidgetItem(str(firing_total)))
+            self.FishTableWidget.setItem(12, 1, QTableWidgetItem(str(firing_mean)))
+
         except Exception as e:
             print(e)
 
     def _set_simulation_list(self):
         try:
             self.SimulationComboBox.addItems(
-                [s for s in self._file.keys() if s[0:10] == "simulation"]
+                [s for s in self._file.keys() if s.startswith("simulation_")]
             )
             self._load_simulation(self.SimulationComboBox.itemText(0))
         except Exception as e:
             print(e)
 
-    def _show_simulation_results(self, sim_grp):
+    def _show_simulation_results(self):
         try:
-            last_t = sim_grp["simulation_log/last_time_point"][()]
-            try:
-                total_move = sim_grp["simulation_log/total_moves"][()]
-            except KeyError:
-                total_move = None
-            max_length = sim_grp["simulation_length"][()]
-            ending_time = util.decode(sim_grp["ending_time"][()])
             self.SimulationTableWidget.setItem(
                 0, 0, QTableWidgetItem("last_time_point")
             )
-            self.SimulationTableWidget.setItem(1, 0, QTableWidgetItem("total_moves"))
-            self.SimulationTableWidget.setItem(2, 0, QTableWidgetItem("max_length"))
-            self.SimulationTableWidget.setItem(3, 0, QTableWidgetItem("ending_time"))
+            self.SimulationTableWidget.setItem(1, 0, QTableWidgetItem("max_length"))
+            self.SimulationTableWidget.setItem(2, 0, QTableWidgetItem("ending_time"))
             self.SimulationTableWidget.setItem(
-                4, 0, QTableWidgetItem("mean_firing_rate")
+                0, 1, QTableWidgetItem(str(self.sim_log.last_time_point))
             )
-            self.SimulationTableWidget.setItem(0, 1, QTableWidgetItem(str(last_t)))
-            self.SimulationTableWidget.setItem(1, 1, QTableWidgetItem(str(total_move)))
-            self.SimulationTableWidget.setItem(2, 1, QTableWidgetItem(str(max_length)))
-            self.SimulationTableWidget.setItem(3, 1, QTableWidgetItem(ending_time))
-            mean_firing_rate = sim.get_mean_firing_rate(sim_grp["simulation_log"])
             self.SimulationTableWidget.setItem(
-                4, 1, QTableWidgetItem(f"{mean_firing_rate:.5f}")
+                1, 1, QTableWidgetItem(str(self.sim_log.max_simulation_length))
+            )
+            self.SimulationTableWidget.setItem(
+                2, 1, QTableWidgetItem(self.sim_log.ending_time)
             )
         except Exception as e:
             print(e)
 
-    def _show_terrain_params(self, sim_grp):
+    def _show_terrain_params(self):
         try:
-            terr_shape = sim_grp["simulation_log/terrain_map"].shape
-            food_num = sim_grp["simulation_log/food_pos_history"].shape[1]
-            terrain_map = sim_grp["simulation_log/terrain_map"][()]
+            terrain_map = self.sim_log.terrain_map
             sea_portion = 1.0 - (
                 np.sum(terrain_map.flat)
                 / float(terrain_map.shape[0] * terrain_map.shape[1])
@@ -242,8 +235,12 @@ class SimulationViewer(Ui_SimulationViewer):
             self.TerrainTableWidget.setItem(0, 0, QTableWidgetItem("terrain_shape"))
             self.TerrainTableWidget.setItem(1, 0, QTableWidgetItem("food_number"))
             self.TerrainTableWidget.setItem(2, 0, QTableWidgetItem("sea_portion"))
-            self.TerrainTableWidget.setItem(0, 1, QTableWidgetItem(str(terr_shape)))
-            self.TerrainTableWidget.setItem(1, 1, QTableWidgetItem(str(food_num)))
+            self.TerrainTableWidget.setItem(
+                0, 1, QTableWidgetItem(str(self.sim_log.terrain_shape))
+            )
+            self.TerrainTableWidget.setItem(
+                1, 1, QTableWidgetItem(str(self.sim_log.food_num))
+            )
             self.TerrainTableWidget.setItem(2, 1, QTableWidgetItem(str(sea_portion)))
         except Exception as e:
             print(e)
@@ -253,16 +250,22 @@ class SimulationViewer(Ui_SimulationViewer):
         self._curr_t_point = 0
 
         if simulation_key in self._file.keys():
-            sim_grp = self._file[simulation_key]
-            self._show_terrain_params(sim_grp)
-            self._show_simulation_results(sim_grp)
-            self._terrain_map_rgb = get_terrain_map_rgb(
-                sim_grp["simulation_log/terrain_map"][()]
+            self.sim_log = sl.SimulationLog(log=self._file[simulation_key])
+            self.fish_name = self.sim_log.fish_names[
+                0
+            ]  # currently only look at the first fish
+            self.fish = fi.load_fish_from_h5_group(self._file[f"fish_{self.fish_name}"])
+            self._show_fish_params()
+            self._show_terrain_params()
+            self._show_simulation_results()
+            self._total_t_point = self.sim_log.last_time_point - 1
+            self._terrain_map_rgb = get_terrain_map_rgb(self.sim_log.terrain_map)
+            self._food_pos_history = self.sim_log.get_food_position_history()
+            self._health_history = self.sim_log.get_fish_health_history(self.fish_name)
+            self._fish_pos_history = self.sim_log.get_fish_position_history(
+                self.fish_name
             )
-            self._health_history = sim_grp["simulation_log/health"][()]
-            self._fish_pos_history = sim_grp["simulation_log/position_history"][()]
-            self._food_pos_history = sim_grp["simulation_log/food_pos_history"][()]
-            self._total_t_point = sim_grp["simulation_log/last_time_point"][()] - 1
+
             self.PlayPauseButton.setEnabled(True)
             self.PlaySlider.setEnabled(True)
             self.TimeTextBrowser.setEnabled(True)
@@ -314,13 +317,9 @@ class SimulationViewer(Ui_SimulationViewer):
         self.PlayPauseButton.setText("Play")
 
         self._file = None
-        self._curr_t_point = None
-        self._terrain_map_rgb = None
-        self._fish_pos_history = None
-        self._health_history = None
-        self._food_pos_history = None
-        self._max_health = None
-        self._total_t_point = None
+        self.sim_log = None
+        self.fish_name = None
+        self.fish = None
 
         if hasattr(self, "_brain_figure"):
             if self._brain_figure is not None:

@@ -78,7 +78,7 @@ class Ui_SimulationViewer(object):
         self.FishTableWidget.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.FishTableWidget.setFrameShadow(QtWidgets.QFrame.Plain)
         self.FishTableWidget.setShowGrid(False)
-        self.FishTableWidget.setRowCount(9)
+        self.FishTableWidget.setRowCount(12)
         self.FishTableWidget.setColumnCount(2)
         self.FishTableWidget.setObjectName("FishTableWidget")
         self.FishTableWidget.horizontalHeader().setVisible(False)

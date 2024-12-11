@@ -71,7 +71,7 @@ class TestSimulation(unittest.TestCase):
             ),
         )
         sim_log_f.close()
-        # os.remove(log_path)
+        os.remove(log_path)
 
 
 if __name__ == "__main__":
