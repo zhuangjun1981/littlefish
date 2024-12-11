@@ -68,6 +68,20 @@ class SimulationLog:
             if isinstance(self.log[k], h5py.Group) and k.startswith("fish_")
         ]
 
+    @property
+    def random_seed(self):
+        if "random_seed" in self.log["simulation_cache"]:
+            return self.log["simulation_cache/random_seed"][()]
+        else:
+            return None
+
+    @property
+    def numpy_random_seed(self):
+        if "numpy_random_seed" in self.log["simulation_cache"]:
+            return self.log["simulation_cache/numpy_random_seed"][()]
+        else:
+            return None
+
     def get_food_position_history(self):
         return self.log["simulation_cache/food_pos_history"][()]
 

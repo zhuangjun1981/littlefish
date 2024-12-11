@@ -215,6 +215,10 @@ class SimulationViewer(Ui_SimulationViewer):
             )
             self.SimulationTableWidget.setItem(1, 0, QTableWidgetItem("max_length"))
             self.SimulationTableWidget.setItem(2, 0, QTableWidgetItem("ending_time"))
+            self.SimulationTableWidget.setItem(3, 0, QTableWidgetItem("random_seed"))
+            self.SimulationTableWidget.setItem(
+                4, 0, QTableWidgetItem("numpy_random_seed")
+            )
             self.SimulationTableWidget.setItem(
                 0, 1, QTableWidgetItem(str(self.sim_log.last_time_point))
             )
@@ -223,6 +227,12 @@ class SimulationViewer(Ui_SimulationViewer):
             )
             self.SimulationTableWidget.setItem(
                 2, 1, QTableWidgetItem(self.sim_log.ending_time)
+            )
+            self.SimulationTableWidget.setItem(
+                3, 1, QTableWidgetItem(self.sim_log.random_seed)
+            )
+            self.SimulationTableWidget.setItem(
+                4, 1, QTableWidgetItem(self.sim_log.numpy_random_seed)
             )
         except Exception as e:
             print(e)

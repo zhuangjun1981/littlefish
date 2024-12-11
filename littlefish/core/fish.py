@@ -45,6 +45,7 @@ class Fish:
         food_rate: float = 20.0,
         move_penalty_rate: float = 0.001,
         action_potential_penalty_rate: float = 0.0,
+        generations: list[int] = [],
     ) -> None:
         """
 
@@ -59,6 +60,7 @@ class Fish:
             from its health.
         :param action_potential_penalty_rate: float, health decay per action potential, implement this can encourage
             sparse firing of the neurons.
+        :param generations: list[int], generations that the fish lasted during evolution
         """
 
         # print('\nFish: Creating littlefish.core.fish.Fish object.')
@@ -79,6 +81,7 @@ class Fish:
         self.food_rate = float(food_rate)
         self.move_penalty_rate = float(move_penalty_rate)
         self.action_potential_penalty_rate = float(action_potential_penalty_rate)
+        self.generations = generations
 
         if brain is None:
             self.brain = Brain()
