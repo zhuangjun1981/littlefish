@@ -1,14 +1,13 @@
 import sys
 import os
-
 import h5py
-import littlefish.core.fish as fi
-import littlefish.core.plotting as pt
-import littlefish.core.utilities as util
-import littlefish.core.simulation as sim
-import littlefish.log_analysis.simulation_log as sl
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+
+import littlefish.core.fish as fi
+import littlefish.core.utilities as util
+import littlefish.log_analysis.simulation_log as sl
+from littlefish.brain.functional import plot_brain_connections
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
     QFileDialog,
@@ -134,7 +133,10 @@ class SimulationViewer(Ui_SimulationViewer):
 
     def _plot_brain(self):
         """this needs to be reimplemented"""
-        pass
+        f = plot_brain_connections(self.fish.brain)
+        f.suptitle(self.fish_name)
+        plt.tight_layout()
+        plt.show()
 
     def _show_fish_params(self):
         try:

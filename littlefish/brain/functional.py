@@ -2,7 +2,9 @@ import h5py
 import yaml
 from typing import Union
 import pandas as pd
+import matplotlib.pyplot as plt
 from littlefish.core import utilities as util
+from littlefish.core.plotting import plot_confusion_matrix
 from littlefish.brain.neuron import (
     Neuron,
     Eye,
@@ -158,24 +160,28 @@ def generate_brain_from_brain_config(
     post_idxs = []
     connections = []
     all_layers = neurons["layer"].unique().tolist()
-    for layer_i in range(1, len(all_layers)):
-        pre_layer = all_layers[layer_i - 1]
-        post_layer = all_layers[layer_i]
-        conn_dict = brain_config[f"connection_{pre_layer}_{post_layer}"]
+    for pre_layer in all_layers:
+        for post_layer in all_layers:
+            connection_group_key = f"connection_{pre_layer}_{post_layer}"
 
-        if (
-            conn_dict["connection_type"] == "full"
-        ):  # currently only full connection are supported
-            conn_params = conn_dict
-            conn_params.pop("connection_type")
-            curr_pre_idxs = neurons.query("layer == @pre_layer").index.to_list()
-            curr_post_idxs = neurons.query("layer == @post_layer").index.to_list()
+            if connection_group_key in brain_config:
+                conn_dict = brain_config[connection_group_key]
 
-            for curr_pre_idx in sorted(curr_pre_idxs):
-                for curr_post_idx in sorted(curr_post_idxs):
-                    pre_idxs.append(curr_pre_idx)
-                    post_idxs.append(curr_post_idx)
-                    connections.append(Connection(**conn_params))
+                if (
+                    conn_dict["connection_type"] == "full"
+                ):  # currently only full connection are supported
+                    conn_params = conn_dict
+                    conn_params.pop("connection_type")
+                    curr_pre_idxs = neurons.query("layer == @pre_layer").index.to_list()
+                    curr_post_idxs = neurons.query(
+                        "layer == @post_layer"
+                    ).index.to_list()
+
+                    for curr_pre_idx in sorted(curr_pre_idxs):
+                        for curr_post_idx in sorted(curr_post_idxs):
+                            pre_idxs.append(curr_pre_idx)
+                            post_idxs.append(curr_post_idx)
+                            connections.append(Connection(**conn_params))
 
     connections = pd.DataFrame(
         {"pre_idx": pre_idxs, "post_idx": post_idxs, "connection": connections}
@@ -184,24 +190,75 @@ def generate_brain_from_brain_config(
     return Brain(neurons=neurons, connections=connections)
 
 
+def plot_brain_connections(brain: Brain):
+    """
+    plot the confusion matrix of each parameter of all connections in the brain
+    """
+    n_neurons = brain.neurons.shape[0]
+    last_neuron_idx_per_layer = [-1]
+    for neuron_i, neuron_row in brain.neurons.iterrows():
+        if (
+            neuron_i > 0
+            and neuron_row["layer"] > brain.neurons.loc[neuron_i - 1, "layer"]
+        ):
+            last_neuron_idx_per_layer.append(neuron_i - 1)
+    last_neuron_idx_per_layer.append(n_neurons - 1)
+
+    f, axs = plt.subplots(2, 2, figsize=(8, 8))
+    for param_i, param in enumerate(
+        ["amplitude", "latency", "rise_time", "decay_time"]
+    ):
+        ax = axs[param_i // 2, param_i % 2]
+        matrix = np.zeros((n_neurons, n_neurons))
+        matrix[:] = np.nan
+
+        for conn_i, conn_row in brain.connections.iterrows():
+            matrix[conn_row["pre_idx"], conn_row["post_idx"]] = eval(
+                f"conn_row['connection'].{param}"
+            )
+
+        if param == "amplitude":
+            vmax = np.nanmax(np.abs(matrix))
+            vmin = -vmax
+            cmap = "RdBu_r"
+        else:
+            vmax = np.nanmax(np.abs(matrix))
+            vmin = 0
+            cmap = "magma_r"
+
+        ax = plot_confusion_matrix(
+            matrix=matrix,
+            ax=ax,
+            last_neuron_idx_per_layer=last_neuron_idx_per_layer,
+            cmap=cmap,
+            vmax=vmax,
+            vmin=vmin,
+        )
+        ax.set_title(param)
+
+    return f
+
+
 if __name__ == "__main__":
     import os
 
+    # pd.set_option('display.max_rows', None)
+
     curr_folder = os.path.dirname(os.path.realpath(__file__))
 
-    brain_config_path_min = os.path.join(
-        os.path.dirname(curr_folder), "configs", "brain_config_minimal.yml"
-    )
-    brain_min = generate_brain_from_brain_config(
-        brain_config_path=brain_config_path_min
-    )
+    # brain_config_path_min = os.path.join(
+    #     os.path.dirname(curr_folder), "configs", "brain_config_minimal.yml"
+    # )
+    # brain_min = generate_brain_from_brain_config(
+    #     brain_config_path=brain_config_path_min
+    # )
 
-    brain_config_path_4eyes_ff = os.path.join(
-        os.path.dirname(curr_folder), "configs", "brain_config_4eyes_feedforward.yml"
-    )
-    brain_4eyes_ff = generate_brain_from_brain_config(
-        brain_config_path=brain_config_path_4eyes_ff
-    )
+    # brain_config_path_4eyes_ff = os.path.join(
+    #     os.path.dirname(curr_folder), "configs", "brain_config_4eyes_feedforward.yml"
+    # )
+    # brain_4eyes_ff = generate_brain_from_brain_config(
+    #     brain_config_path=brain_config_path_4eyes_ff
+    # )
 
     brain_config_path_8eyes_recur = os.path.join(
         os.path.dirname(curr_folder), "configs", "brain_config_8eyes_recurrent.yml"
@@ -211,3 +268,7 @@ if __name__ == "__main__":
     )
     print(brain_8eyes_recur.neurons)
     print(brain_8eyes_recur.connections)
+
+    f = plot_brain_connections(brain_8eyes_recur)
+    plt.tight_layout()
+    plt.show()
