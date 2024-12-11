@@ -319,7 +319,7 @@ class Simulation(object):
             # at t0
             self.simulation_status = 3
             t0 = time.time()
-            start_time_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            start_time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
             self.name = f"simulation_{start_time_str}"
 
             if verbose > 1:
@@ -445,66 +445,6 @@ class Simulation(object):
             )
 
         return
-
-    # def save_log(self, log_folder, is_save_psp_waveforms=False):
-    #     """
-    #     save simulation results into a hdf5 file
-
-    #     :param log_folder: directory path to save save_log
-    #     :param msg: str, print out string
-    #     :param is_save_psp_waveforms:
-    #     :return: None
-    #     """
-
-    #     if self.simulation_status == 4:
-    #         save_name = (
-    #             "simulation_"
-    #             + datetime.datetime.now().strftime("%y%m%d_%H_%M_%S")
-    #             + ".hdf5"
-    #         )
-    #         if not os.path.isdir(log_folder):
-    #             os.makedirs(log_folder)
-    #         log_f = h5py.File(os.path.join(log_folder, save_name), "a")
-    #         log_f["terrain_map"] = self.terrain.terrain_map
-    #         log_f["message"] = self.simulation_cache["message"]
-
-    #         end_t_dset = log_f.create_dataset("last_time_point", data=self.end_t)
-    #         end_t_dset.attrs["description"] = "the last time point simulated."
-
-    #         food_pos_dset = log_f.create_dataset(
-    #             "food_pos_history", data=self.simulation_cache["food_pos_history"]
-    #         )
-    #         food_pos_dset.attrs[
-    #             "data_format"
-    #         ] = "time_points x food_num x food position [row, col]"
-
-    #         fish_list_grp = log_f.create_group("fish_list")
-    #         for curr_fish in self.fish_list:
-    #             curr_fish_grp = fish_list_grp.create_group(curr_fish.name)
-
-    #             # save data of current fish
-    #             curr_fish_fish_grp = curr_fish_grp.create_group("fish")
-    #             curr_fish.to_h5_group(curr_fish_fish_grp)
-    #             curr_fish_fish_grp.attrs["description"] = (
-    #                 "Data of the little.fish.fish.Fish object. The object can "
-    #                 "be loaded by Fish.from_h5_group() method."
-    #             )
-
-    #             # create group to save simulation history of current fish
-    #             curr_fish_sim_grp = curr_fish_grp.create_group("sim_history")
-    #             curr_fish.save_simulation_cache_to_h5_group(h5_group=curr_fish_sim_grp)
-    #             curr_brain_sim_grp = curr_fish_sim_grp.create_group("sim_history_brain")
-    #             curr_fish.brain.save_simulation_cache_to_h5_group(
-    #                 h5_group=curr_brain_sim_grp
-    #             )
-    #             curr_fish_sim_grp["position_history"].attrs[
-    #                 "data_format"
-    #             ] = "time_point x center position [row, col]"
-
-    #     else:
-    #         raise RuntimeError(
-    #             "Simulation: Cannot save save_log. Simulation has not run yet."
-    #         )
 
     def to_h5_group(
         self,

@@ -52,9 +52,8 @@ class TestFish(unittest.TestCase):
 
         fish = Fish(name="aa", mother_name="bb")
         f_temp = h5py.File(temp_path, "a")
-        h5_grp = f_temp.create_group("fish")
-        fish.to_h5_group(h5_group=h5_grp)
-        fish2 = load_fish_from_h5_group(h5_group=h5_grp)
+        fish.to_h5_group(h5_group=f_temp)
+        fish2 = load_fish_from_h5_group(h5_group=f_temp["fish_aa"])
 
         assert fish2.name == "aa"
         assert fish2.mother_name == "bb"
@@ -125,7 +124,7 @@ class TestFish(unittest.TestCase):
             position=body_position, max_simulation_length=max_simulation_length
         )
 
-        movement_attempt, food_eaten = fish.act(
+        updated_health, movement_attempt, food_eaten = fish.act(
             t_point=0,
             terrain_map=terrain_map,
             food_map=food_map,
@@ -143,7 +142,7 @@ class TestFish(unittest.TestCase):
         terrain_map[3, 2] = 0
         fish.simulation_cache["position_history"][1] = body_position
 
-        movement_attempt, food_eaten = fish.act(
+        updated_health, movement_attempt, food_eaten = fish.act(
             t_point=1,
             terrain_map=terrain_map,
             food_map=food_map,

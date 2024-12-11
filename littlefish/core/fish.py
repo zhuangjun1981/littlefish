@@ -259,20 +259,22 @@ class Fish:
     def to_h5_group(
         self, h5_group: h5py.Group, should_save_cache: bool = False
     ) -> None:
+        fish_group = h5_group.create_group(f"fish_{self.name}")
+
         attributes = vars(self)
 
         for k, v in attributes.items():
             if k not in ["brain", "simulation_cache"]:
-                h5_group.create_dataset(k, data=v)
+                fish_group.create_dataset(k, data=v)
 
-        grp_brain = h5_group.create_group("brain")
+        grp_brain = fish_group.create_group("brain")
         self.brain.to_h5_group(h5_group=grp_brain)
 
         if should_save_cache and self.simulation_cache is not None:
-            grp_sim_cache = h5_group.create_group("simulation_cache")
+            grp_sim_cache = fish_group.create_group("simulation_cache")
             self.save_simulation_cache_to_h5_group(h5_group=grp_sim_cache)
 
-    def save_simulation_cache_to_h5_group(self, h5_group: h5py.Group):
+    def save_simulation_cache_to_h5_group(self, h5_group: h5py.Group) -> None:
         for k, v in self.simulation_cache.items():
             dset = h5_group.create_dataset(k, data=v)
             if k == "position_history":
