@@ -18,8 +18,8 @@ class TestTerrain(unittest.TestCase):
         assert (256.0 - np.sum(bm[:])) / 256.0 < 0.5
 
     def test_update_food_map(self):
-        food_map = np.zeros((5, 5), dtype=np.uint8)
-        terrain_map = np.zeros((5, 5), dtype=np.uint8)
+        food_map = np.zeros((5, 5), dtype=int)
+        terrain_map = np.zeros((5, 5), dtype=int)
         terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1
         terrain = tr.BinaryTerrain(terrain_map)
         food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)
@@ -80,7 +80,7 @@ class TestTerrain(unittest.TestCase):
                     [0, 0, 1, 0, 0],
                     [0, 1, 0, 1, 0],
                 ],
-                dtype=np.uint8,
+                dtype=int,
             )
         )
         pos = ter.generate_fish_starting_position(2)

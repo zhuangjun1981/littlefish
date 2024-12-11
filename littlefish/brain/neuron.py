@@ -189,7 +189,7 @@ class Muscle(Neuron):
     def __init__(
         self,
         direction="south",
-        step_motion=np.array([1, 0], dtype=np.int8),
+        step_motion=np.array([1, 0], dtype=int),
         baseline_rate=0.001,
         refractory_period=500.0,
     ):

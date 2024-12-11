@@ -247,7 +247,7 @@ class Brain:
         :param food_map: 2d array, with only 0s (no food) and 1s (food). represents the distribution of food
         :param fish_map: not fully implemented right now.
         :return:
-          movement_attempt: 1-d array, np.uint8, (row, col), representing the movement attempt, be careful, this
+          movement_attempt: 1-d array, int, (row, col), representing the movement attempt, be careful, this
             may not represent the actual movement, it will be evaluated by the fish object
             (fish class) containing this brain to see if the movement is possible. if the fish
             is hitting the edge the world map, then the it will not move out of the map
@@ -256,7 +256,7 @@ class Brain:
             [0, num_neurons], each neuron can only have a single action potential at a time point.
         """
 
-        movement_attempt = np.array([0, 0], dtype=np.uint8)
+        movement_attempt = np.array([0, 0], dtype=int)
         total_action_potential_number = 0
 
         for i, neuron in self.neurons.iterrows():

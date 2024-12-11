@@ -244,7 +244,7 @@ def plot_life_span_distribution(
         life_spans_plot, bins=bins, range=[0, max_life_span]
     )
     bin_width = np.mean(np.diff(bin_edges))
-    bin_centers = (bin_edges[:-1] + bin_width / 2.0).astype(np.int32)
+    bin_centers = (bin_edges[:-1] + bin_width / 2.0).astype(int)
 
     df_plot = pd.DataFrame(
         {
@@ -361,7 +361,7 @@ def plot_simulation_life_spans(
             bin_width = np.mean(np.diff(bin_edges))
 
         if bin_centers is None:
-            bin_centers = (bin_edges[:-1] + bin_width / 2.0).astype(np.int32)
+            bin_centers = (bin_edges[:-1] + bin_width / 2.0).astype(int)
 
         if gen_i % legend_gap == 0:
             legend = f"gen{gen:04d}"

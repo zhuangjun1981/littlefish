@@ -199,10 +199,10 @@ class TestNeuron(unittest.TestCase):
             if movement is not False:
                 movements.append(movement)
         target_movements = [
-            np.array([0, 1], dtype=np.uint8),
-            np.array([0, 1], dtype=np.uint8),
-            np.array([0, 1], dtype=np.uint8),
-            np.array([0, 1], dtype=np.uint8),
+            np.array([0, 1], dtype=int),
+            np.array([0, 1], dtype=int),
+            np.array([0, 1], dtype=int),
+            np.array([0, 1], dtype=int),
         ]
         assert all(
             [np.array_equal(movements[i], target_movements[i]) for i in range(4)]

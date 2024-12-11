@@ -66,9 +66,9 @@ class TerrainGenerator(object):
         binary_map = np.zeros(float_map.shape, dtype=np.bool)
 
         if self.sea_portion == 0:
-            binary_map = np.ones(self.size, dtype=np.uint8)
+            binary_map = np.ones(self.size, dtype=int)
         elif self.sea_portion == 1:
-            binary_map = np.zeros(self.size, dtype=np.uint8)
+            binary_map = np.zeros(self.size, dtype=int)
         else:
             total_area = float(self.size[0] * self.size[1])
 
@@ -95,7 +95,7 @@ class TerrainGenerator(object):
             )
             plt.show()
 
-        return binary_map.astype(np.uint8)
+        return binary_map.astype(int)
 
 
 class BinaryTerrain(object):
@@ -225,7 +225,7 @@ if __name__ == "__main__":
     # terrain_map = terrain_generator.generate_binary_map(sigma=5., is_plot=True)
     # binary_terrain = BinaryTerrain(terrain_map)
     # fish_poss = binary_terrain.generate_fish_starting_position(5)
-    # fish_map = np.zeros(binary_terrain.get_terrain_shape(), _dtype=np.uint8)
+    # fish_map = np.zeros(binary_terrain.get_terrain_shape(), _dtype=int)
     #
     # for fish_pos in fish_poss:
     #     fish_map[fish_pos[0] - 1: fish_pos[0] + 2, fish_pos[1] - 1: fish_pos[1] + 2] = 1
@@ -238,8 +238,8 @@ if __name__ == "__main__":
     # =============================================================
 
     # =============================================================
-    # food_map = np.zeros((5, 5), _dtype=np.uint8)
-    # terrain_map = np.zeros((5, 5), _dtype=np.uint8)
+    # food_map = np.zeros((5, 5), _dtype=int)
+    # terrain_map = np.zeros((5, 5), _dtype=int)
     # terrain_map[(2, 0, 1, 4, 4), (3, 4, 2, 3, 1)] = 1
     # terrain = BinaryTerrain(terrain_map)
     # food_pos_list = terrain.update_food_map(food_num=5, food_map=food_map)

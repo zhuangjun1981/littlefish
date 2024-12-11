@@ -166,12 +166,12 @@ class Simulation(object):
             self.simulation_status = 1
 
             #  generate food map, food position history and initial food positions
-            self.food_map = np.zeros(self.terrain.terrain_map.shape, dtype=np.uint8)
+            self.food_map = np.zeros(self.terrain.terrain_map.shape, dtype=int)
 
             self.simulation_cache = {
                 "message": "",
                 "food_pos_history": np.zeros(
-                    (self.simulation_length, self.food_num, 2), dtype=np.uint32
+                    (self.simulation_length, self.food_num, 2), dtype=int
                 ),
             }
 
@@ -210,7 +210,7 @@ class Simulation(object):
         """
         n_rows, n_cols = self.terrain.terrain_map.shape
         if self.simulation_status in [2, 3, 4]:
-            fish_map = np.zeros((n_rows, n_cols), dtype=np.uint8)
+            fish_map = np.zeros((n_rows, n_cols), dtype=int)
             for fish in self.fish_list:
                 if fish.simulation_cache["health_history"][time_point] > 0.0:
                     curr_row, curr_col = fish.simulation_cache["position_history"][
@@ -380,7 +380,7 @@ class Simulation(object):
                             curr_msg = (
                                 f"Time: {curr_t+1:08d}; Fish: {curr_fish.name}; "
                                 f"health: {curr_fish.simulation_cache['health_history'][curr_t + 1]:3.4f}; "
-                                f"position: {list(curr_fish.simulation_cache['position_history'][curr_t + 1])}"
+                                f"position: {curr_fish.simulation_cache['position_history'][curr_t + 1]}"
                             )
                             print(curr_msg)
                             self.simulation_cache["message"] += "\n" + curr_msg
@@ -527,7 +527,7 @@ class Simulation(object):
             food_pos_dset = sim_grp.create_dataset(
                 "food_pos_history",
                 data=self._simulation_histories["food_pos_history"],
-                dtype=np.uint32,
+                dtype=int,
                 compression="gzip",
             )
             food_pos_dset.attrs[
@@ -557,7 +557,7 @@ class Simulation(object):
             curr_fish_pos_dset = sim_grp.create_dataset(
                 "position_history",
                 data=curr_pos_arr,
-                dtype=np.uint32,
+                dtype=int,
                 compression="gzip",
             )
             curr_fish_pos_dset.attrs[

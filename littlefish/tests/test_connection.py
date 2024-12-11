@@ -298,7 +298,7 @@ class TestConnection(unittest.TestCase):
                 probability_input=psp_waveforms[0, i],
             )
 
-        ccg, t = util.discreat_crosscorrelation(
+        ccg, t = util.discrete_crosscorrelation(
             np.array(action_history_pre), np.array(action_history_post)
         )
         assert np.argmax(ccg) == 15

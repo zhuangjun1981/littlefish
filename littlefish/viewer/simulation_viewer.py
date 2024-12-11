@@ -22,16 +22,16 @@ from matplotlib.backends.backend_qt5agg import (
 )
 from matplotlib.figure import Figure
 
-LAND_RGB = np.array([46, 204, 113], dtype=np.uint8)
-SEA_RGB = np.array([52, 152, 219], dtype=np.uint8)
-FISH_RGB = np.array([241, 196, 15], dtype=np.uint8)
-FOOD_RGB = np.array([157, 32, 45], dtype=np.uint8)
+LAND_RGB = np.array([46, 204, 113], dtype=int)
+SEA_RGB = np.array([52, 152, 219], dtype=int)
+FISH_RGB = np.array([241, 196, 15], dtype=int)
+FOOD_RGB = np.array([157, 32, 45], dtype=int)
 PLOT_STEP = 10
 
 
 def get_terrain_map_rgb(terrain_map_binary):
     terrain_map_rgb = np.zeros(
-        (terrain_map_binary.shape[0], terrain_map_binary.shape[1], 3), dtype=np.uint8
+        (terrain_map_binary.shape[0], terrain_map_binary.shape[1], 3), dtype=int
     )
     land_rgb = LAND_RGB
     sea_rgb = SEA_RGB

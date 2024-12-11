@@ -112,7 +112,7 @@ class Fish:
         health_history = np.zeros((max_simulation_length,), dtype=np.float32)
         health_history[0] = self.max_health
 
-        position_history = np.zeros((max_simulation_length, 2), dtype=np.int16)
+        position_history = np.zeros((max_simulation_length, 2), dtype=int)
         position_history[0, :] = position
 
         self.simulation_cache = {
@@ -200,7 +200,7 @@ class Fish:
                 fish_map=fish_map,
             )
         else:
-            movement_attempt = np.array([0, 0], dtype=np.uint8)
+            movement_attempt = np.array([0, 0], dtype=int)
             action_potential_num = 0
 
         # apply movement penalty

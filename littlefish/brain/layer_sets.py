@@ -173,13 +173,13 @@ FOUR_EYES = {
 
 # direction, step_motion pair
 FOUR_MUSCLES = [
-    ("north", np.array([-1, 0], dtype=np.int8)),
-    ("south", np.array([1, 0], dtype=np.int8)),
-    ("east", np.array([0, -1], dtype=np.int8)),
-    ("west", np.array([0, 1], dtype=np.int8)),
+    ("north", np.array([-1, 0], dtype=int)),
+    ("south", np.array([1, 0], dtype=int)),
+    ("east", np.array([0, -1], dtype=int)),
+    ("west", np.array([0, 1], dtype=int)),
 ]
 
 
 ONE_MUSCLE = [
-    ("south", np.array([1, 0], dtype=np.int8)),
+    ("south", np.array([1, 0], dtype=int)),
 ]

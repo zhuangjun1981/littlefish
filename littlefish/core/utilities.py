@@ -15,7 +15,7 @@ def is_integer(var):
     return isinstance(var, numbers.Integral)
 
 
-def array_nor(arr):
+def array_nor(arr: np.ndarray):
     arr = arr.astype(np.float32)
     return (arr - np.amin(arr)) / (np.amax(arr) - np.amin(arr))
 
@@ -53,7 +53,7 @@ def normalized_to_range(var, input_range=(0.0, 1.0), output_range=(0.0, 1.0)):
     ) + output_range[0]
 
 
-def discreat_crosscorrelation(
+def discrete_crosscorrelation(
     ts_trigger, ts_reference, t_range=(-10.0, 20.0), bin_width=1.0
 ):
     """
@@ -74,7 +74,7 @@ def discreat_crosscorrelation(
         raise (ValueError, "ts_reference should be a 1-d array.")
 
     t_axis = np.arange(t_range[0], t_range[1], bin_width)
-    ccg = np.zeros(t_axis.shape, dtype=np.int32)
+    ccg = np.zeros(t_axis.shape, dtype=int)
     for trigger in ts_trigger:
         # get the chunk of ts_reference for this particular trigger
         ref_ts_chunk = ts_reference[
@@ -91,42 +91,6 @@ def discreat_crosscorrelation(
             ccg[int(ref_ts // bin_width)] += 1
 
     return ccg, t_axis
-
-
-def get_random_number(distribution, shape):
-    """
-    get a random number from given distribution
-
-    :param distribution: tuple in the format, (distribution type, parameter1, parameter2, ...)
-                         supported: ('flat', mean, range), ('gaussian, mean, sigma), ('exponential', mean)
-    :param shape: output shape
-    :return: a random number
-    """
-
-    if distribution is None:
-        output = np.zeros(shape, dtype=np.float64)
-    elif distribution[0] == "flat":
-        output = (
-            np.random.rand(*shape) * float(distribution[2])
-            - 0.5 * distribution[2]
-            + distribution[1]
-        )
-    elif distribution[0] == "gaussian":
-        output = np.random.randn(*shape) * float(distribution[2]) + float(
-            distribution[1]
-        )
-    elif distribution[0] == "exponential":
-        if distribution[1] <= 0:
-            raise (
-                ValueError,
-                "The mean of the exponential distribution should be larger than 0!",
-            )
-        output = np.random.exponential(float(distribution[1]), shape)
-    else:
-        raise (
-            LookupError,
-            'the first element of "noise" should be "gaussian", "flat" or "exponential"!',
-        )
 
 
 def int2str(num, length=None):
@@ -256,9 +220,7 @@ def plot_mask_borders(
         plot_axis = f.add_subplot(111)
 
     if closing_iteration is not None:
-        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(
-            np.uint8
-        )
+        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(int)
     else:
         ploting_mask = mask
 
@@ -294,9 +256,7 @@ def plot_mask(mask, plot_axis=None, color="#ff0000", closing_iteration=None, **k
         plot_axis = f.add_subplot(111)
 
     if closing_iteration is not None:
-        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(
-            np.uint8
-        )
+        ploting_mask = ni.binary_closing(mask, iterations=closing_iteration).astype(int)
     else:
         ploting_mask = mask
 
@@ -434,7 +394,7 @@ def distrube_number(possibilities, population_size):
     pos_cum = np.cumsum(pos_nor)
     pos_buckets = list(zip(pos_cum[:-1], pos_cum[1:]))
 
-    buckets = np.zeros(len(possibilities), dtype=np.int32)
+    buckets = np.zeros(len(possibilities), dtype=int)
 
     for i in range(population_size):
         curr_v = random.random()
@@ -464,7 +424,7 @@ if __name__ == "__main__":
     # ts_trigger = np.arange(5)
     # ts_reference = np.arange(5) + 0.1001
     #
-    # ccg, t = discreat_crosscorrelation(ts_trigger, ts_reference, t_range=(-0.2, 0.5), bin_width=0.1)
+    # ccg, t = discrete_crosscorrelation(ts_trigger, ts_reference, t_range=(-0.2, 0.5), bin_width=0.1)
     #
     # print(t)
     # print(ccg)
@@ -479,7 +439,7 @@ if __name__ == "__main__":
     # ==================================================
 
     # ==================================================
-    # array = np.zeros((100, 100), _dtype=np.uint8)
+    # array = np.zeros((100, 100), _dtype=int)
     # array[35: 38, 40: 43] = 1
     # array[35, 40] = 1
     # plot_mask(array)
