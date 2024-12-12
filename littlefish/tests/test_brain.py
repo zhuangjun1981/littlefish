@@ -5,6 +5,7 @@ import littlefish.brain.brain as brain
 from littlefish.brain.functional import (
     load_brain_from_h5_group,
     generate_brain_from_brain_config,
+    plot_brain_connections,
 )
 
 
@@ -429,6 +430,18 @@ class TestBrain(unittest.TestCase):
             brain_config_path=brain_config_path_8eyes_recur
         )
 
+    def test_plot_brain_connections(self):
+        import os
+
+        curr_folder = os.path.dirname(os.path.realpath(__file__))
+        brain_config_path_8eyes_recur = os.path.join(
+            curr_folder, "brain_config_8eyes_recurrent.yml"
+        )
+        brain_8eyes_recur = generate_brain_from_brain_config(
+            brain_config_path=brain_config_path_8eyes_recur
+        )
+        f = plot_brain_connections(brain=brain_8eyes_recur)
+
 
 if __name__ == "__main__":
     test_brain = TestBrain()
@@ -437,3 +450,4 @@ if __name__ == "__main__":
     test_brain.test_act()
     test_brain.test_io()
     test_brain.test_generate_brain_from_brain_config()
+    test_brain.test_plot_brain_connections()

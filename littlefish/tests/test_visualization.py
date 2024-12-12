@@ -17,8 +17,8 @@ class TestUtilities(unittest.TestCase):
         import h5py
 
         curr_folder = os.path.dirname(os.path.realpath(__file__))
-        log_path = os.path.join(curr_folder, "real_simulation_log.hdf5")
+        log_path = os.path.join(curr_folder, "example_fish_log.hdf5")
         log_f = h5py.File(log_path, "r")
-        input_brain = fi.Brain.from_h5_group(log_f["fish/brain"])
+        input_brain = fi.Brain.from_h5_group(log_f["fish_aa/brain"])
         log_f.close()
         vis.plot_brain(input_brain)

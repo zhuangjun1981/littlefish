@@ -479,7 +479,7 @@ def simulate_one_fish(
     curr_fish_f.close()
 
 
-def simulation_fish_multiprocessing(simulation_params):
+def simulate_fish_multiprocessing(simulation_params):
     """
     warpper of "simulate_one_fish" for multi-processing
     """
@@ -534,7 +534,7 @@ def run_simulation_multi_thread(
         )
 
     with Pool(process_num) as p:
-        p.map(simulation_fish_multiprocessing, sim_params)
+        p.map(simulate_fish_multiprocessing, sim_params)
 
     # for sim_param in sim_params:
     #     simulation_fish_multiprocessing(sim_param)
