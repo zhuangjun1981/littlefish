@@ -2,14 +2,22 @@ import os
 import h5py
 import random
 import datetime
+import copy
 import numpy as np
 import pandas as pd
 import itertools
+from typing import Union
 import littlefish.core.fish as fi
+import littlefish.brain.connection as conn
+import littlefish.brain.neuron as neu
+import littlefish.brain.brain as brain
 import littlefish.core.utilities as util
 
 
-def choose_index_1d(indices, mutation_rate):
+def choose_index(
+    indices: list[int],
+    mutation_rate: float,
+) -> list[int]:
     """
     randomly chooses a subset of indices from a list of indices based on the mutation_rate
 
@@ -22,208 +30,39 @@ def choose_index_1d(indices, mutation_rate):
     return random.sample(indices, mutate_num)
 
 
-def choose_index_2d(indices0, indices1, mutation_rate):
-    """
-    randomly choose a subset of index pairs from a 2d grid based on the mutation rates
+# def choose_index_2d(indices0, indices1, mutation_rate):
+#     """
+#     randomly choose a subset of index pairs from a 2d grid based on the mutation rates
 
-    :param indices0: 1d seq, list of indices along axis 0 (rows)
-    :param indices1: 1d seq, list of indices along axis 1 (columns)
-    :param mutation_rate: float, [0., 1.]
-    :return: list of index pairs, each pair contains two elements [index0, index1] representing the coordinates of a
-             randomly chosen location
-    """
+#     :param indices0: 1d seq, list of indices along axis 0 (rows)
+#     :param indices1: 1d seq, list of indices along axis 1 (columns)
+#     :param mutation_rate: float, [0., 1.]
+#     :return: list of index pairs, each pair contains two elements [index0, index1] representing the coordinates of a
+#              randomly chosen location
+#     """
 
-    all_coordinates = list(itertools.product(indices0, indices1))
-    mutate_num = int(np.ceil(len(all_coordinates) * float(mutation_rate)))
-    return random.sample(all_coordinates, mutate_num)
-
-
-def mutate_neuron(neuron, neuron_mutation):
-    """
-    mutate a neuron, can be Eye, Neuron or Muscle
-
-    :param neuron: the initial little_fish.core.fish.Neuron object
-    :param neuron_mutation: little_fish.core.evolution.NeuronMutation object
-    :return: a mutated little_fish.core.fish.Neuron object
-    """
-
-    mutated_neuron = neuron.copy()
-
-    mutated_baseline = neuron_mutation.get_mutated_baseline()
-    if mutated_baseline is not None:
-        mutated_neuron.set_baseline_rate(mutated_baseline)
-
-    mutated_refractory = neuron_mutation.get_mutated_refractory()
-
-    if mutated_refractory is not None:
-        mutated_neuron.set_refractory_period(mutated_refractory)
-
-    return mutated_neuron
+#     all_coordinates = list(itertools.product(indices0, indices1))
+#     mutate_num = int(np.ceil(len(all_coordinates) * float(mutation_rate)))
+#     return random.sample(all_coordinates, mutate_num)
 
 
-def mutate_connection(connection, connection_mutation):
-    """
-    mutate a connection
-
-    :param connection: the initial little_fish.core.fish.Connection object
-    :param connection_mutation: little_fish.core.evolution.ConnectionMutation object
-    :return: a mutated little_fish.core.fish.Connection object
-    """
-
-    mutated_latency = connection_mutation.get_mutated_latency()
-    if mutated_latency is None:
-        mutated_latency = connection.get_latency()
-
-    mutated_amplitude = connection_mutation.get_mutated_amplitude()
-    if mutated_amplitude is None:
-        mutated_amplitude = connection.get_amplitude()
-
-    mutated_rise_time = connection_mutation.get_mutated_rise_time()
-    if mutated_rise_time is None:
-        mutated_rise_time = connection.get_rise_time()
-
-    mutated_decay_time = connection_mutation.get_mutated_decay_time()
-    if mutated_decay_time is None:
-        mutated_decay_time = connection.get_decay_time()
-
-    return fi.Connection(
-        latency=mutated_latency,
-        amplitude=mutated_amplitude,
-        rise_time=mutated_rise_time,
-        decay_time=mutated_decay_time,
-    )
-
-
-def mutate_brain(
-    brain,
-    brain_mutation,
-    neuron_mutation_rate=0.01,
-    connection_mutation_rate=0.01,
-    verbose=False,
-):
-    if verbose:
-        print("\nmutating input brain ...")
-
-    mutated_neurons = brain.get_neurons().copy()
-    mutated_connections = dict(brain.get_connections())
-
-    mutate_neuron_ind = choose_index_1d(
-        list(mutated_neurons.index.values), neuron_mutation_rate
-    )
-
-    if verbose:
-        print("\nmutating neurons:")
-        print(
-            "total number of neurons: {}. neuron mutation rate: {}. number of neurons to be mutated: {}.".format(
-                len(mutated_neurons), neuron_mutation_rate, len(mutate_neuron_ind)
-            )
-        )
-
-    for mni in mutate_neuron_ind:
-        curr_neuron = mutated_neurons.loc[mni, "neuron"]
-        if curr_neuron.get_neuron_type() == "eye":
-            if verbose:
-                print("Evolution: mutating eye. Index: {}.".format(mni))
-            curr_mutated_neuron = mutate_neuron(
-                neuron=curr_neuron, neuron_mutation=brain_mutation.get_eye_mutation()
-            )
-            mutated_neurons.loc[mni, "neuron"] = curr_mutated_neuron
-
-        elif curr_neuron.get_neuron_type() == "neuron":
-            if verbose:
-                print("Evolution: mutating hidden neuron. Index: {}.".format(mni))
-            curr_mutated_neuron = mutate_neuron(
-                neuron=curr_neuron, neuron_mutation=brain_mutation.get_neuron_mutation()
-            )
-            mutated_neurons.loc[mni, "neuron"] = curr_mutated_neuron
-
-        elif curr_neuron.get_neuron_type() == "muscle":
-            if verbose:
-                print("Evolution: mutating muscle. Index: {}.".format(mni))
-            curr_mutated_neuron = mutate_neuron(
-                neuron=curr_neuron, neuron_mutation=brain_mutation.get_muscle_mutation()
-            )
-            mutated_neurons.loc[mni, "neuron"] = curr_mutated_neuron
-
-    if verbose:
-        print("\nmutating connections:")
-
-    for con_name, con_df in mutated_connections.items():
-        indices0 = con_df.index.values
-        indices1 = con_df.columns.values
-
-        mutate_conn_coors = choose_index_2d(
-            indices0=indices0, indices1=indices1, mutation_rate=connection_mutation_rate
-        )
-
-        if verbose:
-            print("layer: {}".format(con_name))
-            print(
-                "total number of connections: {}. connection mutation rate: {}. "
-                "number of connections to be mutated: {}.".format(
-                    len(indices0) * len(indices1),
-                    connection_mutation_rate,
-                    len(mutate_conn_coors),
-                )
-            )
-
-        for mutate_coor in mutate_conn_coors:
-            curr_con = con_df.loc[mutate_coor[0], mutate_coor[1]]
-            curr_mutated_con = mutate_connection(
-                connection=curr_con,
-                connection_mutation=brain_mutation.get_connection_mutation(),
-            )
-            con_df.loc[mutate_coor[0], mutate_coor[1]] = curr_mutated_con
-
-    mutated_brain = fi.Brain(neurons=mutated_neurons, connections=mutated_connections)
-    return mutated_brain
-
-
-def mutate_fish(
-    fish,
-    brain_mutation,
-    neuron_mutation_rate=0.01,
-    connection_mutation_rate=0.01,
-    verbose=False,
-):
-    mutated_brain = mutate_brain(
-        brain=fish.get_brain(),
-        brain_mutation=brain_mutation,
-        neuron_mutation_rate=neuron_mutation_rate,
-        connection_mutation_rate=connection_mutation_rate,
-        verbose=verbose,
-    )
-    mother_name = fish.get_name()
-    name = "fish_" + datetime.datetime.now().strftime("%y%m%d_%H_%M_%S.%f")
-
-    mutated_fish = fi.Fish(
-        name=name,
-        mother_name=mother_name,
-        brain=mutated_brain,
-        max_health=fish.get_max_health(),
-        health_decay_rate=fish.get_health_decay_rate(),
-        land_penalty_rate=fish.get_land_penalty_rate(),
-        food_rate=fish.get_food_rate(),
-        move_penalty_rate=fish.get_move_penalty_rate(),
-    )
-
-    if verbose:
-        print("fish: {} generated.".format(name))
-    return mutated_fish
-
-
-def get_offspring_num(mother_life_spans, hard_thr, soft_thr, reproducing_rate=0.0002):
+def get_offspring_num(
+    mother_life_spans: list[int],
+    hard_thr: int,
+    soft_thr: int,
+    reproducing_rate: float = 0.0002,
+) -> int:
     """
     given a list of mother life spans in multiple simulations, return a number representing how many offsprings it
     will produce.
 
     :param mother_life_spans: list of non-negative int, mother's life spans in multiple simulation
     :param hard_thr: non-negative int, mother will have chance to reproduce only if all life spans in
-                     mother_life_spans are no less than this threshold
+        mother_life_spans are no less than this threshold
     :param soft_thr: non-negative int, each life span in mother_life_spans longer than this threshold will be used to
-                     calculated offspring number
-    :param reproducing_rate: positive float, this rate time the life spans that exceed soft_thr x soft_thr_ratio
-                             will be returned
+        calculated offspring number
+    :param reproducing_rate: positive float, this rate times the life spans that exceed soft_thr x soft_thr_ratio
+        will be returned
     :return: non-negative int, number of offsprings the mother fish wil produce
     """
 
@@ -245,6 +84,9 @@ def get_single_param_mutation(value_range, dtype):
 
 
 def get_brain_mutation_from_brain_mutation_config(brain_mutation_config):
+    eye_gain_mutation = get_single_param_mutation(
+        brain_mutation_config["eye_gain_r"], "float"
+    )
     eye_bl_mutation = get_single_param_mutation(
         brain_mutation_config["eye_bl_r"], "float"
     )
@@ -276,8 +118,10 @@ def get_brain_mutation_from_brain_mutation_config(brain_mutation_config):
         brain_mutation_config["connection_dt_r"], "int"
     )
 
-    eye_mutation = NeuronMutation(
-        baseline_mutation=eye_bl_mutation, refractory_mutation=eye_rp_mutation
+    eye_mutation = EyeMutation(
+        baseline_mutation=eye_bl_mutation,
+        refractory_mutation=eye_rp_mutation,
+        gain_mutation=eye_gain_mutation,
     )
     neuron_mutation = NeuronMutation(
         baseline_mutation=neuron_bl_mutation, refractory_mutation=neuron_rp_mutation
@@ -315,12 +159,13 @@ class UniformMutation(object):
     random module
     """
 
-    def __init__(self, value_range, dtype):
+    def __init__(self, value_range: list[float], dtype: str):
         """
 
         :param value_range: tuple of two numbers, the two value should be different.
-        :param dtype: str, 'int' or 'float'. if 'int' random value will be drawn by random.randint()
-                                             if 'float' random value will be drawn by random.uniform()
+        :param dtype: str, 'int' or 'float'.
+            if 'int' random value will be drawn by random.randint()
+            if 'float' random value will be drawn by random.uniform()
         """
 
         if len(value_range) != 2:
@@ -331,11 +176,11 @@ class UniformMutation(object):
         if dtype == "int":
             v0 = int(value_range[0])
             v1 = int(value_range[1])
-            self._dtype = "int"
+            self.dtype = "int"
         elif dtype == "float":
             v0 = float(value_range[0])
             v1 = float(value_range[1])
-            self._dtype = "float"
+            self.dtype = "float"
         else:
             raise ValueError('the _dtype shoule be either "int" or "float".')
 
@@ -344,9 +189,9 @@ class UniformMutation(object):
                 "the two values in the input _value_range should be different."
             )
         elif v0 < v1:
-            self._value_range = (v0, v1)
+            self.value_range = (v0, v1)
         else:
-            self._value_range = (v0, v1)
+            self.value_range = (v0, v1)
 
     def get_value(self):
         """
@@ -354,19 +199,13 @@ class UniformMutation(object):
         if self._dtype is 'float': uses random.uniform() function
 
         :return: a random value follow a uniform distribution with a range defined by self._value_range, including the
-                 start but excluding the end
+            start but excluding the end
         """
 
         if self._dtype == "int":
             return random.randint(self._value_range[0], self._value_range[1] - 1)
         elif self._dtype == "float":
             return random.uniform(self._value_range[0], self._value_range[1])
-
-    def get_dtype(self):
-        return self._dtype
-
-    def get_value_range(self):
-        return self._value_range
 
     def __str__(self):
         return "littlefish.core.evolution.UniformMutation object. dtype:{}; value_range:{}".format(
@@ -380,18 +219,21 @@ class NeuronMutation(object):
     definition of a neuron mutation
     """
 
-    def __init__(self, baseline_mutation=None, refractory_mutation=None):
+    def __init__(
+        self,
+        baseline_mutation: UniformMutation = None,
+        refractory_mutation: UniformMutation = None,
+    ):
         """
-
         :param baseline_mutation: a UniformMutation object, dtype should be 'float',
-                                  reasonable value_range will be (0., 0.1), if one time unit is equivalent to 1 ms,
-                                  then this range represents (0, 100) spike per second
+            reasonable value_range will be (0., 0.1), if one time unit is equivalent to 1 ms,
+            then this range represents (0, 100) spike per second
         :param refractory_mutation: a UniformMutation object, dtype should be 'float',
-                                    reasonable value_range will be (1., 3.), if one time unit is equivalent to 1 ms,
-                                    then this range represent (1., 3.) ms.
+            reasonable value_range will be (1., 3.), if one time unit is equivalent to 1 ms,
+            then this range represent (1., 3.) ms.
         """
 
-        if baseline_mutation is None or baseline_mutation.get_dtype() == "float":
+        if baseline_mutation is None or baseline_mutation.dtype == "float":
             self.baseline_mutation = baseline_mutation
         else:
             raise ValueError(
@@ -399,7 +241,7 @@ class NeuronMutation(object):
                 'the dtype of baseline_mutation should be "float".'
             )
 
-        if refractory_mutation is None or refractory_mutation.get_dtype() == "float":
+        if refractory_mutation is None or refractory_mutation.dtype == "float":
             self.refractory_mutation = refractory_mutation
         else:
             raise ValueError(
@@ -411,21 +253,53 @@ class NeuronMutation(object):
         """
         return a mutated baseline rate by self.baseline_mutation
         """
-
-        if self.baseline_mutation is None:
-            return None
-        else:
-            return self.baseline_mutation.get_value()
+        return (
+            self.baseline_mutation.get_value()
+            if self.baseline_mutation is not None
+            else None
+        )
 
     def get_mutated_refractory(self):
         """
         return a mutated refractory period by self.refractory_mutation
         """
+        return (
+            self.refractory_mutation.get_value()
+            if self.refractory_mutation is not None
+            else None
+        )
 
-        if self.refractory_mutation is None:
-            return None
+
+class EyeMutation(NeuronMutation):
+    """
+    Define a mutation class for eyes.
+    Similar to NeuronMutation, but with one more attribute "gain_mutation".
+    Potentially, "rf_positions" and "rf_weights" can be mutated too, but not implemented now.
+    """
+
+    def __init__(
+        self,
+        baseline_mutation: UniformMutation = None,
+        refractory_mutation: UniformMutation = None,
+        gain_mutation: UniformMutation = None,
+        # rf_positions_mutation: None,  # not implemented
+        # rf_weights_mutation: None,  # not implemented
+    ):
+        super().__init__(
+            baseline_mutation=baseline_mutation, refractory_mutation=refractory_mutation
+        )
+        if gain_mutation is None or gain_mutation.dtype == "float":
+            self.gain_mutation = gain_mutation
         else:
-            return self.refractory_mutation.get_value()
+            raise ValueError(
+                "the gain_mutation should be None or "
+                'the dtype of gain_mutation should be "float".'
+            )
+
+    def get_mutated_gain(self):
+        return (
+            self.gain_mutation.get_value() if self.gain_mutation is not None else None
+        )
 
 
 class ConnectionMutation(object):
@@ -454,7 +328,7 @@ class ConnectionMutation(object):
                                     reasonable value_range will be (5, 20)
         """
 
-        if latency_mutation is None or latency_mutation.get_dtype() == "int":
+        if latency_mutation is None or latency_mutation.dtype == "int":
             self.latency_mutation = latency_mutation
         else:
             raise ValueError(
@@ -462,7 +336,7 @@ class ConnectionMutation(object):
                 'the dtype of latency_mutation should be "int".'
             )
 
-        if amplitude_mutation is None or amplitude_mutation.get_dtype() == "float":
+        if amplitude_mutation is None or amplitude_mutation.dtype == "float":
             self.amplitude_mutation = amplitude_mutation
         else:
             raise ValueError(
@@ -470,7 +344,7 @@ class ConnectionMutation(object):
                 'the dtype of amplitude_mutation should be "float".'
             )
 
-        if rise_time_mutation is None or rise_time_mutation.get_dtype() == "int":
+        if rise_time_mutation is None or rise_time_mutation.dtype == "int":
             self.rise_time_mutation = rise_time_mutation
         else:
             raise ValueError(
@@ -478,7 +352,7 @@ class ConnectionMutation(object):
                 'the dtype of rise_time_mutation should be "int".'
             )
 
-        if decay_time_mutation is None or decay_time_mutation.get_dtype() == "int":
+        if decay_time_mutation is None or decay_time_mutation.dtype == "int":
             self.decay_time_mutation = decay_time_mutation
         else:
             raise ValueError(
@@ -487,28 +361,32 @@ class ConnectionMutation(object):
             )
 
     def get_mutated_latency(self):
-        if self.latency_mutation is None:
-            return None
-        else:
-            return self.latency_mutation.get_value()
+        return (
+            self.latency_mutation.get_value()
+            if self.latency_mutation is not None
+            else None
+        )
 
     def get_mutated_amplitude(self):
-        if self.amplitude_mutation is None:
-            return None
-        else:
-            return self.amplitude_mutation.get_value()
+        return (
+            self.amplitude_mutation.get_value()
+            if self.amplitude_mutation is not None
+            else None
+        )
 
     def get_mutated_rise_time(self):
-        if self.rise_time_mutation is None:
-            return None
-        else:
-            return self.rise_time_mutation.get_value()
+        return (
+            self.rise_time_mutation.get_value()
+            if self.rise_time_mutation is not None
+            else None
+        )
 
     def get_mutated_decay_time(self):
-        if self.decay_time_mutation is None:
-            return None
-        else:
-            return self.decay_time_mutation.get_value()
+        return (
+            self.decay_time_mutation.get_value()
+            if self.decay_time_mutation is not None
+            else None
+        )
 
 
 class BrainMutation(object):
@@ -518,13 +396,12 @@ class BrainMutation(object):
 
     def __init__(
         self,
-        eye_mutation=NeuronMutation(),
-        neuron_mutation=NeuronMutation(),
-        muscle_mutation=NeuronMutation(),
-        connection_mutation=ConnectionMutation(),
+        eye_mutation: EyeMutation = EyeMutation(),
+        neuron_mutation: NeuronMutation = NeuronMutation(),
+        muscle_mutation: NeuronMutation = NeuronMutation(),
+        connection_mutation: ConnectionMutation = ConnectionMutation(),
     ):
         """
-
         :param neuron_mutation_rate: float, [0, 1.], fraction of neurons (eyes, hidden neurons and muscles) to be
                                      mutated
         :param eye_mutation: littlefish.core.evolution.NeuronMutation object
@@ -534,22 +411,10 @@ class BrainMutation(object):
         :param connection_mutation: littlefish.core.evolution.ConnectionMutation object
         """
 
-        self._eye_mutation = eye_mutation
-        self._neuron_mutation = neuron_mutation
-        self._muscle_mutation = muscle_mutation
-        self._connection_mutation = connection_mutation
-
-    def get_eye_mutation(self):
-        return self._eye_mutation
-
-    def get_neuron_mutation(self):
-        return self._neuron_mutation
-
-    def get_muscle_mutation(self):
-        return self._muscle_mutation
-
-    def get_connection_mutation(self):
-        return self._connection_mutation
+        self.eye_mutation = eye_mutation
+        self.neuron_mutation = neuron_mutation
+        self.muscle_mutation = muscle_mutation
+        self.connection_mutation = connection_mutation
 
 
 class PopulationEvolution(object):
@@ -562,7 +427,7 @@ class PopulationEvolution(object):
         brain_mutation: BrainMutation,
         life_span_hard_threshold: int = 0,
         movement_hard_threshold: int = 0,
-        generation_digits_num=7,
+        generation_digits_num: int = 7,
     ):
         """
         :param population_size: int, how many fish will be in the next generation, if None, it will be the same as
@@ -588,17 +453,31 @@ class PopulationEvolution(object):
         self.movement_hard_threshold = movement_hard_threshold
         self.generation_digits_num = generation_digits_num
 
+    @staticmethod
+    def _find_single_simulation_log_name(grp_root: h5py.Group):
+        """
+        check if there is one and only one simulation log group in the grp_root
+        and return the simulation log group name
+        """
+        sim_log_ns = [s for s in grp_root.keys() if s[:11] == "simulation_"]
+
+        if len(sim_log_ns) == 0:
+            raise LookupError("Cannot find simulation log")
+        elif len(sim_log_ns) > 1:
+            raise LookupError("More than one simulation logs found.")
+
+        return sim_log_ns[0]
+
     def _calculate_offspring_num(
         self,
-        base_folder,
-        curr_generation_ind,
-        simulation_ind=0,
+        base_folder: str,
+        curr_generation_ind: int,
     ):
         """
         calculate number of offsprings for each fish in the current generation, the mother fish will go to next
         generation as well. The number of offsprings a mother can produce is proportional to its extra life span
         exceeding the life threshold (calculated by the 'get_offspring_num()' function). If several mother fish
-        has same life span, the ones with bigger generation numbers (which survived more generations) will have
+        has the same life span, the ones with larger generation numbers (who survived more generations) will have
         higher priority to pass to next generation. The number of offsprings plus the number of mother fish
         precisely equal to the population_size
 
@@ -609,11 +488,12 @@ class PopulationEvolution(object):
         :param simulation_num: non-negative integer, the simulation index to extract life span
         :param population_size: positive integer, number of individuals of next generation, if None, it will be the
                                 same as current generation.
-        :return: life_thr, positive integer, only fish with life span longer than this number will have chance to
-                           spawn offspring, the extra life (fish's life span - life_thr) determines the possibility
-                           of its offspring among other fish in the current generation
-                 fishes, pandas dataframe, rows: fish those will produce offspring, columns: ['fish_name', 'life_span',
-                         'generation_num', 'extra_life', 'offspring_num']
+        :return:
+            life_thr, positive integer, only fish with life span longer than this number will have chance to
+                spawn offspring, the extra life (fish's life span - life_thr) determines the possibility
+                of its offspring among other fish in the current generation
+            fishes, pandas dataframe, rows: fish those will produce offspring, columns: ['fish_name', 'life_span',
+                'generation_num', 'extra_life', 'offspring_num']
 
         """
 
@@ -652,28 +532,11 @@ class PopulationEvolution(object):
 
             generation_nums.append(fish_f["generations"].shape[0])
 
-            curr_sim_ns = [s for s in fish_f.keys() if s[:11] == "simulation_"]
-            if len(curr_sim_ns) == 0:
-                raise LookupError(
-                    "PopulationEvolution: cannot find simulation results for fish: {}".format(
-                        fish_n
-                    )
-                )
-
-            curr_sim_n = [
-                s for s in curr_sim_ns if int(s.split("_")[1]) == simulation_ind
-            ]
-            if len(curr_sim_n) != 1:
-                raise LookupError(
-                    "PopulationEvolution: there should one and only one simulation log matches the "
-                    "specified simulation index: {} for fish: {}.".format(
-                        simulation_ind, fish_n
-                    )
-                )
-            curr_sim_n = curr_sim_n[0]
-
-            life_spans.append(fish_f[curr_sim_n]["simulation_log/last_time_point"][()])
-            total_movements.append(fish_f[curr_sim_n]["simulation_log/total_moves"][()])
+            curr_sim_n = self._find_single_simulation_log_name(fish_f)
+            life_spans.append(
+                fish_f[curr_sim_n]["simulation_cache/last_time_point"][()]
+            )
+            total_movements.append(fish_f[curr_sim_n][f"fish_{fish_n}/total_moves"][()])
             fish_f.close()
 
         fishes = pd.DataFrame(
@@ -716,9 +579,8 @@ class PopulationEvolution(object):
 
     def generate_next_generation(
         self,
-        base_folder,
-        curr_generation_ind,
-        simulation_ind,
+        base_folder: int,
+        curr_generation_ind: int,
     ):
         print(
             "\n======================================================================"
@@ -744,7 +606,6 @@ class PopulationEvolution(object):
         life_thr, fishes = self._calculate_offspring_num(
             base_folder=base_folder,
             curr_generation_ind=curr_generation_ind,
-            simulation_ind=simulation_ind,
         )
 
         for fish_ind, fish_row in fishes.iterrows():
@@ -787,7 +648,6 @@ class PopulationEvolution(object):
             )
             ng_grp["children_list"] = [c.encode("UTF-8") for c in children_lst]
             ng_grp["life_threshold"] = life_thr
-            ng_grp["simulation_ind"] = simulation_ind
             ng_grp["neuron_mutation_rate"] = self.neuron_mutation_rate
             ng_grp["connection_mutation_rate"] = self.connection_mutation_rate
 
@@ -801,3 +661,182 @@ class PopulationEvolution(object):
         print("======================================================================")
 
         return next_gen_folder
+
+
+def mutate_neuron(
+    neuron: Union[neu.Neuron, neu.Muscle],
+    neuron_mutation: NeuronMutation,
+) -> neu.Neuron:
+    """
+    mutate a neuron, can be Eye, Neuron or Muscle
+
+    :param neuron: the initial little_fish.brain.neuron.Neuron object
+    :param neuron_mutation: little_fish.core.evolution.NeuronMutation object
+    :return: a mutated little_fish.brain.neuron.Neuron object
+    """
+
+    mutated_neuron = copy.deepcopy(neuron)
+
+    mutated_baseline = neuron_mutation.get_mutated_baseline()
+    if mutated_baseline is not None:
+        mutated_neuron.baseline_rate = mutated_baseline
+
+    mutated_refractory = neuron_mutation.get_mutated_refractory()
+    if mutated_refractory is not None:
+        mutated_neuron.refractory_period = mutated_refractory
+
+    return mutated_neuron
+
+
+def mutate_eye(eye: neu.Eye, eye_mutation: EyeMutation) -> neu.Eye:
+    """
+    mutate a neuron, can be Eye, Neuron or Muscle
+
+    :param neuron: the initial little_fish.brain.neuron.Eye object
+    :param neuron_mutation: little_fish.core.evolution.NeuronMutation object
+    :return: a mutated little_fish.brain.neuron.Eye object
+    """
+
+    mutated_eye = copy.deepcopy(eye)
+
+    mutated_gain = eye_mutation.get_mutated_gain()
+    if mutated_gain is not None:
+        mutate_eye.gain = mutated_gain
+
+    mutated_baseline = eye_mutation.get_mutated_baseline()
+    if mutated_baseline is not None:
+        mutated_eye.baseline_rate = mutated_baseline
+
+    mutated_refractory = eye_mutation.get_mutated_refractory()
+    if mutated_refractory is not None:
+        mutated_eye.refractory_period = mutated_refractory
+
+    return mutated_eye
+
+
+def mutate_connection(
+    connection: conn.Connection, connection_mutation: ConnectionMutation
+) -> conn.Connection:
+    """
+    mutate a connection
+
+    :param connection: the initial little_fish.core.fish.Connection object
+    :param connection_mutation: little_fish.core.evolution.ConnectionMutation object
+    :return: a mutated little_fish.core.fish.Connection object
+    """
+
+    mutated_latency = connection_mutation.get_mutated_latency()
+    if mutated_latency is None:
+        mutated_latency = connection.get_latency()
+
+    mutated_amplitude = connection_mutation.get_mutated_amplitude()
+    if mutated_amplitude is None:
+        mutated_amplitude = connection.get_amplitude()
+
+    mutated_rise_time = connection_mutation.get_mutated_rise_time()
+    if mutated_rise_time is None:
+        mutated_rise_time = connection.get_rise_time()
+
+    mutated_decay_time = connection_mutation.get_mutated_decay_time()
+    if mutated_decay_time is None:
+        mutated_decay_time = connection.get_decay_time()
+
+    return fi.Connection(
+        latency=mutated_latency,
+        amplitude=mutated_amplitude,
+        rise_time=mutated_rise_time,
+        decay_time=mutated_decay_time,
+    )
+
+
+def mutate_brain(
+    curr_brain: brain.Brain,
+    brain_mutation: BrainMutation,
+    neuron_mutation_rate: float = 0.01,
+    connection_mutation_rate: float = 0.01,
+    verbose=False,
+) -> brain.Brain:
+    if verbose:
+        print("\nmutating input brain ...")
+
+    mutated_neurons = curr_brain.neurons.copy()
+    mutated_connections = curr_brain.connections.copy()
+
+    mutate_neuron_idxs = choose_index(mutated_neurons.index, neuron_mutation_rate)
+
+    if verbose:
+        print("\nmutating neurons:")
+        print(
+            f"total number of neurons: {len(mutated_neurons)}. "
+            f"neuron mutation rate: {neuron_mutation_rate}. "
+            f"number of neurons to be mutated: {len(mutate_neuron_idxs)}."
+        )
+
+    for mni in mutate_neuron_idxs:
+        curr_neuron = mutated_neurons.loc[mni, "neuron"]
+        if curr_neuron.neuron_type == "eye":
+            if verbose:
+                print(f"Evolution: mutating eye. Index: {mni}.")
+            mutated_neurons.loc[mni, "neuron"] = mutate_eye(
+                curr_neuron, brain_mutation.eye_mutation
+            )
+
+        elif curr_neuron.neuron_type in ["neuron", "muscle"]:
+            if verbose:
+                print(f"Evolution: mutating hidden neuron. Index: {mni}.")
+            mutated_neurons.loc[mni, "neuron"] = mutate_neuron(
+                curr_neuron, brain_mutation.neuron_mutation
+            )
+
+    if verbose:
+        print("\nmutating connections:")
+
+    mutate_connection_idxs = choose_index(
+        mutated_connections.index, connection_mutation_rate
+    )
+
+    for mci in mutate_connection_idxs:
+        curr_connection = mutated_connections.loc[mci, "connection"]
+        if verbose:
+            print(f"Evolution: mutating connection. Index: {mci}.")
+        mutated_connections.loc[mci, "connection"] = mutate_connection(
+            curr_connection, brain_mutation.connection_mutation
+        )
+
+    mutated_brain = brain.Brain(
+        neurons=mutated_neurons, connections=mutated_connections
+    )
+    return mutated_brain
+
+
+def mutate_fish(
+    fish: fi.Fish,
+    brain_mutation: BrainMutation,
+    neuron_mutation_rate: float = 0.01,
+    connection_mutation_rate: float = 0.01,
+    verbose=False,
+) -> fi.Fish:
+    mutated_brain = mutate_brain(
+        brain=fish.brain,
+        brain_mutation=brain_mutation,
+        neuron_mutation_rate=neuron_mutation_rate,
+        connection_mutation_rate=connection_mutation_rate,
+        verbose=verbose,
+    )
+    mother_name = fish.get_name()
+    name = "fish_" + datetime.datetime.now().strftime("%y%m%d_%H_%M_%S.%f")
+
+    mutated_fish = fi.Fish(
+        name=name,
+        mother_name=mother_name,
+        brain=mutated_brain,
+        max_health=fish.max_health,
+        health_decay_rate=fish.health_decay_rate,
+        land_penalty_rate=fish.land_penalty_rate,
+        food_rate=fish.food_rate,
+        move_penalty_rate=fish.move_penalty_rate,
+    )
+
+    if verbose:
+        print("fish: {} generated.".format(name))
+    return mutated_fish

@@ -82,6 +82,10 @@ class Neuron:
             if k == "refractory_period":
                 dset.attrs["unit"] = "time_unit"
 
+    @property
+    def neuron_type(self):
+        return "neuron"
+
 
 class Eye(Neuron):
     """
@@ -180,6 +184,10 @@ class Eye(Neuron):
             probability_base=probability_base,
         )
 
+    @property
+    def neuron_type(self):
+        return "eye"
+
 
 class Muscle(Neuron):
     """
@@ -230,3 +238,7 @@ class Muscle(Neuron):
             return self.step_motion
         else:
             return is_act
+
+    @property
+    def neuron_type(self):
+        return "muscle"

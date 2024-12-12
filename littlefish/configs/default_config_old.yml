@@ -48,6 +48,7 @@ fish_config:
   name: null
 
 brain_mutation_config:
+  eye_gain_r: null                          # eye gain range
   eye_bl_r:                                 # eye baseline range
   - -0.1
   - 0.1
