@@ -565,7 +565,7 @@ class PopulationEvolution(object):
 
     def generate_next_generation(
         self,
-        base_folder: int,
+        base_folder: str,
         curr_generation_ind: int,
     ):
         print(
@@ -960,3 +960,36 @@ def run_evoluation(run_config):
         )
 
         curr_gen_ind += 1
+
+
+if __name__ == "__main__":
+    run_config_path = (
+        r"F:\little_fish_simulation_logs\generation_0000006\run_config.yml"
+    )
+    with open(run_config_path, "r") as f:
+        run_config = yaml.load(f, Loader=yaml.FullLoader)
+
+    brain_mutation = get_brain_mutation_from_brain_mutation_config(
+        run_config["brain_mutation_config"]
+    )
+
+    pe = PopulationEvolution(
+        population_size=10,
+        turnover_rate=0.6,
+        neuron_mutation_rate=0.01,
+        connection_mutation_rate=0.01,
+        brain_mutation=brain_mutation,
+        life_span_hard_threshold=0,
+        movement_hard_threshold=0,
+        generation_digits_num=7,
+    )
+
+    # life_thr, fishes = pe._calculate_offspring_num(
+    #     base_folder=r"F:\little_fish_simulation_logs",
+    #     curr_generation_ind=6,
+    # )
+
+    pe.generate_next_generation(
+        base_folder=r"F:\little_fish_simulation_logs",
+        curr_generation_ind=6,
+    )

@@ -20,7 +20,7 @@ brain_config:
     input_types: 
     - terrain
     - food
-    gain: 0.005
+    gain: 1.
     baseline_rate: 0.0
     refractory_period: 1.2
 
@@ -32,19 +32,19 @@ brain_config:
 
   muscle_layer:
     muscle_set: FOUR_MUSCLES
-    baseline_rate: 1.0e-05
-    refractory_period: 50.0
+    baseline_rate: 0.001
+    refractory_period: 10.
 
   connection_0_1: 
     connection_type: full
-    amplitude: 0.001
+    amplitude: 0.01
     latency: 3
     rise_time: 2
     decay_time: 5
 
   connection_1_2: 
     connection_type: full
-    amplitude: 0.001
+    amplitude: 0.01
     latency: 3
     rise_time: 2
     decay_time: 5
@@ -52,9 +52,9 @@ brain_config:
 fish_config:
   food_rate: 20.0
   land_penalty_rate: 0.5
-  max_health: 100.0
+  max_health: 20.0
   health_decay_rate: 0.01
-  move_penalty_rate: 0.01
+  move_penalty_rate: 0.001
   mother_name: null
   name: null
 
@@ -76,16 +76,16 @@ brain_mutation_config:
   muscle_rp_r: null                         # muscle refractory period range
   
   connection_a_r:                           # connection amplitude range
-  - -0.1
-  - 0.1
+  - -1
+  - 1
   connection_l_r: null                      # connection latency range
   connection_rt_r: null                     # connection rise time range
   connection_dt_r: null                     # connection decay time range
   
 terrain_config:
-  food_num: 50                                # number of food
-  sea_portion: 0.5                            # portion of the sea
+  food_num: 100                             # number of food
+  sea_portion: 0.7                          # portion of the sea
   terrain_filter_sigma: 3.0
-  terrain_size:                               # shape of terrain                     
+  terrain_size:                             # shape of terrain                     
   - 64
   - 64

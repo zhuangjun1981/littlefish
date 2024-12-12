@@ -371,12 +371,15 @@ def value_2_rgb(value, cmap):
     return get_color_str(*color)
 
 
-def distrube_number(possibilities, population_size):
+def distrube_number(
+    values: np.ndarray,
+    population_size: int,
+) -> list[int]:
     """
-    distribute a number of individuals into each bucket according to the given possibility distributions
+    distribute a number of individuals into each bucket according to a given list of numbers
+    the probability of each value index is calculated as softmax
 
-    :param possibilities: list of numbers, indicating the possibilities of each bucket, if not normalized, it will be
-                         normalized to have sum equals to one.
+    :param values: 1d array like, softmax(values) specifies the probability distribution.
     :param population_size: positive integer, total number of individuals to be distributed
     :return: list of non-negative integers, sum of which should precisely equal to population_size
     """
@@ -384,26 +387,21 @@ def distrube_number(possibilities, population_size):
     if not is_integer(population_size) or population_size < 1.0:
         raise ValueError("Utility: population_size sould be positive integer.")
 
-    if len(possibilities) == 1:
+    if len(values) == 1:
         return [population_size]
 
-    # normalize possibilities
-    pos_nor = np.array(possibilities, dtype=np.float64)
-    pos_nor = np.hstack(([0.0], pos_nor))
-    pos_nor = pos_nor / np.sum(pos_nor)
-    pos_cum = np.cumsum(pos_nor)
-    pos_buckets = list(zip(pos_cum[:-1], pos_cum[1:]))
+    # softmax to get probabilities
+    e_x = np.exp(values - np.max(values))
+    probs = e_x / e_x.sum()
 
-    buckets = np.zeros(len(possibilities), dtype=int)
+    offspring_number = [0] * len(probs)
 
-    for i in range(population_size):
-        curr_v = random.random()
-        for j, pos_rang in enumerate(pos_buckets):
-            if curr_v >= pos_rang[0] and curr_v < pos_rang[1]:
-                buckets[j] += 1
-                break
+    idxs = np.random.choice(len(probs), size=population_size, p=probs)
 
-    return buckets
+    for idx in idxs:
+        offspring_number[idx] += 1
+
+    return offspring_number
 
 
 def get_default_config() -> dict:

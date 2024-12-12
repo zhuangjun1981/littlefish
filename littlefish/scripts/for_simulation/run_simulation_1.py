@@ -1,4 +1,3 @@
-import shutil
 import random
 import numpy as np
 from littlefish.core import utilities as utils
@@ -10,16 +9,12 @@ def run():
     random.seed(random_seed)
     np.random.seed(random_seed)
 
-    base_folder = r"F:\little_fish_simulation_logs"
+    base_folder = r"F:\little_fish_simulation_logs_4eyes_ff"
     run_config = utils.get_default_config()
-    shutil.rmtree(base_folder)
 
     run_config["simulation_config"]["data_folder"] = base_folder
     run_config["simulation_config"]["start_generation_ind"] = 0
     run_config["simulation_config"]["end_generation_ind"] = 10
-
-    run_config["simulation_config"]["simulation_length"] = 100
-    run_config["evolution_config"]["population_size"] = 10
 
     evo.run_evoluation(run_config=run_config)
 
