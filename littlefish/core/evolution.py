@@ -3,15 +3,17 @@ import h5py
 import random
 import datetime
 import copy
+import yaml
 import numpy as np
 import pandas as pd
-import itertools
 from typing import Union
 import littlefish.core.fish as fi
+import littlefish.core.simulation as sim
 import littlefish.brain.connection as conn
 import littlefish.brain.neuron as neu
 import littlefish.brain.brain as brain
-import littlefish.core.utilities as util
+import littlefish.brain.functional as fn
+import littlefish.core.utilities as utils
 
 
 def choose_index(
@@ -27,23 +29,7 @@ def choose_index(
     """
 
     mutate_num = int(np.ceil(len(indices) * float(mutation_rate)))
-    return random.sample(indices, mutate_num)
-
-
-# def choose_index_2d(indices0, indices1, mutation_rate):
-#     """
-#     randomly choose a subset of index pairs from a 2d grid based on the mutation rates
-
-#     :param indices0: 1d seq, list of indices along axis 0 (rows)
-#     :param indices1: 1d seq, list of indices along axis 1 (columns)
-#     :param mutation_rate: float, [0., 1.]
-#     :return: list of index pairs, each pair contains two elements [index0, index1] representing the coordinates of a
-#              randomly chosen location
-#     """
-
-#     all_coordinates = list(itertools.product(indices0, indices1))
-#     mutate_num = int(np.ceil(len(all_coordinates) * float(mutation_rate)))
-#     return random.sample(all_coordinates, mutate_num)
+    return random.sample(list(indices), mutate_num)
 
 
 def get_offspring_num(
@@ -147,7 +133,7 @@ def get_brain_mutation_from_brain_mutation_config(brain_mutation_config):
 
 
 def get_default_brain_mutation():
-    defalut_config = util.get_default_config()
+    defalut_config = utils.get_default_config()
     return get_brain_mutation_from_brain_mutation_config(
         defalut_config["brain_mutation_config"]
     )
@@ -202,10 +188,10 @@ class UniformMutation(object):
             start but excluding the end
         """
 
-        if self._dtype == "int":
-            return random.randint(self._value_range[0], self._value_range[1] - 1)
-        elif self._dtype == "float":
-            return random.uniform(self._value_range[0], self._value_range[1])
+        if self.dtype == "int":
+            return random.randint(self.value_range[0], self.value_range[1] - 1)
+        elif self.dtype == "float":
+            return random.uniform(self.value_range[0], self.value_range[1])
 
     def __str__(self):
         return "littlefish.core.evolution.UniformMutation object. dtype:{}; value_range:{}".format(
@@ -499,7 +485,7 @@ class PopulationEvolution(object):
 
         curr_gen_dir = os.path.join(
             base_folder,
-            util.get_generation_name(curr_generation_ind, self.generation_digits_num),
+            utils.get_generation_name(curr_generation_ind, self.generation_digits_num),
         )
 
         if not os.path.isdir(curr_gen_dir):
@@ -567,7 +553,7 @@ class PopulationEvolution(object):
         fishes["extra_life"] = fishes["life_span"] - life_thr
 
         new_fish_number = self.population_size - fishes.shape[0]
-        fishes["offspring_num"] = util.distrube_number(
+        fishes["offspring_num"] = utils.distrube_number(
             fishes["extra_life"], new_fish_number
         )
 
@@ -593,11 +579,11 @@ class PopulationEvolution(object):
 
         curr_gen_folder = os.path.join(
             base_folder,
-            util.get_generation_name(curr_generation_ind, self.generation_digits_num),
+            utils.get_generation_name(curr_generation_ind, self.generation_digits_num),
         )
         next_gen_folder = os.path.join(
             base_folder,
-            util.get_generation_name(
+            utils.get_generation_name(
                 curr_generation_ind + 1, self.generation_digits_num
             ),
         )
@@ -609,10 +595,19 @@ class PopulationEvolution(object):
         )
 
         for fish_ind, fish_row in fishes.iterrows():
-            mother_fish_f = h5py.File(
-                os.path.join(curr_gen_folder, fish_row["fish_name"] + ".hdf5"), "a"
+            mother_fish_path = os.path.join(
+                curr_gen_folder, fish_row["fish_name"] + ".hdf5"
             )
-            mother_fish = fi.Fish.from_h5_group(mother_fish_f["fish"])
+            mother_fish_f = h5py.File(mother_fish_path, "a")
+            mother_fish_name = [
+                k for k in mother_fish_f.keys() if k.startswith("fish_")
+            ]
+            if len(mother_fish_name) != 1:
+                raise LookupError(
+                    f"{mother_fish_path} should have one and only one fish."
+                )
+            mother_fish_name = mother_fish_name[0]
+            mother_fish = fi.load_fish_from_h5_group(mother_fish_f[mother_fish_name])
             mother_fish_gens = list(mother_fish_f["generations"][()])
 
             children_lst = []
@@ -620,8 +615,7 @@ class PopulationEvolution(object):
             child_fish_f = h5py.File(
                 os.path.join(next_gen_folder, mother_fish.name + ".hdf5"), "a"
             )
-            child_fish_grp = child_fish_f.create_group("fish")
-            mother_fish.to_h5_group(child_fish_grp)
+            mother_fish.to_h5_group(child_fish_f)
             mother_fish_gens.append(curr_generation_ind + 1)
             child_fish_f["generations"] = mother_fish_gens
             child_fish_f.close()
@@ -637,8 +631,7 @@ class PopulationEvolution(object):
                 child_fish_f = h5py.File(
                     os.path.join(next_gen_folder, child_fish.name + ".hdf5"), "a"
                 )
-                child_fish_grp = child_fish_f.create_group("fish")
-                child_fish.to_h5_group(child_fish_grp)
+                child_fish.to_h5_group(child_fish_f)
                 child_fish_f["generations"] = [curr_generation_ind + 1]
                 child_fish_f.close()
                 children_lst.append(child_fish.name)
@@ -725,28 +718,25 @@ def mutate_connection(
     :return: a mutated little_fish.core.fish.Connection object
     """
 
+    mutated_connection = copy.deepcopy(connection)
+
     mutated_latency = connection_mutation.get_mutated_latency()
-    if mutated_latency is None:
-        mutated_latency = connection.get_latency()
+    if mutated_latency is not None:
+        mutated_connection.latency = mutated_latency
 
     mutated_amplitude = connection_mutation.get_mutated_amplitude()
-    if mutated_amplitude is None:
-        mutated_amplitude = connection.get_amplitude()
+    if mutated_amplitude is not None:
+        mutated_connection.amplitude = mutated_amplitude
 
     mutated_rise_time = connection_mutation.get_mutated_rise_time()
-    if mutated_rise_time is None:
-        mutated_rise_time = connection.get_rise_time()
+    if mutated_rise_time is not None:
+        mutated_connection.rise_time = mutated_rise_time
 
     mutated_decay_time = connection_mutation.get_mutated_decay_time()
-    if mutated_decay_time is None:
-        mutated_decay_time = connection.get_decay_time()
+    if mutated_decay_time is not None:
+        mutated_connection.decay_time = mutated_decay_time
 
-    return fi.Connection(
-        latency=mutated_latency,
-        amplitude=mutated_amplitude,
-        rise_time=mutated_rise_time,
-        decay_time=mutated_decay_time,
-    )
+    return mutated_connection
 
 
 def mutate_brain(
@@ -817,13 +807,13 @@ def mutate_fish(
     verbose=False,
 ) -> fi.Fish:
     mutated_brain = mutate_brain(
-        brain=fish.brain,
+        curr_brain=fish.brain,
         brain_mutation=brain_mutation,
         neuron_mutation_rate=neuron_mutation_rate,
         connection_mutation_rate=connection_mutation_rate,
         verbose=verbose,
     )
-    mother_name = fish.get_name()
+    mother_name = fish.name
     name = "fish_" + datetime.datetime.now().strftime("%y%m%d_%H_%M_%S.%f")
 
     mutated_fish = fi.Fish(
@@ -840,3 +830,133 @@ def mutate_fish(
     if verbose:
         print("fish: {} generated.".format(name))
     return mutated_fish
+
+
+def run_evoluation(run_config):
+    base_folder = run_config["simulation_config"]["data_folder"]
+
+    generation_digits_num = run_config["simulation_config"]["generation_digits_num"]
+
+    start_generation_ind = run_config["simulation_config"]["start_generation_ind"]
+    if not utils.is_integer(start_generation_ind) or start_generation_ind < 0:
+        raise ValueError(
+            "PopulationEvolution: start_generation_ind should be a non-negative integer."
+        )
+
+    end_generation_ind = run_config["simulation_config"]["end_generation_ind"]
+    if not utils.is_integer(end_generation_ind) or end_generation_ind < 0:
+        raise ValueError(
+            "PopulationEvolution: end_generation_ind should be a non-negative integer."
+        )
+
+    if start_generation_ind >= end_generation_ind:
+        raise ValueError(
+            "PopulationEvolution: start_generation_ind should be smaller than end_generation_ind."
+        )
+
+    brain_mutation = get_brain_mutation_from_brain_mutation_config(
+        run_config["brain_mutation_config"],
+    )
+
+    evolution = PopulationEvolution(
+        brain_mutation=brain_mutation,
+        generation_digits_num=generation_digits_num,
+        **run_config["evolution_config"],
+    )
+
+    start_generation_folder = os.path.join(
+        base_folder,
+        utils.get_generation_name(
+            start_generation_ind,
+            generation_digits_num,
+        ),
+    )
+
+    # check and generate starting folder structure
+    if start_generation_ind == 0:
+        if not os.path.isdir(start_generation_folder):
+            os.makedirs(start_generation_folder)
+
+        if os.listdir(start_generation_folder):
+            raise LookupError(
+                "PopulationEvolution: start generation folder ({}) is not empty.".format(
+                    os.path.realpath(start_generation_folder)
+                )
+            )
+
+        # save run_config to the current folder
+        with open(os.path.join(start_generation_folder, "run_config.yml"), "w") as f:
+            yaml.dump(run_config, f)
+
+        print(
+            "\n======================================================================"
+        )
+        print("PopulationEvolution: generating fish for generation: 0 ...")
+
+        for fish_ind in range(run_config["evolution_config"]["population_size"]):
+            curr_brain = fn.generate_brain_from_brain_config(run_config["brain_config"])
+            curr_fish = fi.Fish(brain=curr_brain, **run_config["fish_config"])
+            rand_fish = mutate_fish(
+                curr_fish,
+                brain_mutation=brain_mutation,
+                neuron_mutation_rate=run_config["evolution_config"][
+                    "neuron_mutation_rate"
+                ],
+                connection_mutation_rate=run_config["evolution_config"][
+                    "connection_mutation_rate"
+                ],
+                verbose=False,
+            )
+            rand_fish_f = h5py.File(
+                os.path.join(start_generation_folder, rand_fish.name + ".hdf5"), "a"
+            )
+            rand_fish.to_h5_group(rand_fish_f)
+            rand_fish_f["generations"] = [0]
+            rand_fish_f.close()
+
+        print("PopulationEvolution: fish generation for generation: 0 finished.")
+        print("======================================================================")
+
+        sim.run_simulation_multi_thread(
+            base_folder=base_folder,
+            generation_ind=0,
+            process_num=run_config["simulation_config"]["process_num"],
+            simulation_length=run_config["simulation_config"]["simulation_length"],
+            terrain_size=run_config["terrain_config"]["terrain_size"],
+            sea_portion=run_config["terrain_config"]["sea_portion"],
+            terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
+            food_num=run_config["terrain_config"]["food_num"],
+        )
+
+    else:
+        if not os.listdir(start_generation_folder):
+            raise LookupError(
+                "PopulationEvolution: start generation folder ({}) should not be empty.".format(
+                    os.path.realpath(start_generation_folder)
+                )
+            )
+
+    # run simulation
+    curr_gen_ind = start_generation_ind
+    while curr_gen_ind < end_generation_ind:
+        next_generation_folder = evolution.generate_next_generation(
+            base_folder=base_folder,
+            curr_generation_ind=curr_gen_ind,
+        )
+
+        # save run_config to the next generation folder
+        with open(os.path.join(next_generation_folder, "run_config.yml"), "w") as f:
+            yaml.dump(run_config, f)
+
+        sim.run_simulation_multi_thread(
+            base_folder=base_folder,
+            generation_ind=curr_gen_ind + 1,
+            process_num=run_config["simulation_config"]["process_num"],
+            simulation_length=run_config["simulation_config"]["simulation_length"],
+            terrain_size=run_config["terrain_config"]["terrain_size"],
+            sea_portion=run_config["terrain_config"]["sea_portion"],
+            terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
+            food_num=run_config["terrain_config"]["food_num"],
+        )
+
+        curr_gen_ind += 1

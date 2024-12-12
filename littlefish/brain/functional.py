@@ -116,7 +116,7 @@ def generate_brain_from_brain_config(
     # generate eyes
     eye_set = eval(brain_config["eye_layer"]["eye_set"])
     input_types = brain_config["eye_layer"]["input_types"]
-    eye_params = brain_config["eye_layer"]
+    eye_params = brain_config["eye_layer"].copy()
     eye_params.pop("eye_set")
     eye_params.pop("input_types")
     for input_type in input_types:
@@ -134,7 +134,7 @@ def generate_brain_from_brain_config(
     # generate hidden layers
     if "hidden_layers" in brain_config:
         hidden_neuron_numbers = brain_config["hidden_layers"]["neuron_nums"]
-        neuron_params = brain_config["hidden_layers"]
+        neuron_params = brain_config["hidden_layers"].copy()
         neuron_params.pop("neuron_nums")
         for hidden_neuron_number in hidden_neuron_numbers:
             curr_layer += 1
@@ -144,7 +144,7 @@ def generate_brain_from_brain_config(
 
     # generate muscles
     muscle_set = eval(brain_config["muscle_layer"]["muscle_set"])
-    muscle_params = brain_config["muscle_layer"]
+    muscle_params = brain_config["muscle_layer"].copy()
     muscle_params.pop("muscle_set")
     curr_layer += 1
     for direction, step_motion in muscle_set:
@@ -170,7 +170,7 @@ def generate_brain_from_brain_config(
                 if (
                     conn_dict["connection_type"] == "full"
                 ):  # currently only full connection are supported
-                    conn_params = conn_dict
+                    conn_params = conn_dict.copy()
                     conn_params.pop("connection_type")
                     curr_pre_idxs = neurons.query("layer == @pre_layer").index.to_list()
                     curr_post_idxs = neurons.query(

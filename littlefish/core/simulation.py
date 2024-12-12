@@ -3,7 +3,6 @@ import time
 import datetime
 import random
 import h5py
-import yaml
 from multiprocessing import Pool
 import numpy as np
 import pandas as pd
@@ -11,7 +10,6 @@ import matplotlib.pyplot as plt
 import littlefish.core.utilities as utils
 import littlefish.core.terrain as tr
 import littlefish.core.fish as fi
-from littlefish.core import evolution as evo
 
 from littlefish.core.terrain import BinaryTerrain
 from littlefish.core.fish import Fish
@@ -426,7 +424,7 @@ def simulate_one_fish(
     fish_names = [k[5:] for k in curr_fish_f.keys() if k.startswith("fish_")]
 
     if len(fish_names) == 0:
-        raise ValueError("cannot find fish group")
+        raise ValueError(f"{fish_path}, cannot find fish group")
     elif len(fish_names) > 1:
         raise ValueError("found more than one fish groups")
     else:
@@ -537,7 +535,7 @@ def run_simulation_multi_thread(
         p.map(simulate_fish_multiprocessing, sim_params)
 
     # for sim_param in sim_params:
-    #     simulation_fish_multiprocessing(sim_param)
+    #     simulate_fish_multiprocessing(sim_param)
 
     print(
         "PopulationEvolution: simulation of generation: {} finished.".format(
@@ -545,133 +543,3 @@ def run_simulation_multi_thread(
         )
     )
     print("======================================================================")
-
-
-# def run_evoluation(run_config):
-#     base_folder = run_config["simulation_config"]["data_folder"]
-
-#     generation_digits_num = run_config["simulation_config"]["generation_digits_num"]
-
-#     start_generation_ind = run_config["simulation_config"]["start_generation_ind"]
-#     if not utils.is_integer(start_generation_ind) or start_generation_ind < 0:
-#         raise ValueError(
-#             "PopulationEvolution: start_generation_ind should be a non-negative integer."
-#         )
-
-#     end_generation_ind = run_config["simulation_config"]["end_generation_ind"]
-#     if not utils.is_integer(end_generation_ind) or end_generation_ind < 0:
-#         raise ValueError(
-#             "PopulationEvolution: end_generation_ind should be a non-negative integer."
-#         )
-
-#     if start_generation_ind >= end_generation_ind:
-#         raise ValueError(
-#             "PopulationEvolution: start_generation_ind should be smaller than end_generation_ind."
-#         )
-
-#     brain_mutation = evo.get_brain_mutation_from_brain_mutation_config(
-#         run_config["brain_mutation_config"],
-#     )
-
-#     evolution = evo.PopulationEvolution(
-#         brain_mutation=brain_mutation,
-#         generation_digits_num=generation_digits_num,
-#         **run_config["evolution_config"],
-#     )
-
-#     start_generation_folder = os.path.join(
-#         base_folder,
-#         utils.get_generation_name(
-#             start_generation_ind,
-#             generation_digits_num,
-#         ),
-#     )
-
-#     # check and generate starting folder structure
-#     if start_generation_ind == 0:
-#         if not os.path.isdir(start_generation_folder):
-#             os.makedirs(start_generation_folder)
-
-#         if os.listdir(start_generation_folder):
-#             raise LookupError(
-#                 "PopulationEvolution: start generation folder ({}) is not empty.".format(
-#                     os.path.realpath(start_generation_folder)
-#                 )
-#             )
-
-#         # save run_config to the current folder
-#         with open(os.path.join(start_generation_folder, "run_config.yml"), "w") as f:
-#             yaml.dump(run_config, f)
-
-#         print(
-#             "\n======================================================================"
-#         )
-#         print("PopulationEvolution: generating fish for generation: 0 ...")
-
-#         for fish_ind in range(run_config["evolution_config"]["population_size"]):
-#             curr_brain = generate_brain_from_brain_config(run_config["brain_config"])
-#             curr_fish = Fish(brain=curr_brain, **run_config["fish_config"])
-#             rand_fish = evo.mutate_fish(
-#                 curr_fish,
-#                 brain_mutation=brain_mutation,
-#                 neuron_mutation_rate=run_config["evolution_config"][
-#                     "neuron_mutation_rate"
-#                 ],
-#                 connection_mutation_rate=run_config["evolution_config"][
-#                     "connection_mutation_rate"
-#                 ],
-#                 verbose=False,
-#             )
-#             rand_fish_f = h5py.File(
-#                 os.path.join(start_generation_folder, rand_fish.name + ".hdf5"), "a"
-#             )
-#             rand_fish_grp = rand_fish_f.create_group("fish")
-#             rand_fish.to_h5_group(rand_fish_grp)
-#             rand_fish_f["generations"] = [0]
-#             rand_fish_f.close()
-
-#         print("PopulationEvolution: fish generation for generation: 0 finished.")
-#         print("======================================================================")
-
-#         run_simulation_multi_thread(
-#             base_folder=base_folder,
-#             generation_ind=0,
-#             process_num=run_config["simulation_config"]["process_num"],
-#             simulation_length=run_config["simulation_config"]["simulation_length"],
-#             terrain_size=run_config["terrain_config"]["terrain_size"],
-#             sea_portion=run_config["terrain_config"]["sea_portion"],
-#             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
-#             food_num=run_config["terrain_config"]["food_num"],
-#         )
-
-#     else:
-#         if not os.listdir(start_generation_folder):
-#             raise LookupError(
-#                 "PopulationEvolution: start generation folder ({}) should not be empty.".format(
-#                     os.path.realpath(start_generation_folder)
-#                 )
-#             )
-
-#     # run simulation
-#     curr_gen_ind = start_generation_ind
-#     while curr_gen_ind < end_generation_ind:
-#         next_generation_folder = evolution.generate_next_generation(
-#             base_folder=base_folder, curr_generation_ind=curr_gen_ind, simulation_ind=0
-#         )
-
-#         # save run_config to the next generation folder
-#         with open(os.path.join(next_generation_folder, "run_config.yml"), "w") as f:
-#             yaml.dump(run_config, f)
-
-#         run_simulation_multi_thread(
-#             base_folder=base_folder,
-#             generation_ind=curr_gen_ind + 1,
-#             process_num=run_config["simulation_config"]["process_num"],
-#             simulation_length=run_config["simulation_config"]["simulation_length"],
-#             terrain_size=run_config["terrain_config"]["terrain_size"],
-#             sea_portion=run_config["terrain_config"]["sea_portion"],
-#             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
-#             food_num=run_config["terrain_config"]["food_num"],
-#         )
-
-#         curr_gen_ind += 1

@@ -201,7 +201,7 @@ def plot_mask_borders(
     color="#ff0000",
     border_width=2,
     closing_iteration=None,
-    **kwargs
+    **kwargs,
 ):
     """
     plot mask (ROI) borders by using pyplot.contour function. all the 0s and Nans in the input mask will be considered
@@ -406,13 +406,22 @@ def distrube_number(possibilities, population_size):
     return buckets
 
 
-def get_default_config():
+def get_default_config() -> dict:
     curr_folder = os.path.dirname(os.path.abspath(__file__))
     repo_folder = os.path.dirname(curr_folder)
     default_config_path = os.path.join(repo_folder, "configs", "default_config.yml")
     with open(default_config_path, "r") as f:
         default_config = yaml.load(f, Loader=yaml.FullLoader)
     return default_config
+
+
+def get_brain_config(brain_config_name: str) -> dict:
+    curr_folder = os.path.dirname(os.path.abspath(__file__))
+    repo_folder = os.path.dirname(curr_folder)
+    brain_config_path = os.path.join(repo_folder, "configs", f"{brain_config_name}.yml")
+    with open(brain_config_path, "r") as f:
+        brain_config = yaml.load(f, Loader=yaml.FullLoader)
+    return brain_config
 
 
 def get_generation_name(generation_ind, generation_digits_num=7):
