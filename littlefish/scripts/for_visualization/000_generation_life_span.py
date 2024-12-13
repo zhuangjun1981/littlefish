@@ -2,10 +2,10 @@ import os
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-from littlefish.core import plotting
+from littlefish.visulization import plotting
 
-gen_folder = r"F:\little_fish_simulation_logs_5\generation_0000100"
-max_life_span = 10000
+gen_folder = r"F:\little_fish_simulation_logs_4eyes_ff\generation_0000027"
+max_life_span = 15000
 bins = 60
 default_life_span = 2000
 

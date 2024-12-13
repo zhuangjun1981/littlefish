@@ -4,7 +4,7 @@ from typing import Union
 import pandas as pd
 import matplotlib.pyplot as plt
 from littlefish.core import utilities as util
-from littlefish.core.plotting import plot_confusion_matrix
+from littlefish.visulization.plotting import plot_confusion_matrix
 from littlefish.brain.neuron import (
     Neuron,
     Eye,
