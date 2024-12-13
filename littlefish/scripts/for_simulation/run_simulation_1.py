@@ -13,10 +13,11 @@ def run():
     run_config = utils.get_default_config()
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 0
-    run_config["simulation_config"]["end_generation_ind"] = 10
+    run_config["simulation_config"]["start_generation_ind"] = 20
+    run_config["simulation_config"]["end_generation_ind"] = 40
 
-    run_config["evolution_config"]["population_size"] = 10
+    run_config["simulation_config"]["food_num"] = 50
+    run_config["fish_config"]["move_penalty_rate"] = 0.0005
 
     evo.run_evoluation(run_config=run_config)
 

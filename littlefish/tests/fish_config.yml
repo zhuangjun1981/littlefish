@@ -6,7 +6,7 @@ fish_config:
   land_penalty_rate: 1.0
   health_decay_rate: 0.05
   move_penalty_rate: 0.0001
-  action_potential_penalty_rate: 0.000001
+  firing_penalty_rate: 0.000001
 
 
 brain_config:

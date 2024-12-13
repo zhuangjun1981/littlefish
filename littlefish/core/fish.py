@@ -44,7 +44,7 @@ class Fish:
         land_penalty_rate: float = 0.5,
         food_rate: float = 20.0,
         move_penalty_rate: float = 0.001,
-        action_potential_penalty_rate: float = 0.0,
+        firing_penalty_rate: float = 0.0,
         generations: list[int] = [],
     ) -> None:
         """
@@ -58,7 +58,7 @@ class Fish:
             health point / pixel. the food after taken will disappear, so no health gaining is a transient event
         :param move_penalty_rate: float, the penalty of healh point, if the fish move once this amount will be subtracted
             from its health.
-        :param action_potential_penalty_rate: float, health decay per action potential, implement this can encourage
+        :param firing_penalty_rate: float, health decay per action potential, implement this can encourage
             sparse firing of the neurons.
         :param generations: list[int], generations that the fish lasted during evolution
         """
@@ -80,7 +80,7 @@ class Fish:
         self.land_penalty_rate = float(land_penalty_rate)
         self.food_rate = float(food_rate)
         self.move_penalty_rate = float(move_penalty_rate)
-        self.action_potential_penalty_rate = float(action_potential_penalty_rate)
+        self.firing_penalty_rate = float(firing_penalty_rate)
         self.generations = generations
 
         if brain is None:
@@ -212,7 +212,7 @@ class Fish:
         )
 
         # apply action potential penalty
-        updated_health -= self.action_potential_penalty_rate * action_potential_num
+        updated_health -= self.firing_penalty_rate * action_potential_num
 
         if t_point + 1 < len(self.simulation_cache["health_history"]):
             self.simulation_cache["health_history"][t_point + 1] = updated_health
@@ -300,6 +300,14 @@ def load_fish_from_h5_group(
                 fish_params[key] = utils.decode(dset[()])
             else:
                 fish_params[key] = dset[()]
+
+    # temporal bug fix
+    if "action_potential_penalty_rate" in fish_params:
+        fish_params["firing_penalty_rate"] = fish_params[
+            "action_potential_penalty_rate"
+        ]
+        del fish_params["action_potential_penalty_rate"]
+
     fish = Fish(**fish_params)
 
     if should_load_simulation_cache and "simulation_cache" in h5_group:

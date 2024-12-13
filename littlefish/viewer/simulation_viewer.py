@@ -171,7 +171,7 @@ class SimulationViewer(Ui_SimulationViewer):
                 6, 1, QTableWidgetItem(str(self.fish.move_penalty_rate))
             )
             self.FishTableWidget.setItem(
-                7, 1, QTableWidgetItem(str(self.fish.action_potential_penalty_rate))
+                7, 1, QTableWidgetItem(str(self.fish.firing_penalty_rate))
             )
 
             # this should be in evolution_log, which needs to be implemented

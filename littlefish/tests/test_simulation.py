@@ -98,7 +98,7 @@ class TestSimulation(unittest.TestCase):
             land_penalty_rate=0.5,
             food_rate=20.0,
             move_penalty_rate=0.001,
-            action_potential_penalty_rate=0.00001,
+            firing_penalty_rate=0.00001,
             generations=[0],
         )
         log_path = os.path.join(curr_folder, "test_log.h5")

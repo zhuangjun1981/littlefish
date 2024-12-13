@@ -36,7 +36,7 @@ class TestFish(unittest.TestCase):
         assert fish.land_penalty_rate == 1.0
         assert fish.health_decay_rate == 0.05
         assert fish.move_penalty_rate == 0.0001
-        assert fish.action_potential_penalty_rate == 0.000001
+        assert fish.firing_penalty_rate == 0.000001
         assert np.array_equal(
             fish.brain.neurons.layer,
             [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2],
@@ -62,7 +62,7 @@ class TestFish(unittest.TestCase):
         assert fish2.land_penalty_rate == fish.land_penalty_rate
         assert fish2.food_rate == fish.food_rate
         assert fish2.move_penalty_rate == fish.move_penalty_rate
-        assert fish2.action_potential_penalty_rate == fish.action_potential_penalty_rate
+        assert fish2.firing_penalty_rate == fish.firing_penalty_rate
         assert fish2.brain.neurons.shape == fish.brain.neurons.shape
         assert fish2.brain.connections.shape == fish.brain.connections.shape
         assert np.array_equal(fish2.brain.neurons.layer, fish.brain.neurons.layer)
@@ -117,7 +117,7 @@ class TestFish(unittest.TestCase):
             land_penalty_rate=0.5,
             food_rate=20.0,
             move_penalty_rate=0.001,
-            action_potential_penalty_rate=0.0001,
+            firing_penalty_rate=0.0001,
         )
 
         fish.initiate_simulation(
