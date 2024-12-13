@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-from littlefish.core import utilities as util
+from littlefish.core import utilities as utils
 from littlefish.brain.brain import Brain
 from littlefish.brain.functional import (
     load_brain_from_h5_group,
@@ -255,7 +255,7 @@ class Fish:
         return body_food_overlap
 
     @staticmethod
-    def _eval_fish(self, fish_map: np.ndarray):
+    def _eval_fish(fish_map: np.ndarray, curr_position: list[int]):
         """currently not implemented"""
         pass
 
@@ -279,7 +279,7 @@ class Fish:
 
     def save_simulation_cache_to_h5_group(self, h5_group: h5py.Group) -> None:
         for k, v in self.simulation_cache.items():
-            dset = h5_group.create_dataset(k, data=v)
+            dset = utils.save_h5_dataset(h5_group, k, v)
             if k == "position_history":
                 dset.attrs["data_format"] = "time_point x center position [row, col]"
 
@@ -297,7 +297,7 @@ def load_fish_from_h5_group(
     for key, dset in h5_group.items():
         if key not in ["brain", "simulation_cache"]:
             if key in ["name", "mother_name"]:
-                fish_params[key] = util.decode(dset[()])
+                fish_params[key] = utils.decode(dset[()])
             else:
                 fish_params[key] = dset[()]
     fish = Fish(**fish_params)

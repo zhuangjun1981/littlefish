@@ -302,6 +302,12 @@ class Simulation(object):
                             )
                             print(curr_msg)
                             self.simulation_cache["message"] += "\n" + curr_msg
+                        curr_fish.simulation_cache[
+                            "health_history"
+                        ] = curr_fish.simulation_cache["health_history"][: curr_t + 1]
+                        curr_fish.simulation_cache[
+                            "position_history"
+                        ] = curr_fish.simulation_cache["position_history"][: curr_t + 1]
                         dead_fish_list.append(curr_fish)
 
                 for dead_fish in dead_fish_list:
@@ -369,14 +375,20 @@ class Simulation(object):
 
         save_group = h5_group.create_group(self.name)
         save_group.create_dataset("name", data=self.name)
-        save_group.create_dataset("terrain_map", data=self.terrain.terrain_map)
-        save_group.create_dataset("max_simulation_length", data=self.simulation_length)
-        save_group.create_dataset("food_num", data=self.food_num)
-        save_group.create_dataset("sea_portion", data=self.terrain.get_sea_portion())
+        save_group.create_dataset(
+            "terrain_map", data=self.terrain.terrain_map, dtype=np.uint8
+        )
+        save_group.create_dataset(
+            "max_simulation_length", data=self.simulation_length, dtype=np.int32
+        )
+        save_group.create_dataset("food_num", data=self.food_num, dtype=np.int32)
+        save_group.create_dataset(
+            "sea_portion", data=self.terrain.get_sea_portion(), dtype=np.float32
+        )
 
         sim_cache_group = save_group.create_group("simulation_cache")
         for k, v in self.simulation_cache.items():
-            dset = sim_cache_group.create_dataset(k, data=v)
+            dset = utils.save_h5_dataset(sim_cache_group, k, v)
             if k == "food_pos_history":
                 dset.attrs[
                     "data_format"
@@ -433,7 +445,7 @@ def simulate_one_fish(
     curr_fish = fi.load_fish_from_h5_group(curr_fish_f[f"fish_{fish_name}"])
 
     for sim_ind in range(simulation_num):
-        curr_seed = random.randrange(2**32 - 1)
+        curr_seed = random.randrange(2**31 - 1)
         random.seed(curr_seed)
         np.random.seed(curr_seed)
 

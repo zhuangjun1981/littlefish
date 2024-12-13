@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from littlefish.brain.neuron import Neuron, Eye, Muscle
 from littlefish.brain.connection import Connection
-from littlefish.core import utilities as util
+from littlefish.core import utilities as utils
 
 
 def generate_minimal_brain():
@@ -367,8 +367,10 @@ class Brain:
                 ]
             )
             amplitudes.append(curr_connection.amplitude)
-        dset_conn_matrix = grp_connections.create_dataset(
-            name="connection_matrix", data=np.array(connection_mat, dtype=int)
+        dset_conn_matrix = utils.save_h5_dataset(
+            grp_connections,
+            "connection_matrix",
+            np.array(connection_mat, dtype=np.int32),
         )
         dset_conn_matrix.attrs["column_names"] = [
             "pre_idx",
@@ -377,7 +379,7 @@ class Brain:
             "rise_time",
             "decay_time",
         ]
-        grp_connections.create_dataset(name="amplitudes", data=amplitudes)
+        dset_conn_amp = utils.save_h5_dataset(grp_connections, "amplitudes", amplitudes)
 
         if should_save_cache:
             grp_sim_cache = h5_group.create_group("simulation_cache")
@@ -396,13 +398,13 @@ class Brain:
                 self.simulation_cache["action_histories"]
             ):
                 neuron_name = f"neuron_{i:04d}"
-                grp_action.create_dataset(name=neuron_name, data=action_history)
+                dset = utils.save_h5_dataset(grp_action, neuron_name, action_history)
 
         if (
             should_save_psp_waveforms
             and self.simulation_cache["psp_waveforms"] is not None
         ):
-            psp_dset = h5_group.create_dataset(
-                name="psp_waveforms", data=self.simulation_cache["psp_waveforms"]
+            dset_psp = utils.save_h5_dataset(
+                h5_group, "psp_waveforms", self.simulation_cache["psp_waveforms"]
             )
-            psp_dset.attrs["data_format"] = "neuron_ind x time_point"
+            dset_psp.attrs["data_format"] = "neuron_ind x time_point"

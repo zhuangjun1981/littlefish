@@ -2,6 +2,7 @@
 #                         print_function, unicode_literals)
 # from builtins import *
 
+import h5py
 import numpy as np
 import numbers
 import random
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 import scipy.ndimage as ni
 import os
 import yaml
+from typing import Union
 
 
 def is_integer(var):
@@ -424,6 +426,29 @@ def get_brain_config(brain_config_name: str) -> dict:
 
 def get_generation_name(generation_ind, generation_digits_num=7):
     return "generation_" + int2str(generation_ind, generation_digits_num)
+
+
+def save_h5_dataset(
+    h5_group: h5py.Group,
+    key: str,
+    value: Union[int, float, list, tuple, np.ndarray],
+):
+    if isinstance(value, Union[list, tuple]):
+        value = np.array(value)
+
+    if is_integer(value):
+        dset = h5_group.create_dataset(key, data=value, dtype=np.int32)
+    elif isinstance(value, float):
+        dset = h5_group.create_dataset(key, data=value, dtype=np.float32)
+    elif isinstance(value, np.ndarray):
+        if np.issubdtype(value.dtype, np.integer):
+            dset = h5_group.create_dataset(key, data=value, dtype=np.int32)
+        elif np.issubdtype(value.dtype, np.floating):
+            dset = h5_group.create_dataset(key, data=value, dtype=np.float32)
+    else:
+        dset = h5_group.create_dataset(key, data=value)
+
+    return dset
 
 
 if __name__ == "__main__":

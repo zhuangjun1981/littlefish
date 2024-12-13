@@ -325,39 +325,39 @@ class TestBrain(unittest.TestCase):
             min_brain.neurons.loc[0, "neuron"].input_type
             == min_brain_2.neurons.loc[0, "neuron"].input_type
         )
-        assert (
-            min_brain.neurons.loc[0, "neuron"].baseline_rate
-            == min_brain_2.neurons.loc[0, "neuron"].baseline_rate
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[0, "neuron"].baseline_rate,
+            min_brain_2.neurons.loc[0, "neuron"].baseline_rate,
         )
-        assert (
-            min_brain.neurons.loc[0, "neuron"].refractory_period
-            == min_brain_2.neurons.loc[0, "neuron"].refractory_period
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[0, "neuron"].refractory_period,
+            min_brain_2.neurons.loc[0, "neuron"].refractory_period,
         )
 
         assert (
             min_brain.neurons.loc[1, "neuron"].type
             == min_brain_2.neurons.loc[1, "neuron"].type
         )
-        assert (
-            min_brain.neurons.loc[1, "neuron"].baseline_rate
-            == min_brain_2.neurons.loc[1, "neuron"].baseline_rate
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[1, "neuron"].baseline_rate,
+            min_brain_2.neurons.loc[1, "neuron"].baseline_rate,
         )
-        assert (
-            min_brain.neurons.loc[1, "neuron"].refractory_period
-            == min_brain_2.neurons.loc[1, "neuron"].refractory_period
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[1, "neuron"].refractory_period,
+            min_brain_2.neurons.loc[1, "neuron"].refractory_period,
         )
 
         assert (
             min_brain.neurons.loc[2, "neuron"].type
             == min_brain_2.neurons.loc[2, "neuron"].type
         )
-        assert (
-            min_brain.neurons.loc[2, "neuron"].baseline_rate
-            == min_brain_2.neurons.loc[2, "neuron"].baseline_rate
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[2, "neuron"].baseline_rate,
+            min_brain_2.neurons.loc[2, "neuron"].baseline_rate,
         )
-        assert (
-            min_brain.neurons.loc[2, "neuron"].refractory_period
-            == min_brain_2.neurons.loc[2, "neuron"].refractory_period
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[2, "neuron"].refractory_period,
+            min_brain_2.neurons.loc[2, "neuron"].refractory_period,
         )
 
         assert (
@@ -372,13 +372,13 @@ class TestBrain(unittest.TestCase):
             min_brain.neurons.loc[3, "neuron"].step_motion,
             min_brain_2.neurons.loc[3, "neuron"].step_motion,
         )
-        assert (
-            min_brain.neurons.loc[3, "neuron"].baseline_rate
-            == min_brain_2.neurons.loc[3, "neuron"].baseline_rate
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[3, "neuron"].baseline_rate,
+            min_brain_2.neurons.loc[3, "neuron"].baseline_rate,
         )
-        assert (
-            min_brain.neurons.loc[3, "neuron"].refractory_period
-            == min_brain_2.neurons.loc[3, "neuron"].refractory_period
+        self.assertAlmostEqual(
+            min_brain.neurons.loc[3, "neuron"].refractory_period,
+            min_brain_2.neurons.loc[3, "neuron"].refractory_period,
         )
 
         for i in range(4):
@@ -386,9 +386,9 @@ class TestBrain(unittest.TestCase):
                 min_brain.connections.loc[i, "connection"].type
                 == min_brain_2.connections.loc[i, "connection"].type
             )
-            assert (
-                min_brain.connections.loc[i, "connection"].amplitude
-                == min_brain_2.connections.loc[i, "connection"].amplitude
+            self.assertAlmostEqual(
+                min_brain.connections.loc[i, "connection"].amplitude,
+                min_brain_2.connections.loc[i, "connection"].amplitude,
             )
             assert (
                 min_brain.connections.loc[i, "connection"].latency

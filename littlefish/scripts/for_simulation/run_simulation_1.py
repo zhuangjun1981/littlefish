@@ -16,6 +16,8 @@ def run():
     run_config["simulation_config"]["start_generation_ind"] = 0
     run_config["simulation_config"]["end_generation_ind"] = 10
 
+    run_config["evolution_config"]["population_size"] = 10
+
     evo.run_evoluation(run_config=run_config)
 
 

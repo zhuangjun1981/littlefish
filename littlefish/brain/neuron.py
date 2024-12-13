@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from littlefish.core.utilities import save_h5_dataset
 
 
 class Neuron:
@@ -76,7 +77,7 @@ class Neuron:
         attributes.update(additional_kv_pairs)
 
         for k, v in attributes.items():
-            dset = h5_group.create_dataset(k, data=v)
+            dset = save_h5_dataset(h5_group, k, v)
             if k == "baseline_rate":
                 dset.attrs["unit"] = "action_per_time_unit"
             if k == "refractory_period":

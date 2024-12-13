@@ -26,9 +26,9 @@ class TestNeuron(unittest.TestCase):
         neuron2 = load_neuron_from_h5_group(h5_grp)
         f_temp.close()
 
-        assert neuron.baseline_rate == neuron2.baseline_rate
-        assert neuron.type == neuron2.type
-        assert neuron.refractory_period == neuron2.refractory_period
+        self.assertAlmostEqual(neuron.baseline_rate, neuron2.baseline_rate)
+        self.assertEqual(neuron.type, neuron2.type)
+        self.assertAlmostEqual(neuron.refractory_period, neuron2.refractory_period)
 
         os.remove(temp_path)
 
@@ -95,14 +95,14 @@ class TestNeuron(unittest.TestCase):
         eye2 = load_neuron_from_h5_group(h5_grp)
         f_temp.close()
 
-        assert eye.type == eye2.type
-        assert eye.baseline_rate == eye2.baseline_rate
-        assert eye.refractory_period == eye2.refractory_period
-        assert eye.gain == eye2.gain
-        assert eye.input_type == eye2.input_type
-        assert eye.eye_direction == eye2.eye_direction
+        self.assertEqual(eye.type, eye2.type)
+        self.assertAlmostEqual(eye.baseline_rate, eye2.baseline_rate)
+        self.assertAlmostEqual(eye.refractory_period, eye2.refractory_period)
+        self.assertAlmostEqual(eye.gain, eye2.gain)
+        self.assertEqual(eye.input_type, eye2.input_type)
+        self.assertEqual(eye.eye_direction, eye2.eye_direction)
         assert np.array_equal(eye.rf_positions, eye2.rf_positions)
-        assert np.array_equal(eye.rf_weights, eye2.rf_weights)
+        assert np.allclose(eye.rf_weights, eye2.rf_weights, atol=1e-10)
 
         os.remove(temp_path)
 
@@ -173,10 +173,10 @@ class TestNeuron(unittest.TestCase):
         muscle2 = load_neuron_from_h5_group(h5_grp)
         f_temp.close()
 
-        assert muscle.type == muscle2.type
-        assert muscle.baseline_rate == muscle2.baseline_rate
-        assert muscle.refractory_period == muscle2.refractory_period
-        assert muscle.direction == muscle2.direction
+        self.assertEqual(muscle.type, muscle2.type)
+        self.assertAlmostEqual(muscle.baseline_rate, muscle2.baseline_rate)
+        self.assertAlmostEqual(muscle.refractory_period, muscle2.refractory_period)
+        self.assertEqual(muscle.direction, muscle2.direction)
         os.remove(temp_path)
 
     def test_muscle_action(self):
