@@ -268,7 +268,7 @@ class Fish:
 
         for k, v in attributes.items():
             if k not in ["brain", "simulation_cache"]:
-                fish_group.create_dataset(k, data=v)
+                utils.save_h5_dataset(fish_group, k, v)
 
         grp_brain = fish_group.create_group("brain")
         self.brain.to_h5_group(h5_group=grp_brain)

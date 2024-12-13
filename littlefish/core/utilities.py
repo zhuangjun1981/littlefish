@@ -392,6 +392,9 @@ def distrube_number(
     if len(values) == 1:
         return [population_size]
 
+    # use rank instead of values for softmax
+    values = np.array(list(range(len(values)))[::-1])
+
     # softmax to get probabilities
     e_x = np.exp(values - np.max(values))
     probs = e_x / e_x.sum()
@@ -436,13 +439,25 @@ def save_h5_dataset(
     if isinstance(value, Union[list, tuple]):
         value = np.array(value)
 
-    if is_integer(value):
+    if key == "food_pos_history":
+        dset = h5_group.create_dataset(
+            key, data=value, dtype=np.uint8, compression="lzf"
+        )
+    elif key == "terrain_map":
+        dset = h5_group.create_dataset(key, data=value, dtype=np.uint8)
+    elif key == "position_history":
+        dset = h5_group.create_dataset(
+            key, data=value, dtype=np.uint16, compression="lzf"
+        )
+    elif key == "rf_positions":
+        dset = h5_group.create_dataset(key, data=value, dtype=np.int32)
+    elif is_integer(value):
         dset = h5_group.create_dataset(key, data=value, dtype=np.int32)
     elif isinstance(value, float):
         dset = h5_group.create_dataset(key, data=value, dtype=np.float32)
     elif isinstance(value, np.ndarray):
         if np.issubdtype(value.dtype, np.integer):
-            dset = h5_group.create_dataset(key, data=value, dtype=np.int32)
+            dset = h5_group.create_dataset(key, data=value, dtype=np.uint16)
         elif np.issubdtype(value.dtype, np.floating):
             dset = h5_group.create_dataset(key, data=value, dtype=np.float32)
     else:
