@@ -373,42 +373,6 @@ def value_2_rgb(value, cmap):
     return get_color_str(*color)
 
 
-def distrube_number(
-    values: np.ndarray,
-    population_size: int,
-) -> list[int]:
-    """
-    distribute a number of individuals into each bucket according to a given list of numbers
-    the probability of each value index is calculated as softmax
-
-    :param values: 1d array like, softmax(values) specifies the probability distribution.
-    :param population_size: positive integer, total number of individuals to be distributed
-    :return: list of non-negative integers, sum of which should precisely equal to population_size
-    """
-
-    if not is_integer(population_size) or population_size < 1.0:
-        raise ValueError("Utility: population_size sould be positive integer.")
-
-    if len(values) == 1:
-        return [population_size]
-
-    # use rank instead of values for softmax
-    values = np.array(list(range(len(values)))[::-1])
-
-    # softmax to get probabilities
-    e_x = np.exp(values - np.max(values))
-    probs = e_x / e_x.sum()
-
-    offspring_number = [0] * len(probs)
-
-    idxs = np.random.choice(len(probs), size=population_size, p=probs)
-
-    for idx in idxs:
-        offspring_number[idx] += 1
-
-    return offspring_number
-
-
 def get_default_config() -> dict:
     curr_folder = os.path.dirname(os.path.abspath(__file__))
     repo_folder = os.path.dirname(curr_folder)

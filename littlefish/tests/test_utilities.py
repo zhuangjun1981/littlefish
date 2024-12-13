@@ -3,6 +3,7 @@
 # from builtins import *
 
 import unittest
+import littlefish.core.evolution
 import littlefish.core.utilities as util
 import numpy as np
 
@@ -80,7 +81,7 @@ class TestUtilities(unittest.TestCase):
     #     plt.show()
 
     def test_distrube_number(self):
-        buckets = util.distrube_number(
+        buckets = littlefish.core.evolution.distrube_number(
             possibilities=np.arange(1, 6), population_size=1500
         )
         # print ('\n{}'.format(buckets))

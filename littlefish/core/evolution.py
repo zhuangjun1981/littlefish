@@ -14,6 +14,7 @@ import littlefish.brain.neuron as neu
 import littlefish.brain.brain as brain
 import littlefish.brain.functional as fn
 import littlefish.core.utilities as utils
+from littlefish.core.utilities import is_integer
 
 
 def choose_index(
@@ -30,6 +31,47 @@ def choose_index(
 
     mutate_num = int(np.ceil(len(indices) * float(mutation_rate)))
     return random.sample(list(indices), mutate_num)
+
+
+def distrube_number(
+    values: np.ndarray,
+    population_size: int,
+    temperature: float = 1.0,
+) -> list[int]:
+    """
+    distribute a number of individuals into each bucket according to a given list of numbers
+    the probability of each value index is calculated as softmax with temperature
+
+    :param values: 1d array like, softmax(values) specifies the probability distribution.
+    :param population_size: positive integer, total number of individuals to be distributed
+    :param temperature: float, temperature in softmax calculation, higher temperature will
+        encourage more randomness in the output. should be no less than one.
+    :return: list of non-negative integers, sum of which should precisely equal to population_size
+    """
+
+    assert temperature >= 1, "temperature should be no less than 1."
+
+    if not is_integer(population_size) or population_size < 1.0:
+        raise ValueError("Utility: population_size sould be positive integer.")
+
+    if len(values) == 1:
+        return [population_size]
+
+    # # use rank instead of values for softmax
+    # values = np.array(list(range(len(values)))[::-1])
+
+    # softmax to get probabilities
+    e_x = np.exp((values - np.max(values)) / temperature)
+    probs = e_x / e_x.sum()
+
+    offspring_number = [0] * len(probs)
+
+    idxs = np.random.choice(len(probs), size=population_size, p=probs)
+
+    for idx in idxs:
+        offspring_number[idx] += 1
+
+    return offspring_number
 
 
 def get_offspring_num(
@@ -553,8 +595,12 @@ class PopulationEvolution(object):
         fishes["extra_life"] = fishes["life_span"] - life_thr
 
         new_fish_number = self.population_size - fishes.shape[0]
-        fishes["offspring_num"] = utils.distrube_number(
-            fishes["extra_life"], new_fish_number
+        fishes["offspring_num"] = distrube_number(
+            values=fishes["extra_life"],
+            population_size=new_fish_number,
+            temperature=max(
+                1.0, np.mean(fishes["extra_life"])
+            ),  # temperature to increase randomness
         )
 
         print("================== mother fish ==================")
@@ -899,12 +945,8 @@ def run_evoluation(run_config):
             rand_fish = mutate_fish(
                 curr_fish,
                 brain_mutation=brain_mutation,
-                neuron_mutation_rate=run_config["evolution_config"][
-                    "neuron_mutation_rate"
-                ],
-                connection_mutation_rate=run_config["evolution_config"][
-                    "connection_mutation_rate"
-                ],
+                neuron_mutation_rate=1.0,  # fully random fish
+                connection_mutation_rate=1.0,  # fully random fish
                 verbose=False,
             )
             rand_fish_f = h5py.File(
@@ -963,33 +1005,17 @@ def run_evoluation(run_config):
 
 
 if __name__ == "__main__":
-    run_config_path = (
-        r"F:\little_fish_simulation_logs\generation_0000006\run_config.yml"
-    )
-    with open(run_config_path, "r") as f:
-        run_config = yaml.load(f, Loader=yaml.FullLoader)
+    values = [6795, 6728, 5833, 5787, 5722, 3000, 1500, 4320, 1010, 0, 0]
 
-    brain_mutation = get_brain_mutation_from_brain_mutation_config(
-        run_config["brain_mutation_config"]
-    )
+    numbers = distrube_number(values=values, population_size=1000, temperature=1.0)
+    print(numbers)
 
-    pe = PopulationEvolution(
-        population_size=10,
-        turnover_rate=0.6,
-        neuron_mutation_rate=0.01,
-        connection_mutation_rate=0.01,
-        brain_mutation=brain_mutation,
-        life_span_hard_threshold=0,
-        movement_hard_threshold=0,
-        generation_digits_num=7,
-    )
+    numbers2 = distrube_number(values=values, population_size=1000, temperature=20.0)
+    print(numbers2)
 
-    # life_thr, fishes = pe._calculate_offspring_num(
-    #     base_folder=r"F:\little_fish_simulation_logs",
-    #     curr_generation_ind=6,
-    # )
-
-    pe.generate_next_generation(
-        base_folder=r"F:\little_fish_simulation_logs",
-        curr_generation_ind=6,
+    numbers3 = distrube_number(
+        values=values, population_size=1000, temperature=np.mean(values)
     )
+    print(numbers3)
+
+    print("for debug ...")
