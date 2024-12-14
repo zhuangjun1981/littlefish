@@ -14,6 +14,8 @@ evolution_config:
   life_span_hard_threshold: 0
   movement_hard_threshold: 0
 
+brain_config_path: null
+
 brain_config:
   eye_layer:
     eye_set: FOUR_EYES

@@ -1041,6 +1041,31 @@ def run_evoluation(run_config):
         run_config["brain_mutation_config"],
     )
 
+    if run_config["brain_config"] is None and run_config["brain_config_path"] is None:
+        raise ValueError(
+            "One of 'brain_config' and 'brain_config_path' should not be None."
+        )
+    elif (
+        run_config["brain_config"] is not None
+        and run_config["brain_config_path"] is None
+    ):
+        pass
+    elif (
+        run_config["brain_config"] is None
+        and run_config["brain_config_path"] is not None
+    ):
+        curr_folder = os.path.dirname(os.path.realpath(__file__))
+        brain_config_path = os.path.join(
+            os.path.dirname(curr_folder), "configs", run_config["brain_config_path"]
+        )
+        with open(brain_config_path, "r") as f:
+            brain_config = yaml.load(f, Loader=yaml.FullLoader)
+        run_config["brain_config"] = brain_config["brain_config"]
+    else:
+        raise ValueError(
+            "One of 'brain_config' and 'brain_config_path' should not be None."
+        )
+
     evolution = PopulationEvolution(
         brain_mutation=brain_mutation,
         generation_digits_num=generation_digits_num,
