@@ -26,6 +26,8 @@
     <property name="font">
      <font>
       <pointsize>12</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
@@ -111,7 +113,7 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>460</y>
+      <y>530</y>
       <width>251</width>
       <height>31</height>
      </rect>
@@ -119,6 +121,8 @@
     <property name="font">
      <font>
       <pointsize>12</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
@@ -160,7 +164,7 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>640</y>
+      <y>650</y>
       <width>251</width>
       <height>31</height>
      </rect>
@@ -168,6 +172,8 @@
     <property name="font">
      <font>
       <pointsize>12</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="text">
@@ -180,7 +186,7 @@
       <x>690</x>
       <y>140</y>
       <width>251</width>
-      <height>311</height>
+      <height>391</height>
      </rect>
     </property>
     <property name="font">
@@ -198,7 +204,7 @@
      <bool>false</bool>
     </property>
     <property name="rowCount">
-     <number>8</number>
+     <number>13</number>
     </property>
     <property name="columnCount">
      <number>2</number>
@@ -215,6 +221,11 @@
     <attribute name="verticalHeaderVisible">
      <bool>false</bool>
     </attribute>
+    <row/>
+    <row/>
+    <row/>
+    <row/>
+    <row/>
     <row/>
     <row/>
     <row/>
@@ -250,7 +261,7 @@
      <bool>false</bool>
     </property>
     <property name="rowCount">
-     <number>4</number>
+     <number>5</number>
     </property>
     <property name="columnCount">
      <number>2</number>
@@ -268,6 +279,7 @@
     <row/>
     <row/>
     <row/>
+    <row/>
     <column/>
     <column/>
    </widget>
@@ -275,9 +287,9 @@
     <property name="geometry">
      <rect>
       <x>689</x>
-      <y>500</y>
+      <y>560</y>
       <width>251</width>
-      <height>131</height>
+      <height>91</height>
      </rect>
     </property>
     <property name="font">

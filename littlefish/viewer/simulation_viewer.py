@@ -8,7 +8,7 @@ import littlefish.core.fish as fi
 import littlefish.core.utilities as util
 import littlefish.log_analysis.simulation_log as sl
 from littlefish.brain.functional import plot_brain_connections
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtWidgets import (
     QFileDialog,
     QMainWindow,
@@ -111,9 +111,11 @@ class SimulationViewer(Ui_SimulationViewer):
         self.ClearFileButton.clicked.connect(self.clear_loaded_file)
         self.PlayPauseButton.clicked.connect(self._play_pause)
         self.PlayTimer.timeout.connect(self._show_next_frame)
-        self.PlaySlider.sliderMoved.connect(self._slide_to_t)
+        # self.PlaySlider.sliderMoved.connect(self._slide_to_t)
+        self.PlaySlider.valueChanged.connect(self._slide_to_t)
 
         self._saved_directory = None
+        self._file = None
         self.clear_loaded_file()
 
     def get_file(self):
@@ -124,12 +126,14 @@ class SimulationViewer(Ui_SimulationViewer):
             directory=self._saved_directory,
             filter="hdf Files (*.hdf5 *.h5);;",
         )
-        self.clear_loaded_file()
-        self.PlotBrainButton.setEnabled(True)
-        self.FilePathBrowser.setText(f_path)
-        self._saved_directory = os.path.dirname(f_path)
-        self._file = h5py.File(f_path, "r")
-        self._set_simulation_list()
+
+        if f_path:
+            self.clear_loaded_file()
+            self.PlotBrainButton.setEnabled(True)
+            self.FilePathBrowser.setText(f_path)
+            self._saved_directory = os.path.dirname(f_path)
+            self._file = h5py.File(f_path, "r")
+            self._set_simulation_list()
 
     def _plot_brain(self):
         """this needs to be reimplemented"""
@@ -162,26 +166,26 @@ class SimulationViewer(Ui_SimulationViewer):
                 3, 1, QTableWidgetItem(str(self.fish.food_rate))
             )
             self.FishTableWidget.setItem(
-                4, 1, QTableWidgetItem(str(self.fish.health_decay_rate))
+                4, 1, QTableWidgetItem(f"{self.fish.health_decay_rate:.6f}")
             )
             self.FishTableWidget.setItem(
                 5, 1, QTableWidgetItem(str(self.fish.land_penalty_rate))
             )
             self.FishTableWidget.setItem(
-                6, 1, QTableWidgetItem(str(self.fish.move_penalty_rate))
+                6, 1, QTableWidgetItem(f"{self.fish.move_penalty_rate:.6f}")
             )
             self.FishTableWidget.setItem(
-                7, 1, QTableWidgetItem(str(self.fish.firing_penalty_rate))
+                7, 1, QTableWidgetItem(f"{self.fish.firing_penalty_rate:.8f}")
             )
 
-            # this should be in evolution_log, which needs to be implemented
-            # if "generations" in self._file:
-            #     self.FishTableWidget.setItem(
-            #         8, 1, QTableWidgetItem(str(self._file["generations"][0]))
-            #     )
-            #     self.FishTableWidget.setItem(
-            #         9, 1, QTableWidgetItem(str(self._file["generations"][-1]))
-            #     )
+            # this should be in simulation_log, which needs to be implemented
+            if "generations" in self._file:
+                self.FishTableWidget.setItem(
+                    8, 1, QTableWidgetItem(str(self._file["generations"][0]))
+                )
+                self.FishTableWidget.setItem(
+                    9, 1, QTableWidgetItem(str(self._file["generations"][-1]))
+                )
 
             self.FishTableWidget.setItem(
                 10,
@@ -229,10 +233,10 @@ class SimulationViewer(Ui_SimulationViewer):
                 2, 1, QTableWidgetItem(self.sim_log.ending_time)
             )
             self.SimulationTableWidget.setItem(
-                3, 1, QTableWidgetItem(self.sim_log.random_seed)
+                3, 1, QTableWidgetItem(str(self.sim_log.random_seed))
             )
             self.SimulationTableWidget.setItem(
-                4, 1, QTableWidgetItem(self.sim_log.numpy_random_seed)
+                4, 1, QTableWidgetItem(str(self.sim_log.numpy_random_seed))
             )
         except Exception as e:
             print(e)
@@ -320,11 +324,13 @@ class SimulationViewer(Ui_SimulationViewer):
 
     def _slide_to_t(self):
         self._curr_t_point = int(self.PlaySlider.value())
-        if not self._is_playing:
+        if self._file is not None and not self._is_playing:
             self._show_curr_map()
 
     def clear_loaded_file(self):
         self._is_playing = False
+        self.PlaySlider.setValue(0)
+        self._slide_to_t()
         self.PlayTimer.stop()
         self.PlayPauseButton.setText("Play")
 
