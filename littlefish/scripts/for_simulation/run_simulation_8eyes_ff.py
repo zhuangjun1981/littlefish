@@ -16,7 +16,7 @@ def run():
     run_config["brain_config"] = None
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 0
+    run_config["simulation_config"]["start_generation_ind"] = 1
     run_config["simulation_config"]["end_generation_ind"] = 10
 
     run_config["simulation_config"]["food_num"] = 100
