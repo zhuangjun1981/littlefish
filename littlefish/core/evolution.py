@@ -550,6 +550,7 @@ class PopulationEvolution(object):
         brain_mutation: BrainMutation,
         life_span_hard_threshold: int = 0,
         movement_hard_threshold: int = 0,
+        random_fish_num_per_generation: int = 50,
         generation_digits_num: int = 7,
     ):
         """
@@ -567,6 +568,10 @@ class PopulationEvolution(object):
                                      default: 7 (max generation num 10 million)
         """
 
+        assert (
+            random_fish_num_per_generation <= population_size * turnover_rate
+        ), "number of random fish per generation should not exceed the number of new fish in each generation."
+
         self.population_size = population_size
         self.turnover_rate = turnover_rate
         self.neuron_mutation_rate = neuron_mutation_rate
@@ -574,6 +579,7 @@ class PopulationEvolution(object):
         self.brain_mutation = brain_mutation
         self.life_span_hard_threshold = life_span_hard_threshold
         self.movement_hard_threshold = movement_hard_threshold
+        self.random_fish_num_per_generation = random_fish_num_per_generation
         self.generation_digits_num = generation_digits_num
 
     @staticmethod
@@ -689,7 +695,9 @@ class PopulationEvolution(object):
 
         fishes["extra_life"] = fishes["life_span"] - life_thr
 
-        new_fish_number = self.population_size - fishes.shape[0]
+        new_fish_number = (
+            self.population_size - fishes.shape[0] - self.random_fish_num_per_generation
+        )
         fishes["offspring_num"] = distrube_number(
             values=fishes["extra_life"],
             population_size=new_fish_number,
@@ -705,15 +713,18 @@ class PopulationEvolution(object):
         return life_thr, fishes
 
     def generate_next_generation(
-        self, base_folder: str, curr_generation_ind: int, should_perturb: bool = True
+        self,
+        base_folder: str,
+        curr_generation_ind: int,
+        brain_config: dict,  # brain config to generate new random fish
+        fish_config: dict,  # fish config to generate new random fish
+        should_perturb: bool = True,
     ):
         print(
             "\n======================================================================"
         )
         print(
-            "PopulationEvolution: generating fish for generation: {} ...".format(
-                curr_generation_ind + 1
-            )
+            f"PopulationEvolution: generating fish for generation: {curr_generation_ind + 1} ..."
         )
 
         curr_gen_folder = os.path.join(
@@ -787,9 +798,31 @@ class PopulationEvolution(object):
             mother_fish_f.close()
 
         print(
-            "PopulationEvolution: fish generation for generation: {} finished.".format(
-                curr_generation_ind + 1
+            f"PopulationEvolution: generating random fish for generation: {curr_generation_ind +  1} ..."
+        )
+        for _ in range(self.random_fish_num_per_generation):
+            curr_brain = fn.generate_brain_from_brain_config(brain_config)
+            curr_fish = fi.Fish(brain=curr_brain, **fish_config)
+            rand_fish = mutate_fish(
+                curr_fish,
+                brain_mutation=self.brain_mutation,
+                neuron_mutation_rate=1.0,  # fully random fish
+                connection_mutation_rate=1.0,  # fully random fish
+                should_perturb=False,
+                verbose=False,
             )
+            rand_fish_f = h5py.File(
+                os.path.join(next_gen_folder, rand_fish.name + "hdf5"), "a"
+            )
+            rand_fish.to_h5_group(rand_fish_f)
+            rand_fish_f["generations"] = [curr_generation_ind + 1]
+            rand_fish_f.close()
+        print(
+            f"PopulationEvolution: generating random fish for generation: {curr_generation_ind +  1} finished."
+        )
+
+        print(
+            f"PopulationEvolution: fish generation for generation: {curr_generation_ind + 1} finished."
         )
         print("======================================================================")
 
@@ -1148,6 +1181,8 @@ def run_evoluation(run_config):
             base_folder=base_folder,
             curr_generation_ind=curr_gen_ind,
             should_perturb=True,
+            fish_config=run_config["fish_config"],
+            brain_config=run_config["brain_config"],
         )
 
         # save run_config to the next generation folder
