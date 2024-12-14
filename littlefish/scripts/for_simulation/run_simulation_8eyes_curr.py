@@ -9,16 +9,17 @@ def run():
     random.seed(random_seed)
     np.random.seed(random_seed)
 
-    base_folder = r"F:\little_fish_simulation_logs_4eyes_ff"
+    base_folder = r"F:\little_fish_simulation_logs_8eyes_curr"
+
     run_config = utils.get_default_config()
-    run_config["brain_config_path"] = "brain_config_4eyes_ff.yml"
+    run_config["brain_config_path"] = "brain_config_8eyes_curr.yml"
     run_config["brain_config"] = None
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 21
-    run_config["simulation_config"]["end_generation_ind"] = 40
+    run_config["simulation_config"]["start_generation_ind"] = 0
+    run_config["simulation_config"]["end_generation_ind"] = 10
 
-    run_config["simulation_config"]["food_num"] = 50
+    run_config["simulation_config"]["food_num"] = 100
     run_config["fish_config"]["move_penalty_rate"] = 0.0005
     run_config["evolution_config"]["neuron_mutation_rate"] = 0.1
     run_config["evolution_config"]["connection_mutation_rate"] = 0.1
