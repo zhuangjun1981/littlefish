@@ -103,47 +103,77 @@ def get_offspring_num(
     return offspring_num
 
 
-def get_single_param_mutation(value_range, dtype):
+def get_single_param_mutation(
+    value_range: list[Union[int, float]],
+    dtype: str,
+    perturb_rate: float,
+):
     if value_range is None:
         mutation = None
     else:
-        mutation = UniformMutation(value_range=value_range, dtype=dtype)
+        mutation = UniformMutation(
+            value_range=value_range,
+            dtype=dtype,
+            perturb_rate=perturb_rate,
+        )
     return mutation
 
 
 def get_brain_mutation_from_brain_mutation_config(brain_mutation_config):
     eye_gain_mutation = get_single_param_mutation(
-        brain_mutation_config["eye_gain_r"], "float"
+        value_range=brain_mutation_config["eye_gain_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     eye_bl_mutation = get_single_param_mutation(
-        brain_mutation_config["eye_bl_r"], "float"
+        value_range=brain_mutation_config["eye_bl_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     eye_rp_mutation = get_single_param_mutation(
-        brain_mutation_config["eye_rp_r"], "float"
+        value_range=brain_mutation_config["eye_rp_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     neuron_bl_mutation = get_single_param_mutation(
-        brain_mutation_config["neuron_bl_r"], "float"
+        value_range=brain_mutation_config["neuron_bl_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     neuron_rp_mutation = get_single_param_mutation(
-        brain_mutation_config["neuron_rp_r"], "float"
+        value_range=brain_mutation_config["neuron_rp_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     muscle_bl_mutation = get_single_param_mutation(
-        brain_mutation_config["muscle_bl_r"], "float"
+        value_range=brain_mutation_config["muscle_bl_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     muscle_rp_mutation = get_single_param_mutation(
-        brain_mutation_config["muscle_rp_r"], "float"
+        value_range=brain_mutation_config["muscle_rp_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     connection_l_mutation = get_single_param_mutation(
-        brain_mutation_config["connection_l_r"], "int"
+        value_range=brain_mutation_config["connection_l_range"],
+        dtype="int",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     connection_a_mutation = get_single_param_mutation(
-        brain_mutation_config["connection_a_r"], "float"
+        value_range=brain_mutation_config["connection_a_range"],
+        dtype="float",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     connection_rt_mutation = get_single_param_mutation(
-        brain_mutation_config["connection_rt_r"], "int"
+        brain_mutation_config["connection_rt_range"],
+        dtype="int",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
     connection_dt_mutation = get_single_param_mutation(
-        brain_mutation_config["connection_dt_r"], "int"
+        value_range=brain_mutation_config["connection_dt_range"],
+        dtype="int",
+        perturb_rate=brain_mutation_config["perturb_rate"],
     )
 
     eye_mutation = EyeMutation(
@@ -187,13 +217,23 @@ class UniformMutation(object):
     random module
     """
 
-    def __init__(self, value_range: list[float], dtype: str):
+    def __init__(
+        self,
+        value_range: list[float],
+        dtype: str,
+        perturb_rate: float = 0.0,
+    ) -> None:
         """
 
         :param value_range: tuple of two numbers, the two value should be different.
         :param dtype: str, 'int' or 'float'.
             if 'int' random value will be drawn by random.randint()
             if 'float' random value will be drawn by random.uniform()
+        :param perturb_rate: float, the probability that the parameter will be perturbed
+            if it is selected for mutation. If perturbed, the updated value will be uniformly
+            choosen in the range plus and minus 10% of value_range around the current value.
+            if not perturbed, the updated value will be uniformly choosen from the full
+            value_range.
         """
 
         if len(value_range) != 2:
@@ -221,19 +261,43 @@ class UniformMutation(object):
         else:
             self.value_range = (v0, v1)
 
-    def get_value(self):
+        self.perturb_rate = np.clip(perturb_rate, 0, 1, dtype=np.float32)
+
+    @property
+    def value_span(self):
+        return self.value_range[1] - self.value_range[0]
+
+    def get_value(self, curr_value: Union[float, int], should_perturb: bool = True):
         """
         if self._dtype is 'int': uses random.randint() function
         if self._dtype is 'float': uses random.uniform() function
+
+        :param curr_value: float or int, the value to be updated
+        :param should_perturb: bool, if True, apply self.perturb_rate to perturb the curr_value
+            the parameter will have self.perturb_rate chace to be perturbed
+            If perturbed, the updated value will be uniformly choosen in the range plus and minus
+                10% of value_range around the current value.
+            if not perturbed, the updated value will be uniformly choosen from the full
+            value_range.
 
         :return: a random value follow a uniform distribution with a range defined by self._value_range, including the
             start but excluding the end
         """
 
+        if should_perturb and random.random() <= self.perturb_rate:
+            low = curr_value - 0.05 * self.value_span
+            high = curr_value + 0.05 * self.value_span
+        else:
+            low = self.value_range[0]
+            high = self.value_range[1]
+
+        low = max(low, self.value_range[0])
+        high = min(high, self.value_range[1])
+
         if self.dtype == "int":
-            return random.randint(self.value_range[0], self.value_range[1] - 1)
+            return random.randint(int(np.floor(low)), int(np.ceil(high)) - 1)
         elif self.dtype == "float":
-            return random.uniform(self.value_range[0], self.value_range[1])
+            return random.uniform(low, high)
 
     def __str__(self):
         return "littlefish.core.evolution.UniformMutation object. dtype:{}; value_range:{}".format(
@@ -277,22 +341,28 @@ class NeuronMutation(object):
                 'the dtype of refractory_mutation should be "float".'
             )
 
-    def get_mutated_baseline(self):
+    def get_mutated_baseline(self, neuron: neu.Neuron, should_perturb: bool = True):
         """
         return a mutated baseline rate by self.baseline_mutation
         """
         return (
-            self.baseline_mutation.get_value()
+            self.baseline_mutation.get_value(
+                curr_value=neuron.baseline_rate,
+                should_perturb=should_perturb,
+            )
             if self.baseline_mutation is not None
             else None
         )
 
-    def get_mutated_refractory(self):
+    def get_mutated_refractory(self, neuron: neu.Neuron, should_perturb: bool = True):
         """
         return a mutated refractory period by self.refractory_mutation
         """
         return (
-            self.refractory_mutation.get_value()
+            self.refractory_mutation.get_value(
+                curr_value=neuron.refractory_period,
+                should_perturb=should_perturb,
+            )
             if self.refractory_mutation is not None
             else None
         )
@@ -324,9 +394,14 @@ class EyeMutation(NeuronMutation):
                 'the dtype of gain_mutation should be "float".'
             )
 
-    def get_mutated_gain(self):
+    def get_mutated_gain(self, neuron: neu.Eye, should_perturb: bool = True):
         return (
-            self.gain_mutation.get_value() if self.gain_mutation is not None else None
+            self.gain_mutation.get_value(
+                curr_value=neuron.gain,
+                should_perturb=should_perturb,
+            )
+            if self.gain_mutation is not None
+            else None
         )
 
 
@@ -338,10 +413,10 @@ class ConnectionMutation(object):
 
     def __init__(
         self,
-        latency_mutation=None,
-        amplitude_mutation=None,
-        rise_time_mutation=None,
-        decay_time_mutation=None,
+        latency_mutation: UniformMutation = None,
+        amplitude_mutation: UniformMutation = None,
+        rise_time_mutation: UniformMutation = None,
+        decay_time_mutation: UniformMutation = None,
     ):
         """
 
@@ -388,30 +463,50 @@ class ConnectionMutation(object):
                 'the dtype of decay_time_mutation should be "int".'
             )
 
-    def get_mutated_latency(self):
+    def get_mutated_latency(
+        self, connection: conn.Connection, should_perturb: bool = True
+    ):
         return (
-            self.latency_mutation.get_value()
+            self.latency_mutation.get_value(
+                curr_value=connection.latency,
+                should_perturb=should_perturb,
+            )
             if self.latency_mutation is not None
             else None
         )
 
-    def get_mutated_amplitude(self):
+    def get_mutated_amplitude(
+        self, connection: conn.Connection, should_perturb: bool = True
+    ):
         return (
-            self.amplitude_mutation.get_value()
+            self.amplitude_mutation.get_value(
+                curr_value=connection.amplitude,
+                should_perturb=should_perturb,
+            )
             if self.amplitude_mutation is not None
             else None
         )
 
-    def get_mutated_rise_time(self):
+    def get_mutated_rise_time(
+        self, connection: conn.Connection, should_perturb: bool = True
+    ):
         return (
-            self.rise_time_mutation.get_value()
+            self.rise_time_mutation.get_value(
+                curr_value=connection.rise_time,
+                should_perturb=should_perturb,
+            )
             if self.rise_time_mutation is not None
             else None
         )
 
-    def get_mutated_decay_time(self):
+    def get_mutated_decay_time(
+        self, connection: conn.Connection, should_perturb: bool = True
+    ):
         return (
-            self.decay_time_mutation.get_value()
+            self.decay_time_mutation.get_value(
+                curr_value=connection.decay_time,
+                should_perturb=should_perturb,
+            )
             if self.decay_time_mutation is not None
             else None
         )
@@ -610,9 +705,7 @@ class PopulationEvolution(object):
         return life_thr, fishes
 
     def generate_next_generation(
-        self,
-        base_folder: str,
-        curr_generation_ind: int,
+        self, base_folder: str, curr_generation_ind: int, should_perturb: bool = True
     ):
         print(
             "\n======================================================================"
@@ -673,6 +766,7 @@ class PopulationEvolution(object):
                     brain_mutation=self.brain_mutation,
                     neuron_mutation_rate=self.neuron_mutation_rate,
                     connection_mutation_rate=self.connection_mutation_rate,
+                    should_perturb=should_perturb,
                 )
                 child_fish_f = h5py.File(
                     os.path.join(next_gen_folder, child_fish.name + ".hdf5"), "a"
@@ -705,6 +799,7 @@ class PopulationEvolution(object):
 def mutate_neuron(
     neuron: Union[neu.Neuron, neu.Muscle],
     neuron_mutation: NeuronMutation,
+    should_perturb: bool = True,
 ) -> neu.Neuron:
     """
     mutate a neuron, can be Eye, Neuron or Muscle
@@ -716,18 +811,28 @@ def mutate_neuron(
 
     mutated_neuron = copy.deepcopy(neuron)
 
-    mutated_baseline = neuron_mutation.get_mutated_baseline()
+    mutated_baseline = neuron_mutation.get_mutated_baseline(
+        neuron=neuron,
+        should_perturb=should_perturb,
+    )
     if mutated_baseline is not None:
         mutated_neuron.baseline_rate = mutated_baseline
 
-    mutated_refractory = neuron_mutation.get_mutated_refractory()
+    mutated_refractory = neuron_mutation.get_mutated_refractory(
+        neuron=neuron,
+        should_perturb=should_perturb,
+    )
     if mutated_refractory is not None:
         mutated_neuron.refractory_period = mutated_refractory
 
     return mutated_neuron
 
 
-def mutate_eye(eye: neu.Eye, eye_mutation: EyeMutation) -> neu.Eye:
+def mutate_eye(
+    eye: neu.Eye,
+    eye_mutation: EyeMutation,
+    should_perturb: bool = True,
+) -> neu.Eye:
     """
     mutate a neuron, can be Eye, Neuron or Muscle
 
@@ -738,15 +843,24 @@ def mutate_eye(eye: neu.Eye, eye_mutation: EyeMutation) -> neu.Eye:
 
     mutated_eye = copy.deepcopy(eye)
 
-    mutated_gain = eye_mutation.get_mutated_gain()
+    mutated_gain = eye_mutation.get_mutated_gain(
+        neuron=eye,
+        should_perturb=should_perturb,
+    )
     if mutated_gain is not None:
         mutate_eye.gain = mutated_gain
 
-    mutated_baseline = eye_mutation.get_mutated_baseline()
+    mutated_baseline = eye_mutation.get_mutated_baseline(
+        neuron=eye,
+        should_perturb=should_perturb,
+    )
     if mutated_baseline is not None:
         mutated_eye.baseline_rate = mutated_baseline
 
-    mutated_refractory = eye_mutation.get_mutated_refractory()
+    mutated_refractory = eye_mutation.get_mutated_refractory(
+        neuron=eye,
+        should_perturb=should_perturb,
+    )
     if mutated_refractory is not None:
         mutated_eye.refractory_period = mutated_refractory
 
@@ -754,7 +868,9 @@ def mutate_eye(eye: neu.Eye, eye_mutation: EyeMutation) -> neu.Eye:
 
 
 def mutate_connection(
-    connection: conn.Connection, connection_mutation: ConnectionMutation
+    connection: conn.Connection,
+    connection_mutation: ConnectionMutation,
+    should_perturb: bool = True,
 ) -> conn.Connection:
     """
     mutate a connection
@@ -766,19 +882,31 @@ def mutate_connection(
 
     mutated_connection = copy.deepcopy(connection)
 
-    mutated_latency = connection_mutation.get_mutated_latency()
+    mutated_latency = connection_mutation.get_mutated_latency(
+        connection=connection,
+        should_perturb=should_perturb,
+    )
     if mutated_latency is not None:
         mutated_connection.latency = mutated_latency
 
-    mutated_amplitude = connection_mutation.get_mutated_amplitude()
+    mutated_amplitude = connection_mutation.get_mutated_amplitude(
+        connection=connection,
+        should_perturb=should_perturb,
+    )
     if mutated_amplitude is not None:
         mutated_connection.amplitude = mutated_amplitude
 
-    mutated_rise_time = connection_mutation.get_mutated_rise_time()
+    mutated_rise_time = connection_mutation.get_mutated_rise_time(
+        connection=connection,
+        should_perturb=should_perturb,
+    )
     if mutated_rise_time is not None:
         mutated_connection.rise_time = mutated_rise_time
 
-    mutated_decay_time = connection_mutation.get_mutated_decay_time()
+    mutated_decay_time = connection_mutation.get_mutated_decay_time(
+        connection=connection,
+        should_perturb=should_perturb,
+    )
     if mutated_decay_time is not None:
         mutated_connection.decay_time = mutated_decay_time
 
@@ -790,6 +918,7 @@ def mutate_brain(
     brain_mutation: BrainMutation,
     neuron_mutation_rate: float = 0.01,
     connection_mutation_rate: float = 0.01,
+    should_perturb: bool = True,
     verbose=False,
 ) -> brain.Brain:
     if verbose:
@@ -814,14 +943,18 @@ def mutate_brain(
             if verbose:
                 print(f"Evolution: mutating eye. Index: {mni}.")
             mutated_neurons.loc[mni, "neuron"] = mutate_eye(
-                curr_neuron, brain_mutation.eye_mutation
+                curr_neuron,
+                brain_mutation.eye_mutation,
+                should_perturb=should_perturb,
             )
 
         elif curr_neuron.neuron_type in ["neuron", "muscle"]:
             if verbose:
                 print(f"Evolution: mutating hidden neuron. Index: {mni}.")
             mutated_neurons.loc[mni, "neuron"] = mutate_neuron(
-                curr_neuron, brain_mutation.neuron_mutation
+                curr_neuron,
+                brain_mutation.neuron_mutation,
+                should_perturb=should_perturb,
             )
 
     if verbose:
@@ -836,7 +969,9 @@ def mutate_brain(
         if verbose:
             print(f"Evolution: mutating connection. Index: {mci}.")
         mutated_connections.loc[mci, "connection"] = mutate_connection(
-            curr_connection, brain_mutation.connection_mutation
+            curr_connection,
+            brain_mutation.connection_mutation,
+            should_perturb=should_perturb,
         )
 
     mutated_brain = brain.Brain(
@@ -850,6 +985,7 @@ def mutate_fish(
     brain_mutation: BrainMutation,
     neuron_mutation_rate: float = 0.01,
     connection_mutation_rate: float = 0.01,
+    should_perturb: bool = True,
     verbose=False,
 ) -> fi.Fish:
     mutated_brain = mutate_brain(
@@ -857,6 +993,7 @@ def mutate_fish(
         brain_mutation=brain_mutation,
         neuron_mutation_rate=neuron_mutation_rate,
         connection_mutation_rate=connection_mutation_rate,
+        should_perturb=should_perturb,
         verbose=verbose,
     )
     mother_name = fish.name
@@ -947,6 +1084,7 @@ def run_evoluation(run_config):
                 brain_mutation=brain_mutation,
                 neuron_mutation_rate=1.0,  # fully random fish
                 connection_mutation_rate=1.0,  # fully random fish
+                should_perturb=False,
                 verbose=False,
             )
             rand_fish_f = h5py.File(
@@ -984,6 +1122,7 @@ def run_evoluation(run_config):
         next_generation_folder = evolution.generate_next_generation(
             base_folder=base_folder,
             curr_generation_ind=curr_gen_ind,
+            should_perturb=True,
         )
 
         # save run_config to the next generation folder

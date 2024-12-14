@@ -60,28 +60,30 @@ fish_config:
   name: null
 
 brain_mutation_config:
-  eye_gain_r: null                          # eye gain range
-  eye_bl_r:                                 # eye baseline range
-  - -0.1
-  - 0.1
-  eye_rp_r: null                            # eye refractory period rang
+  perturb_rate: 0.8                         # probablity for perturb other than fully random generation
   
-  neuron_bl_r:                              # hidden neuron baseline range
+  eye_gain_range: null                      # eye gain range
+  eye_bl_range:                             # eye baseline range
   - -0.1
   - 0.1
-  neuron_rp_r: null                         # hidden neuron refractory period range
+  eye_rp_range: null                        # eye refractory period rang
+  
+  neuron_bl_range:                          # hidden neuron baseline range
+  - -0.1
+  - 0.1
+  neuron_rp_range: null                     # hidden neuron refractory period range
 
-  muscle_bl_r:                              # muscle baseline range
+  muscle_bl_range:                          # muscle baseline range
   - -0.1
   - 0.1
-  muscle_rp_r: null                         # muscle refractory period range
+  muscle_rp_range: null                     # muscle refractory period range
   
-  connection_a_r:                           # connection amplitude range
+  connection_a_range:                       # connection amplitude range
   - -1
   - 1
-  connection_l_r: null                      # connection latency range
-  connection_rt_r: null                     # connection rise time range
-  connection_dt_r: null                     # connection decay time range
+  connection_l_range: null                  # connection latency range
+  connection_rt_range: null                 # connection rise time range
+  connection_dt_range: null                 # connection decay time range
   
 terrain_config:
   food_num: 100                             # number of food
