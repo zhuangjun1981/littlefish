@@ -198,7 +198,7 @@ class SimulationViewer(Ui_SimulationViewer):
                 self.fish_name
             )
             self.FishTableWidget.setItem(11, 1, QTableWidgetItem(str(firing_total)))
-            self.FishTableWidget.setItem(12, 1, QTableWidgetItem(str(firing_mean)))
+            self.FishTableWidget.setItem(12, 1, QTableWidgetItem(f"{firing_mean:.4f}"))
 
         except Exception as e:
             print(e)

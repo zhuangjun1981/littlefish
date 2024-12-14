@@ -95,7 +95,9 @@ class SimulationLog:
         action_num = 0
         for k, v in grp_action_history.items():
             action_num += len(v)
-        return action_num, action_num / len(grp_action_history.keys())
+        return action_num, action_num / (
+            len(grp_action_history.keys()) * self.last_time_point
+        )
 
     def get_fish_health_history(self, fish_name: str):
         return self.log[f"fish_{fish_name}/health_history"][()]
