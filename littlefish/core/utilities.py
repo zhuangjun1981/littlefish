@@ -415,6 +415,8 @@ def save_h5_dataset(
         )
     elif key == "rf_positions":
         dset = h5_group.create_dataset(key, data=value, dtype=np.int32)
+    elif key == "step_motion":
+        dset = h5_group.create_dataset(key, data=value, dtype=np.int16)
     elif is_integer(value):
         dset = h5_group.create_dataset(key, data=value, dtype=np.int32)
     elif isinstance(value, float):
