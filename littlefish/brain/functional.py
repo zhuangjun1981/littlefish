@@ -260,15 +260,24 @@ if __name__ == "__main__":
     #     brain_config_path=brain_config_path_4eyes_ff
     # )
 
-    brain_config_path_8eyes_recur = os.path.join(
-        os.path.dirname(curr_folder), "configs", "brain_config_8eyes_recurrent.yml"
-    )
-    brain_8eyes_recur = generate_brain_from_brain_config(
-        brain_config_path=brain_config_path_8eyes_recur
-    )
-    print(brain_8eyes_recur.neurons)
-    print(brain_8eyes_recur.connections)
+    # brain_config_path_8eyes_recur = os.path.join(
+    #     os.path.dirname(curr_folder), "configs", "brain_config_8eyes_recurrent.yml"
+    # )
+    # brain_8eyes_recur = generate_brain_from_brain_config(
+    #     brain_config_path=brain_config_path_8eyes_recur
+    # )
+    # print(brain_8eyes_recur.neurons)
+    # print(brain_8eyes_recur.connections)
 
-    f = plot_brain_connections(brain_8eyes_recur)
+    brain_config_path_8eyes_no_hidden = os.path.join(
+        os.path.dirname(curr_folder), "configs", "brain_config_8eyes_no_hidden.yml"
+    )
+    brain_8eyes_no_hidden = generate_brain_from_brain_config(
+        brain_config_path=brain_config_path_8eyes_no_hidden
+    )
+    print(brain_8eyes_no_hidden.neurons)
+    print(brain_8eyes_no_hidden.connections)
+
+    f = plot_brain_connections(brain_8eyes_no_hidden)
     plt.tight_layout()
     plt.show()
