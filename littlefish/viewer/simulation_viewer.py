@@ -287,7 +287,8 @@ class SimulationViewer(Ui_SimulationViewer):
             self.TimeTextBrowser.setEnabled(True)
             self.HealthTextBrowser.setEnabled(True)
             self.PlaySlider.setRange(0, self._total_t_point)
-            self._show_curr_map()
+            self.PlaySlider.setValue(0)
+            self._slide_to_t()
 
     def _show_curr_map(self):
         try:

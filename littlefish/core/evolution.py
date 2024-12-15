@@ -15,6 +15,7 @@ import littlefish.brain.brain as brain
 import littlefish.brain.functional as fn
 import littlefish.core.utilities as utils
 from littlefish.core.utilities import is_integer
+from littlefish.log_analysis.simulation_log import get_simulation_logs
 
 
 def choose_index(
@@ -582,20 +583,20 @@ class PopulationEvolution(object):
         self.random_fish_num_per_generation = random_fish_num_per_generation
         self.generation_digits_num = generation_digits_num
 
-    @staticmethod
-    def _find_single_simulation_log_name(grp_root: h5py.Group):
-        """
-        check if there is one and only one simulation log group in the grp_root
-        and return the simulation log group name
-        """
-        sim_log_ns = [s for s in grp_root.keys() if s[:11] == "simulation_"]
+    # @staticmethod
+    # def _find_single_simulation_log_name(grp_root: h5py.Group):
+    #     """
+    #     check if there is one and only one simulation log group in the grp_root
+    #     and return the simulation log group name
+    #     """
+    #     sim_log_ns = [s for s in grp_root.keys() if s[:11] == "simulation_"]
 
-        if len(sim_log_ns) == 0:
-            raise LookupError("Cannot find simulation log")
-        elif len(sim_log_ns) > 1:
-            raise LookupError("More than one simulation logs found.")
+    #     if len(sim_log_ns) == 0:
+    #         raise LookupError("Cannot find simulation log")
+    #     elif len(sim_log_ns) > 1:
+    #         raise LookupError("More than one simulation logs found.")
 
-        return sim_log_ns[0]
+    #     return sim_log_ns[0]
 
     def _calculate_offspring_num(
         self,
@@ -661,12 +662,17 @@ class PopulationEvolution(object):
 
             generation_nums.append(fish_f["generations"].shape[0])
 
-            curr_sim_n = self._find_single_simulation_log_name(fish_f)
+            simulation_logs = get_simulation_logs(fish_f)
             life_spans.append(
-                fish_f[curr_sim_n]["simulation_cache/last_time_point"][()]
+                np.mean(
+                    [s.last_time_point for s in simulation_logs],
+                ),
             )
-            total_movements.append(fish_f[curr_sim_n][f"fish_{fish_n}/total_moves"][()])
-            fish_f.close()
+            total_movements.append(
+                np.mean(
+                    [s.get_fish_total_moves(fish_name=fish_n) for s in simulation_logs],
+                )
+            )
 
         fishes = pd.DataFrame(
             list(zip(fish_ns, life_spans, total_movements, generation_nums)),
@@ -1164,6 +1170,7 @@ def run_evoluation(run_config):
             sea_portion=run_config["terrain_config"]["sea_portion"],
             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
             food_num=run_config["terrain_config"]["food_num"],
+            simulation_num=run_config["simulation_config"]["simulation_num"],
         )
 
     else:
@@ -1198,6 +1205,7 @@ def run_evoluation(run_config):
             sea_portion=run_config["terrain_config"]["sea_portion"],
             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
             food_num=run_config["terrain_config"]["food_num"],
+            simulation_num=run_config["simulation_config"]["simulation_num"],
         )
 
         curr_gen_ind += 1

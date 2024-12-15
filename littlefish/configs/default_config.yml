@@ -5,6 +5,7 @@ simulation_config:
   generation_digits_num: 7                    # use how many digits to represent generation index
   process_num: 10                             # process number for multi-processing
   simulation_length: 50000                    # max simulation length for each fish
+  simulation_num: 3                           # number of simulations for each evaluation
 
 evolution_config:
   connection_mutation_rate: 0.01

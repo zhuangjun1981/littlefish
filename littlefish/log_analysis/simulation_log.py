@@ -106,6 +106,15 @@ class SimulationLog:
         return self.log[f"fish_{fish_name}/position_history"][()]
 
 
+def get_simulation_logs(h5_grp: h5py.Group) -> list[SimulationLog]:
+    """
+    get all simulation logs from a h5py group
+    """
+    return [
+        SimulationLog(log=v) for k, v in h5_grp.items() if k.startswith("simulation_")
+    ]
+
+
 if __name__ == "__main__":
     import os
 

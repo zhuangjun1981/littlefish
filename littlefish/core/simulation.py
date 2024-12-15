@@ -219,7 +219,7 @@ class Simulation(object):
             # at t0
             self.simulation_status = 3
             t0 = time.time()
-            start_time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            start_time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")
             self.name = f"simulation_{start_time_str}"
 
             if verbose > 1:
@@ -494,11 +494,19 @@ def simulate_fish_multiprocessing(simulation_params):
     warpper of "simulate_one_fish" for multi-processing
     """
 
-    f_path, fish_ind, fish_num, simulation_length, terrain, food_num = simulation_params
+    (
+        f_path,
+        fish_ind,
+        fish_num,
+        simulation_length,
+        terrain,
+        food_num,
+        simulation_num,
+    ) = simulation_params
     simulate_one_fish(
         fish_path=f_path,
         simulation_length=simulation_length,
-        simulation_num=1,
+        simulation_num=simulation_num,
         terrain=terrain,
         food_num=food_num,
         hard_thr=0,
@@ -511,6 +519,7 @@ def run_simulation_multi_thread(
     base_folder,
     generation_ind,
     process_num=6,
+    simulation_num=1,
     simulation_length=50000,
     terrain_size=(64, 64),
     sea_portion=0.5,
@@ -540,7 +549,15 @@ def run_simulation_multi_thread(
     sim_params = []
     for fish_ind, fish_p in enumerate(fish_ps):
         sim_params.append(
-            (fish_p, fish_ind, len(fish_ps), simulation_length, ter, food_num)
+            (
+                fish_p,
+                fish_ind,
+                len(fish_ps),
+                simulation_length,
+                ter,
+                food_num,
+                simulation_num,
+            )
         )
 
     with Pool(process_num) as p:
