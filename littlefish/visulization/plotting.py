@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import littlefish.core.utilities as util
+from littlefish.log_analysis.simulation_log import get_simulation_logs
 
 
 def plot_confusion_matrix(
@@ -160,18 +160,20 @@ def collect_life_spans(
             else:
                 is_from_last_gen.append(False)
 
-            sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
-            if len(sim_n) == 0:
-                continue
-            elif len(sim_n) > 1:
-                print(
-                    f"{gen_folder}/{fish_fn} has more than one simulations, take the first one."
-                )
-            sim_n = sim_n[0]
+            # sim_n = [s for s in ff.keys() if s[:11] == "simulation_"]
+            # if len(sim_n) == 0:
+            #     continue
+            # elif len(sim_n) > 1:
+            #     print(
+            #         f"{gen_folder}/{fish_fn} has more than one simulations, take the first one."
+            #     )
+            # sim_n = sim_n[0]
+
+            sim_logs = get_simulation_logs(ff)
 
             fish_names.append(fish_name)
             generations.append(curr_gen)
-            life_spans.append(ff[sim_n]["simulation_cache/last_time_point"][()])
+            life_spans.append(np.mean([s.last_time_point for s in sim_logs]))
 
     life_span_df = pd.DataFrame()
     life_span_df["generation"] = generations
