@@ -285,8 +285,8 @@ class UniformMutation(object):
         """
 
         if should_perturb and random.random() <= self.perturb_rate:
-            low = curr_value - 0.05 * self.value_span
-            high = curr_value + 0.05 * self.value_span
+            low = curr_value - 0.1 * self.value_span
+            high = curr_value + 0.1 * self.value_span
         else:
             low = self.value_range[0]
             high = self.value_range[1]
