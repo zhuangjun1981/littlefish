@@ -812,7 +812,7 @@ class PopulationEvolution(object):
                 verbose=False,
             )
             rand_fish_f = h5py.File(
-                os.path.join(next_gen_folder, rand_fish.name + "hdf5"), "a"
+                os.path.join(next_gen_folder, rand_fish.name + ".hdf5"), "a"
             )
             rand_fish.to_h5_group(rand_fish_f)
             rand_fish_f["generations"] = [curr_generation_ind + 1]

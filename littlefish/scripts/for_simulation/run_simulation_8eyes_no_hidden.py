@@ -16,14 +16,14 @@ def run():
     run_config["brain_config"] = None
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 5
+    run_config["simulation_config"]["start_generation_ind"] = 0
     run_config["simulation_config"]["end_generation_ind"] = 10
 
-    run_config["simulation_config"]["food_num"] = 100
+    run_config["simulation_config"]["food_num"] = 50
     run_config["fish_config"]["move_penalty_rate"] = 0.0005
     run_config["evolution_config"]["neuron_mutation_rate"] = 0.3
     run_config["evolution_config"]["connection_mutation_rate"] = 0.3
-    run_config["evolution_config"]["life_span_hard_threshold"] = 3000
+    run_config["evolution_config"]["life_span_hard_threshold"] = 2000
     # run_config["terrain_config"]["sea_portion"] = 0.5
 
     evo.run_evoluation(run_config=run_config)
