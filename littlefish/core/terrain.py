@@ -141,15 +141,20 @@ class BinaryTerrain(object):
         ]
         return [tuple(p) for p in fish_positions]
 
-    def update_food_map(self, food_num: int, food_map: np.ndarray):
+    def update_food_map(
+        self,
+        food_num: int,
+        food_map: np.ndarray,
+        fish_positions: np.ndarray = [],
+    ) -> np.ndarray:
         """
         update the input food_map and food_pos_array, to generate new food map and food_pos_array so that the terrain
         contains food_num of food pixels (each food only occupies one pixel). If the number of food is less than
         food_num, new food will be added, if the number of food is more than food_num, extra food will be removed.
 
-        :param food_map: 2-d binary array, 0: non-food, 1: food
+        :param food_map: 2-d binary array, 0: non-food, 1: food, this input will be updated
         :param food_num: positive integer, number of food pixels after update
-        :return: food_map: updated food map
+        :param fish_positions: 2d array or list[list[int]], [[row, col]] for each fish
         :return: food_positions: 2d array, food_num x 2, _dtype: uint16, array of food pixel coordinates,
             each row is a food position, columns: [row, col]
         """
@@ -185,9 +190,22 @@ class BinaryTerrain(object):
             len(curr_food_pos_list) < food_num
         ):  # current number of food less than food_num
             # get positions to add food
-            possible_positions = list(
-                zip(*np.where(np.logical_or(self.terrain_map, food_map) == 0))
-            )
+            mask_map = np.logical_or(self.terrain_map, food_map)
+
+            # remove fish pixels
+            for fish_pos in fish_positions:
+                mask_map[
+                    fish_pos[0] - 1 : fish_pos[0] + 2,
+                    fish_pos[1] - 1 : fish_pos[1] + 2,
+                ] = 1
+
+            possible_positions = list(zip(*np.where(mask_map == 0)))
+
+            print("aaaaaaaaaaaaaaaa")
+            print(mask_map)
+            print(len(possible_positions))
+            print(food_num - len(curr_food_pos_list))
+
             food_add_index = np.random.choice(
                 range(len(possible_positions)),
                 size=food_num - len(curr_food_pos_list),

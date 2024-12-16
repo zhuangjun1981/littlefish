@@ -90,5 +90,6 @@ class TestTerrain(unittest.TestCase):
 
 if __name__ == "__main__":
     tu = TestTerrain()
+    # tu.test_terrain_generator()
     tu.test_update_food_map()
-    tu.test_generate_fish_starting_position()
+    # tu.test_generate_fish_starting_position()

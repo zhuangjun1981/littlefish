@@ -246,8 +246,12 @@ class Simulation(object):
                         curr_progress = curr_t // (self.simulation_length // 10)
 
                 # update food position
+                fish_positions = [
+                    fish.simulation_cache["position_history"][curr_t, :]
+                    for fish in alive_fish_list
+                ]
                 curr_food_positions = self.terrain.update_food_map(
-                    self.food_num, self.food_map
+                    self.food_num, self.food_map, fish_positions=fish_positions
                 )
                 self.simulation_cache["food_pos_history"][curr_t] = curr_food_positions
 
@@ -543,8 +547,17 @@ def run_simulation_multi_thread(
     fish_ns.sort()
     fish_ps = [os.path.join(gen_folder, f) for f in fish_ns]
 
-    tg = tr.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
-    ter = tr.BinaryTerrain(tg.generate_binary_map(sigma=terrain_filter_sigma))
+    # # random terrain for evaluation fish
+    # tg = tr.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
+    # ter = tr.BinaryTerrain(tg.generate_binary_map(sigma=terrain_filter_sigma))
+
+    # predetermined terrain for evaluating fish, much more efficient
+    ter_map = np.zeros((9, 9), dtype=np.uint8)
+    ter_map[:, 0] = 1
+    ter_map[:, -1] = 1
+    ter_map[0, :] = 1
+    ter_map[-1, :] = 1
+    ter = tr.BinaryTerrain(ter_map)
 
     sim_params = []
     for fish_ind, fish_p in enumerate(fish_ps):
