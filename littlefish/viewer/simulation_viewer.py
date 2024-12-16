@@ -257,7 +257,9 @@ class SimulationViewer(Ui_SimulationViewer):
             self.TerrainTableWidget.setItem(
                 1, 1, QTableWidgetItem(str(self.sim_log.food_num))
             )
-            self.TerrainTableWidget.setItem(2, 1, QTableWidgetItem(str(sea_portion)))
+            self.TerrainTableWidget.setItem(
+                2, 1, QTableWidgetItem(f"{sea_portion*100:.2f}%")
+            )
         except Exception as e:
             print(e)
 
