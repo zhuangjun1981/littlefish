@@ -201,11 +201,6 @@ class BinaryTerrain(object):
 
             possible_positions = list(zip(*np.where(mask_map == 0)))
 
-            print("aaaaaaaaaaaaaaaa")
-            print(mask_map)
-            print(len(possible_positions))
-            print(food_num - len(curr_food_pos_list))
-
             food_add_index = np.random.choice(
                 range(len(possible_positions)),
                 size=food_num - len(curr_food_pos_list),
