@@ -19,15 +19,15 @@ def run():
     run_config["simulation_config"]["start_generation_ind"] = 0
     run_config["simulation_config"]["end_generation_ind"] = 10
     run_config["simulation_config"]["simulation_length"] = 10000
-    run_config["simulation_config"]["simulation_num"] = 20
+    run_config["simulation_config"]["simulation_num"] = 10
 
-    run_config["terrain_config"]["food_num"] = 1
+    run_config["terrain_config"]["should_use_mini_map"] = True
 
     run_config["fish_config"]["move_penalty_rate"] = 0.0005
 
     run_config["evolution_config"]["neuron_mutation_rate"] = 0.3
     run_config["evolution_config"]["connection_mutation_rate"] = 0.3
-    run_config["evolution_config"]["life_span_hard_threshold"] = 2000
+    run_config["evolution_config"]["life_span_hard_threshold"] = 0
     run_config["evolution_config"]["random_fish_num_per_generation"] = 100
     # run_config["terrain_config"]["sea_portion"] = 0.5
 

@@ -525,10 +525,11 @@ def run_simulation_multi_thread(
     process_num=6,
     simulation_num=1,
     simulation_length=50000,
+    should_use_mini_map=True,
     terrain_size=(64, 64),
     sea_portion=0.5,
-    food_num=50,
     terrain_filter_sigma=3.0,
+    food_num=50,
     generation_digits_num=7,
 ):
     print("\n======================================================================")
@@ -547,17 +548,19 @@ def run_simulation_multi_thread(
     fish_ns.sort()
     fish_ps = [os.path.join(gen_folder, f) for f in fish_ns]
 
-    # # random terrain for evaluation fish
-    # tg = tr.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
-    # ter = tr.BinaryTerrain(tg.generate_binary_map(sigma=terrain_filter_sigma))
-
     # predetermined terrain for evaluating fish, much more efficient
-    ter_map = np.zeros((9, 9), dtype=np.uint8)
-    ter_map[:, 0] = 1
-    ter_map[:, -1] = 1
-    ter_map[0, :] = 1
-    ter_map[-1, :] = 1
-    ter = tr.BinaryTerrain(ter_map)
+    if should_use_mini_map:
+        ter_map = np.zeros((11, 11), dtype=np.uint8)
+        ter_map[:, :2] = 1
+        ter_map[:, -2:] = 1
+        ter_map[:2, :] = 1
+        ter_map[-2:, :] = 1
+        ter = tr.BinaryTerrain(ter_map)
+        food_num = 1
+    else:
+        # # random terrain for evaluation fish
+        tg = tr.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
+        ter = tr.BinaryTerrain(tg.generate_binary_map(sigma=terrain_filter_sigma))
 
     sim_params = []
     for fish_ind, fish_p in enumerate(fish_ps):
