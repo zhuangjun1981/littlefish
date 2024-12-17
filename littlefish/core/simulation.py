@@ -556,7 +556,6 @@ def run_simulation_multi_thread(
         ter_map[:2, :] = 1
         ter_map[-2:, :] = 1
         ter = tr.BinaryTerrain(ter_map)
-        food_num = 1
     else:
         # # random terrain for evaluation fish
         tg = tr.TerrainGenerator(size=terrain_size, sea_portion=sea_portion)
