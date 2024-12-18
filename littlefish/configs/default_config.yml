@@ -6,6 +6,7 @@ simulation_config:
   process_num: 10                             # process number for multi-processing
   simulation_length: 50000                    # max simulation length for each fish
   simulation_num: 3                           # number of simulations for each evaluation
+  start_health: null                          # start health of each fish
 
 evolution_config:
   connection_mutation_rate: 0.01

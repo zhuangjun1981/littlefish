@@ -97,7 +97,10 @@ class Fish:
         self.simulation_cache = {"health_history": None}
 
     def initiate_simulation(
-        self, position: list[int], max_simulation_length: int
+        self,
+        position: list[int],
+        max_simulation_length: int,
+        start_health: float = None,
     ) -> None:
         """
         pre-allocate memorys for runing the simulation.
@@ -108,12 +111,18 @@ class Fish:
             "health_history": ndarray, shape: (simulation length, )
             "position_history": ndarray, shape: (simulation length, 2), first column: row_idx, second column: col_idx
           }
+
+        if start_health is less than max_health, start with start_health
         """
 
         self.brain.initiate_simulation(max_simulation_length=max_simulation_length)
 
         health_history = np.zeros((max_simulation_length,), dtype=np.float32)
-        health_history[0] = self.max_health
+
+        if start_health is not None:
+            health_history[0] = min(start_health, self.max_health)
+        else:
+            health_history[0] = self.max_health
 
         position_history = np.zeros((max_simulation_length, 2), dtype=int)
         position_history[0, :] = position

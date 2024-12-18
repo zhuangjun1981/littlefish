@@ -27,6 +27,7 @@ class Simulation(object):
         fish_list: list[Fish],
         simulation_length: int = 100,
         food_num: int = 5,
+        start_health: float = None,
     ) -> None:
         """
         designed to run only once after creation
@@ -35,6 +36,7 @@ class Simulation(object):
         :param fish_list: list of fish object (fish.Fish class)
         :param simulation_length: positive integer, number of time points of the simulation
         :param food_num: positive integer, number of food pixels in food map
+        :param start_health: start_health of each fish
         :return: None
         """
 
@@ -48,6 +50,7 @@ class Simulation(object):
         self.fish_list = fish_list
         self.simulation_length = int(simulation_length)
         self.food_num = int(food_num)
+        self.start_health = start_health
 
         assert self.food_num >= 0, "'food_num' should be a non-negative integer."
 
@@ -85,6 +88,7 @@ class Simulation(object):
                 fish.initiate_simulation(
                     position=fish_start_positions[i],
                     max_simulation_length=self.simulation_length,
+                    start_health=self.start_health,
                 )
 
             #  simulation initialization finished, change simulation status
@@ -413,6 +417,7 @@ def simulate_one_fish(
     simulation_num: int,
     terrain: BinaryTerrain,
     food_num: int,
+    start_health: None,
     hard_thr: int = 0,
     fish_ind: int = 0,
     fish_num: int = 0,
@@ -428,6 +433,7 @@ def simulate_one_fish(
     :param simulation_num: positive int, number of terrain maps to simulate
     :param terrain: littlefish.core.terrain.BinaryTerrain object
     :param food_num: non-negative int, how many food pellet(s) are presented at any given time in terrain map.
+    :param start_health: float, starting health point for a fish
     :param hard_thr: positive int, fish should have a life span longer than this threshold to be kept for simulation.
     :param fish_ind: non-negative int, the index of the current fish in the whole population (generation). just for
         printout purpose, if not known, keep 0.
@@ -465,6 +471,7 @@ def simulate_one_fish(
             fish_list=[curr_fish],
             simulation_length=simulation_length,
             food_num=food_num,
+            start_health=start_health,
         )
 
         curr_simulation.initiate_simulation()
@@ -505,6 +512,7 @@ def simulate_fish_multiprocessing(simulation_params):
         simulation_length,
         terrain,
         food_num,
+        start_health,
         simulation_num,
     ) = simulation_params
     simulate_one_fish(
@@ -513,6 +521,7 @@ def simulate_fish_multiprocessing(simulation_params):
         simulation_num=simulation_num,
         terrain=terrain,
         food_num=food_num,
+        start_health=start_health,
         hard_thr=0,
         fish_ind=fish_ind,
         fish_num=fish_num,
@@ -530,6 +539,7 @@ def run_simulation_multi_thread(
     sea_portion=0.5,
     terrain_filter_sigma=3.0,
     food_num=50,
+    start_health=None,
     generation_digits_num=7,
 ):
     print("\n======================================================================")
@@ -550,11 +560,11 @@ def run_simulation_multi_thread(
 
     # predetermined terrain for evaluating fish, much more efficient
     if should_use_mini_map:
-        ter_map = np.zeros((11, 11), dtype=np.uint8)
-        ter_map[:, :2] = 1
-        ter_map[:, -2:] = 1
-        ter_map[:2, :] = 1
-        ter_map[-2:, :] = 1
+        ter_map = np.zeros((7, 7), dtype=np.uint8)
+        ter_map[:, 1] = 1
+        ter_map[:, -1:] = 1
+        ter_map[:1, :] = 1
+        ter_map[-1:, :] = 1
         ter = tr.BinaryTerrain(ter_map)
     else:
         # # random terrain for evaluation fish
@@ -571,6 +581,7 @@ def run_simulation_multi_thread(
                 simulation_length,
                 ter,
                 food_num,
+                start_health,
                 simulation_num,
             )
         )

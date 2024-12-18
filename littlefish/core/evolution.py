@@ -1171,6 +1171,7 @@ def run_evoluation(run_config):
             sea_portion=run_config["terrain_config"]["sea_portion"],
             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
             food_num=run_config["terrain_config"]["food_num"],
+            start_health=run_config["simulation_config"]["start_health"],
             simulation_num=run_config["simulation_config"]["simulation_num"],
         )
 
@@ -1206,6 +1207,7 @@ def run_evoluation(run_config):
             sea_portion=run_config["terrain_config"]["sea_portion"],
             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
             food_num=run_config["terrain_config"]["food_num"],
+            start_health=run_config["simulation_config"]["start_health"],
             simulation_num=run_config["simulation_config"]["simulation_num"],
         )
 
