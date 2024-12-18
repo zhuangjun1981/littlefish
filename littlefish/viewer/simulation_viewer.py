@@ -302,7 +302,7 @@ class SimulationViewer(Ui_SimulationViewer):
             )
             add_foods_rgb(show_map_rgb=curr_map_rgb, food_poss=curr_food_poss)
             self.TimeTextBrowser.setText("Time: {:7d}".format(self._curr_t_point))
-            self.HealthTextBrowser.setText("HP: {:5.2f}".format(curr_health))
+            self.HealthTextBrowser.setText("HP: {:7.4f}".format(curr_health))
             self.MovieCanvas.plot_rgb(curr_map_rgb)
         except Exception as e:
             print(e)

@@ -764,6 +764,15 @@ class PopulationEvolution(object):
                 )
             mother_fish_name = mother_fish_name[0]
             mother_fish = fi.load_fish_from_h5_group(mother_fish_f[mother_fish_name])
+
+            # update fish properties according to the input fish_config
+            mother_fish.firing_penalty_rate = fish_config["firing_penalty_rate"]
+            mother_fish.food_rate = fish_config["food_rate"]
+            mother_fish.land_penalty_rate = fish_config["land_penalty_rate"]
+            mother_fish.max_health = fish_config["max_health"]
+            mother_fish.health_decay_rate = fish_config["health_decay_rate"]
+            mother_fish.move_penalty_rate = fish_config["move_penalty_rate"]
+
             mother_fish_gens = list(mother_fish_f["generations"][()])
 
             children_lst = []
@@ -1151,7 +1160,6 @@ def run_evoluation(run_config):
                 should_perturb=False,
                 verbose=False,
             )
-            rand_fish.max_health = run_config["fish_config"]["max_health"]
             rand_fish_f = h5py.File(
                 os.path.join(start_generation_folder, rand_fish.name + ".hdf5"), "a"
             )
