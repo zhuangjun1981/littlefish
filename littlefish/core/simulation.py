@@ -561,9 +561,9 @@ def run_simulation_multi_thread(
     # predetermined terrain for evaluating fish, much more efficient
     if should_use_mini_map:
         ter_map = np.zeros((7, 7), dtype=np.uint8)
-        ter_map[:, 1] = 1
+        ter_map[:, 0] = 1
         ter_map[:, -1:] = 1
-        ter_map[:1, :] = 1
+        ter_map[0, :] = 1
         ter_map[-1:, :] = 1
         ter = tr.BinaryTerrain(ter_map)
     else:
