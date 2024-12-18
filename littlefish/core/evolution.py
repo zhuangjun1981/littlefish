@@ -1151,6 +1151,7 @@ def run_evoluation(run_config):
                 should_perturb=False,
                 verbose=False,
             )
+            rand_fish.max_health = run_config["fish_config"]["max_health"]
             rand_fish_f = h5py.File(
                 os.path.join(start_generation_folder, rand_fish.name + ".hdf5"), "a"
             )
