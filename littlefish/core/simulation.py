@@ -421,7 +421,7 @@ def simulate_one_fish(
     hard_thr: int = 0,
     fish_ind: int = 0,
     fish_num: int = 0,
-    verbose: int = 0,
+    verbose: int = 1,
 ):
     """
     the function to simulate a fish's lives in multiple terrain maps. the simulation results will be saved in the same
@@ -454,17 +454,20 @@ def simulate_one_fish(
 
     curr_fish = fi.load_fish_from_h5_group(curr_fish_f[f"fish_{fish_name}"])
 
+    if verbose and fish_ind % 100 == 0:
+        print(f"{fish_ind + 1}/{fish_num}; fish: {curr_fish.name}; simulation started.")
+
     for sim_ind in range(simulation_num):
         curr_seed = random.randrange(2**31 - 1)
         random.seed(curr_seed)
         np.random.seed(curr_seed)
 
-        if verbose:
-            print(
-                "\n\n========================= {}/{}; fish: {} ; simulation: {}/{} start ===========================".format(
-                    fish_ind + 1, fish_num, curr_fish.name, sim_ind + 1, simulation_num
-                )
-            )
+        # if verbose and fish_ind % 100 == 0:
+        #     print(
+        #         "\n\n========================= {}/{}; fish: {} ; simulation: {}/{} start ===========================".format(
+        #             fish_ind + 1, fish_num, curr_fish.name, sim_ind + 1, simulation_num
+        #         )
+        #     )
 
         curr_simulation = Simulation(
             terrain=terrain,
@@ -482,12 +485,12 @@ def simulate_one_fish(
 
         curr_simulation.to_h5_group(curr_fish_f, should_save_psp_waveforms=False)
 
-        if verbose:
-            print(
-                "\n========================== {}/{}; fish: {}; simulation: {}/{} end ============================".format(
-                    fish_ind + 1, fish_num, curr_fish.name, sim_ind + 1, simulation_num
-                )
-            )
+        # if verbose and fish_ind % 100 == 0:
+        #     print(
+        #         "\n========================== {}/{}; fish: {}; simulation: {}/{} end ============================".format(
+        #             fish_ind + 1, fish_num, curr_fish.name, sim_ind + 1, simulation_num
+        #         )
+        #     )
 
         if curr_simulation.simulation_cache["last_time_point"] < hard_thr:
             if verbose:
@@ -496,6 +499,11 @@ def simulate_one_fish(
                     "fish: {}".format(curr_fish.name)
                 )
             break
+
+    if verbose and fish_ind % 100 == 0:
+        print(
+            f"{fish_ind + 1}/{fish_num}; fish: {curr_fish.name}; simulation finished."
+        )
 
     curr_fish_f.close()
 
