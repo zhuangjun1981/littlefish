@@ -15,6 +15,7 @@ evolution_config:
   turnover_rate: 0.6
   life_span_hard_threshold: 0
   movement_hard_threshold: 0
+  stats_for_evaluation: mean                  # min, mean, or median, stats for evaluating life span across simulations
   random_fish_num_per_generation: 50
 
 brain_config_path: null

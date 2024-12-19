@@ -552,6 +552,7 @@ class PopulationEvolution(object):
         life_span_hard_threshold: int = 0,
         movement_hard_threshold: int = 0,
         random_fish_num_per_generation: int = 50,
+        stats_for_evaluation: str = "mean",
         generation_digits_num: int = 7,
     ):
         """
@@ -565,8 +566,9 @@ class PopulationEvolution(object):
             generate offspring and pass to next generation
         :param movement_hard_threshold: int, only the fish with movement more than this number will have chances to generate
             offspring and pass to next generation
+        :param stats_for_evaluation: str, "min", "mean" or "median". What statistics of life span in all simulations should be used to determine offspring number
         :param generation_digit_num: positive int, number of digits to represent generation number,
-                                     default: 7 (max generation num 10 million)
+            default: 7 (max generation num 10 million)
         """
 
         assert (
@@ -581,6 +583,7 @@ class PopulationEvolution(object):
         self.life_span_hard_threshold = life_span_hard_threshold
         self.movement_hard_threshold = movement_hard_threshold
         self.random_fish_num_per_generation = random_fish_num_per_generation
+        self.stats_for_evaluation = stats_for_evaluation
         self.generation_digits_num = generation_digits_num
 
     # @staticmethod
@@ -654,7 +657,9 @@ class PopulationEvolution(object):
             self.population_size = len(fish_ns)
 
         fish_ns = [os.path.splitext(f)[0] for f in fish_ns]
-        life_spans = []
+        min_life_spans = []
+        mean_life_spans = []
+        median_life_spans = []
         total_movements = []
         generation_nums = []
         for fish_n in fish_ns:
@@ -663,11 +668,12 @@ class PopulationEvolution(object):
             generation_nums.append(fish_f["generations"].shape[0])
 
             simulation_logs = get_simulation_logs(fish_f)
-            life_spans.append(
-                np.mean(
-                    [s.last_time_point for s in simulation_logs],
-                ),
-            )
+            curr_life_spans = [s.last_time_point for s in simulation_logs]
+
+            min_life_spans.append(np.min(curr_life_spans))
+            mean_life_spans.append(np.mean(curr_life_spans))
+            median_life_spans.append(np.median(curr_life_spans))
+
             total_movements.append(
                 np.mean(
                     [s.get_fish_total_moves(fish_name=fish_n) for s in simulation_logs],
@@ -675,11 +681,33 @@ class PopulationEvolution(object):
             )
 
         fishes = pd.DataFrame(
-            list(zip(fish_ns, life_spans, total_movements, generation_nums)),
-            columns=["fish_name", "life_span", "total_movements", "generation_num"],
+            list(
+                zip(
+                    fish_ns,
+                    min_life_spans,
+                    mean_life_spans,
+                    median_life_spans,
+                    total_movements,
+                    generation_nums,
+                )
+            ),
+            columns=[
+                "fish_name",
+                "min_life_span",
+                "mean_life_span",
+                "median_life_span",
+                "total_movements",
+                "generation_num",
+            ],
         )
+
+        if self.stats_for_evaluation in ["min", "mean", "median"]:
+            life_span_key = f"{self.stats_for_evaluation}_life_span"
+        else:
+            raise ValueError("self.stats_for_evaluation should 'mean' or 'median'.")
+
         fishes.sort_values(
-            by=["life_span", "generation_num"], ascending=False, inplace=True
+            by=[life_span_key, "generation_num"], ascending=False, inplace=True
         )
 
         retain_number = int(
@@ -689,7 +717,7 @@ class PopulationEvolution(object):
         fishes = fishes[0:retain_number]
 
         fishes = fishes.query(
-            "life_span >= @self.life_span_hard_threshold and total_movements >= @self.movement_hard_threshold"
+            f"{life_span_key} >= @self.life_span_hard_threshold and total_movements >= @self.movement_hard_threshold"
         ).copy()
 
         if len(fishes) == 0:
@@ -697,9 +725,9 @@ class PopulationEvolution(object):
                 "No fish qualifies as mother fish. Try reducing the 'life_span_hard_threshold' or the 'movement_hard_threshold'."
             )
 
-        life_thr = fishes.iloc[-1, 1]
+        life_thr = fishes.iloc[-1][life_span_key]
 
-        fishes["extra_life"] = fishes["life_span"] - life_thr
+        fishes["extra_life"] = fishes[life_span_key] - life_thr
 
         new_fish_number = (
             self.population_size - fishes.shape[0] - self.random_fish_num_per_generation
