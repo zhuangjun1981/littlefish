@@ -454,8 +454,8 @@ def simulate_one_fish(
 
     curr_fish = fi.load_fish_from_h5_group(curr_fish_f[f"fish_{fish_name}"])
 
-    if verbose and fish_ind % 100 == 0:
-        print(f"{fish_ind + 1}/{fish_num}; fish: {curr_fish.name}; simulation started.")
+    # if verbose and fish_ind % 100 == 0:
+    #     print(f"{fish_ind + 1}/{fish_num}; fish: {curr_fish.name}; simulation started.")
 
     for sim_ind in range(simulation_num):
         curr_seed = random.randrange(2**31 - 1)

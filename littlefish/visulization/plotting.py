@@ -135,7 +135,8 @@ def collect_life_spans(
 
     generations = []
     fish_names = []
-    life_spans = []
+    mean_life_spans = []
+    median_life_spans = []
     is_from_last_gen = []
 
     for gen_i, gen_folder in enumerate(plot_gen_folders):
@@ -173,12 +174,14 @@ def collect_life_spans(
 
             fish_names.append(fish_name)
             generations.append(curr_gen)
-            life_spans.append(np.mean([s.last_time_point for s in sim_logs]))
+            mean_life_spans.append(np.mean([s.last_time_point for s in sim_logs]))
+            median_life_spans.append(np.median([s.last_time_point for s in sim_logs]))
 
     life_span_df = pd.DataFrame()
     life_span_df["generation"] = generations
     life_span_df["fish_name"] = fish_names
-    life_span_df["life_span"] = life_spans
+    life_span_df["mean_life_span"] = mean_life_spans
+    life_span_df["median_life_span"] = median_life_spans
     life_span_df["is_from_last_geneartion"] = is_from_last_gen
 
     return life_span_df
