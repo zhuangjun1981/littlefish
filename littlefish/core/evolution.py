@@ -1241,6 +1241,8 @@ def run_evoluation(run_config):
             generation_ind=curr_gen_ind + 1,
             process_num=run_config["simulation_config"]["process_num"],
             simulation_length=run_config["simulation_config"]["simulation_length"],
+            should_use_mini_map=run_config["terrain_config"]["should_use_mini_map"],
+            mini_map_size=run_config["terrain_config"]["mini_map_size"],
             terrain_size=run_config["terrain_config"]["terrain_size"],
             sea_portion=run_config["terrain_config"]["sea_portion"],
             terrain_filter_sigma=run_config["terrain_config"]["terrain_filter_sigma"],
