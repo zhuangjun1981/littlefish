@@ -543,6 +543,7 @@ def run_simulation_multi_thread(
     simulation_num=1,
     simulation_length=50000,
     should_use_mini_map=True,
+    mini_map_size=7,
     terrain_size=(64, 64),
     sea_portion=0.5,
     terrain_filter_sigma=3.0,
@@ -568,7 +569,7 @@ def run_simulation_multi_thread(
 
     # predetermined terrain for evaluating fish, much more efficient
     if should_use_mini_map:
-        ter_map = np.zeros((7, 7), dtype=np.uint8)
+        ter_map = np.zeros((mini_map_size, mini_map_size), dtype=np.uint8)
         ter_map[:, 0] = 1
         ter_map[:, -1:] = 1
         ter_map[0, :] = 1

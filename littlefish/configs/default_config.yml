@@ -92,7 +92,8 @@ brain_mutation_config:
   connection_dt_range: null                 # connection decay time range
   
 terrain_config:
-  should_use_mini_map: True                 # if or not to use minimap (11 x 11) to increase evaluation efficiency
+  should_use_mini_map: True                 # if or not to use mini_map (11 x 11) to increase evaluation efficiency
+  mini_map_size: 7                           # size of square mini_map
   food_num: 100                             # number of food
   sea_portion: 0.7                          # portion of the sea
   terrain_filter_sigma: 3.0
