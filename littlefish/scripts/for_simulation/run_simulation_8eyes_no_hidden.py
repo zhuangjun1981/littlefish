@@ -16,8 +16,8 @@ def run():
     run_config["brain_config"] = None
 
     run_config["simulation_config"]["data_folder"] = base_folder
-    run_config["simulation_config"]["start_generation_ind"] = 150
-    run_config["simulation_config"]["end_generation_ind"] = 160
+    run_config["simulation_config"]["start_generation_ind"] = 163
+    run_config["simulation_config"]["end_generation_ind"] = 180
     run_config["simulation_config"]["simulation_length"] = 20000
     run_config["simulation_config"]["simulation_num"] = 10
     run_config["simulation_config"]["start_health"] = 10
@@ -32,11 +32,11 @@ def run():
     run_config["fish_config"]["move_penalty_rate"] = 0.000
     run_config["fish_config"]["land_penalty_rate"] = 5
 
-    run_config["evolution_config"]["neuron_mutation_rate"] = 0.5
-    run_config["evolution_config"]["connection_mutation_rate"] = 0.5
-    run_config["evolution_config"]["life_span_hard_threshold"] = 1100
-    run_config["evolution_config"]["random_fish_num_per_generation"] = 400
-    run_config["evolution_config"]["stats_for_evaluation"] = "mean"
+    run_config["evolution_config"]["neuron_mutation_rate"] = 0.4
+    run_config["evolution_config"]["connection_mutation_rate"] = 0.4
+    run_config["evolution_config"]["life_span_hard_threshold"] = 800
+    run_config["evolution_config"]["random_fish_num_per_generation"] = 300
+    run_config["evolution_config"]["stats_for_evaluation"] = "median"
     # run_config["terrain_config"]["sea_portion"] = 0.5
 
     evo.run_evoluation(run_config=run_config)
