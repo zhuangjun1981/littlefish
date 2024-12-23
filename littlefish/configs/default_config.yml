@@ -1,3 +1,11 @@
+# things to improve
+# 1. quantized mutation
+# 2. crossover
+# 3. speciation
+#  ============
+# 4. NEAT
+
+
 simulation_config:
   data_folder: to be overwritten              # directory to save simulation log
   start_generation_ind: 0                     # start generation index
