@@ -15,8 +15,8 @@ ONE_EYE = {
 EIGHT_EYES = {
     "southeast": {
         "rf_positions": [
-            [-1, -1, -2, -2, -2, -3, -3],
-            [-1, -2, -2, -1, -3, -3, -2],
+            [1, 1, 2, 2, 2, 3, 3],
+            [1, 2, 2, 1, 3, 3, 2],
         ],
         "rf_weights": [0.1, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
     },
@@ -175,8 +175,8 @@ FOUR_EYES = {
 FOUR_MUSCLES = [
     ("north", np.array([-1, 0], dtype=int)),
     ("south", np.array([1, 0], dtype=int)),
-    ("east", np.array([0, -1], dtype=int)),
-    ("west", np.array([0, 1], dtype=int)),
+    ("east", np.array([0, 1], dtype=int)),
+    ("west", np.array([0, -1], dtype=int)),
 ]
 
 
